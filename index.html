@@ -93,6 +93,16 @@
             background: #fee2e2;
         }
 
+        .btn-success {
+            background: #10b981;
+            color: white;
+            border: none;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
         .blog-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -227,6 +237,31 @@
             gap: 5px;
         }
 
+        .github-status {
+            background: #f3f4f6;
+            color: #1f2937;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .github-status.configured {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .config-info {
+            background: #f9fafb;
+            padding: 12px;
+            border-radius: 12px;
+            margin: 15px 0;
+            font-size: 13px;
+            word-break: break-all;
+        }
+
         .error-boundary {
             color: #dc2626;
             padding: 20px;
@@ -260,6 +295,7 @@
                 <button class="btn" id="newPostBtn">+ 写文章</button>
                 <button class="btn" id="logoutBtn">退出</button>
                 <span class="status-badge">✓ 已登录</span>
+                <span id="githubStatusBadge" class="github-status">⚙️ GitHub未配置</span>
             </div>
         </div>
     </div>
@@ -268,6 +304,37 @@
 <main class="container">
     <div id="postsContainer" class="blog-grid"></div>
 </main>
+
+<!-- GitHub 配置模态框 -->
+<div id="githubConfigModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span>🔧 GitHub 配置</span>
+            <button class="close-btn" onclick="closeModal('githubConfigModal')">&times;</button>
+        </div>
+        <div>
+            <label>GitHub Personal Access Token</label>
+            <input type="password" id="githubTokenInput" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off">
+            <div style="font-size: 12px; color: #666; margin-top: -10px; margin-bottom: 10px;">
+                <a href="https://github.com/settings/tokens" target="_blank">获取 Token</a> (需要 repo 权限)
+            </div>
+            
+            <label>GitHub 用户名</label>
+            <input type="text" id="githubOwnerInput" placeholder="username">
+            
+            <label>仓库名称</label>
+            <input type="text" id="githubRepoInput" placeholder="myblog">
+            
+            <div id="configStatus" class="config-info" style="display: none;"></div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn btn-primary" id="saveGithubConfigBtn" style="flex:1;">💾 保存配置</button>
+                <button class="btn btn-danger" id="clearGithubConfigBtn" style="flex:1;">🗑️ 清除配置</button>
+            </div>
+            <button class="btn" id="testGithubBtn" style="width: 100%; margin-top: 10px;">🔍 测试连接</button>
+        </div>
+    </div>
+</div>
 
 <!-- 登录模态框 -->
 <div id="loginModal" class="modal">
@@ -324,7 +391,7 @@
 </div>
 
 <script>
-    // 安全的文本转义函数 - 防止 XSS 和 HTML 解析错误
+    // 安全的文本转义函数
     function escapeHtml(text) {
         if (!text) return '';
         return text
@@ -336,45 +403,21 @@
             .replace(/`/g, '&#96;');
     }
     
-    // 安全的文本截取
-    function safeSubstring(text, maxLength) {
-        if (!text) return '';
-        const plainText = text.replace(/[#*`>]/g, '').substring(0, maxLength);
-        return escapeHtml(plainText);
-    }
-    
-    // 简单的 Markdown 解析器（安全版本）
+    // 简单的 Markdown 解析器
     function simpleMarkdown(text) {
         if (!text) return '';
-        
-        // 先转义 HTML 特殊字符
         let html = escapeHtml(text);
         
-        // 处理代码块（需要特殊处理，因为代码块内不应该转义）
-        html = html.replace(/&lt;pre&gt;&lt;code&gt;(.*?)&lt;\/code&gt;&lt;\/pre&gt;/gs, function(match, code) {
-            return '<pre><code>' + code + '</code></pre>';
-        });
-        
-        // 标题
         html = html.replace(/^### (.*)$/gm, '<h3>$1</h3>');
         html = html.replace(/^## (.*)$/gm, '<h2>$1</h2>');
         html = html.replace(/^# (.*)$/gm, '<h1>$1</h1>');
-        
-        // 粗体和斜体
         html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-        
-        // 行内代码
         html = html.replace(/`(.*?)`/g, '<code>$1</code>');
-        
-        // 链接
         html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
-        
-        // 无序列表
         html = html.replace(/^\s*-\s(.*)$/gm, '<li>$1</li>');
         html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
         
-        // 段落
         let paragraphs = html.split('\n\n');
         html = paragraphs.map(p => {
             p = p.trim();
@@ -392,38 +435,101 @@
     let isAdmin = false;
     let editPostId = null;
     
-    // GitHub 配置
-    let githubToken = '';
-    let githubOwner = '';
-    let githubRepo = '';
+    // GitHub 配置（持久化存储）
+    let githubConfig = {
+        token: '',
+        owner: '',
+        repo: ''
+    };
     
-    // 加载保存的配置
-    function loadConfig() {
+    // 加载 GitHub 配置
+    function loadGithubConfig() {
         try {
-            githubToken = localStorage.getItem('gh_token') || '';
-            githubOwner = localStorage.getItem('gh_owner') || '';
-            githubRepo = localStorage.getItem('gh_repo') || '';
-            
-            const savedLogin = localStorage.getItem('admin_logged_in');
-            const loginExpiry = localStorage.getItem('admin_expiry');
-            if (savedLogin === 'true' && loginExpiry && Date.now() < parseInt(loginExpiry)) {
-                isAdmin = true;
-                updateUIForAdmin(true);
+            const savedConfig = localStorage.getItem('github_config');
+            if (savedConfig) {
+                const config = JSON.parse(savedConfig);
+                githubConfig = {
+                    token: config.token || '',
+                    owner: config.owner || '',
+                    repo: config.repo || ''
+                };
+                updateGithubStatusBadge();
+                return true;
             }
         } catch(e) {
-            console.error('加载配置失败:', e);
+            console.error('加载 GitHub 配置失败:', e);
+        }
+        return false;
+    }
+    
+    // 保存 GitHub 配置
+    function saveGithubConfig(token, owner, repo) {
+        try {
+            githubConfig = { token, owner, repo };
+            localStorage.setItem('github_config', JSON.stringify(githubConfig));
+            updateGithubStatusBadge();
+            showToast('GitHub 配置已保存', false);
+            return true;
+        } catch(e) {
+            console.error('保存 GitHub 配置失败:', e);
+            showToast('保存失败', true);
+            return false;
         }
     }
     
-    function updateUIForAdmin(loggedIn) {
-        const loginSection = document.getElementById('loginSection');
-        const adminSection = document.getElementById('adminSection');
-        if (loggedIn) {
-            if (loginSection) loginSection.style.display = 'none';
-            if (adminSection) adminSection.style.display = 'flex';
+    // 清除 GitHub 配置
+    function clearGithubConfig() {
+        githubConfig = { token: '', owner: '', repo: '' };
+        localStorage.removeItem('github_config');
+        updateGithubStatusBadge();
+        showToast('GitHub 配置已清除');
+    }
+    
+    // 更新 GitHub 状态显示
+    function updateGithubStatusBadge() {
+        const badge = document.getElementById('githubStatusBadge');
+        if (!badge) return;
+        
+        const hasConfig = githubConfig.token && githubConfig.owner && githubConfig.repo;
+        if (hasConfig) {
+            badge.className = 'github-status configured';
+            badge.innerHTML = `✓ GitHub已配置 (${githubConfig.owner}/${githubConfig.repo})`;
         } else {
-            if (loginSection) loginSection.style.display = 'block';
-            if (adminSection) adminSection.style.display = 'none';
+            badge.className = 'github-status';
+            badge.innerHTML = '⚙️ GitHub未配置';
+        }
+    }
+    
+    // 测试 GitHub 连接
+    async function testGithubConnection() {
+        if (!githubConfig.token || !githubConfig.owner || !githubConfig.repo) {
+            showToast('请先配置 GitHub', true);
+            return false;
+        }
+        
+        showToast('测试连接中...', false);
+        try {
+            const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}`;
+            const response = await fetch(url, {
+                headers: { 'Authorization': `token ${githubConfig.token}` }
+            });
+            
+            if (response.ok) {
+                showToast('✓ GitHub 连接成功！', false);
+                return true;
+            } else if (response.status === 401) {
+                showToast('✗ Token 无效或已过期', true);
+                return false;
+            } else if (response.status === 404) {
+                showToast('✗ 仓库不存在，请检查仓库名称', true);
+                return false;
+            } else {
+                showToast(`✗ 连接失败: ${response.status}`, true);
+                return false;
+            }
+        } catch(e) {
+            showToast('✗ 网络错误，无法连接 GitHub', true);
+            return false;
         }
     }
     
@@ -441,32 +547,30 @@
         if (modal) modal.style.display = 'none';
     }
     
-    // 保存文章到本地和 GitHub
+    // 保存文章
     async function savePosts() {
         try {
-            // 保存到本地
             const postsData = JSON.stringify(posts);
             localStorage.setItem('blog_posts', postsData);
             
-            // 如果配置了 GitHub，同步到远程
-            if (githubToken && githubOwner && githubRepo) {
+            if (githubConfig.token && githubConfig.owner && githubConfig.repo) {
                 try {
                     const content = btoa(encodeURIComponent(postsData));
-                    const url = `https://api.github.com/repos/${githubOwner}/${githubRepo}/contents/posts.json`;
+                    const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/posts.json`;
                     
                     let sha = '';
                     const getRes = await fetch(url, {
-                        headers: { 'Authorization': `token ${githubToken}` }
+                        headers: { 'Authorization': `token ${githubConfig.token}` }
                     });
                     if (getRes.ok) {
                         const data = await getRes.json();
                         sha = data.sha;
                     }
                     
-                    const response = await fetch(url, {
+                    await fetch(url, {
                         method: 'PUT',
                         headers: {
-                            'Authorization': `token ${githubToken}`,
+                            'Authorization': `token ${githubConfig.token}`,
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
@@ -476,18 +580,13 @@
                             branch: 'main'
                         })
                     });
-                    
-                    if (response.ok) {
-                        console.log('已同步到 GitHub');
-                    }
                 } catch(e) {
                     console.log('GitHub 同步失败:', e);
                 }
             }
             return true;
         } catch(e) {
-            console.error('保存文章失败:', e);
-            showToast('保存失败: ' + e.message, true);
+            console.error('保存失败:', e);
             return false;
         }
     }
@@ -495,18 +594,17 @@
     // 加载文章
     async function loadPosts() {
         try {
-            // 尝试从 GitHub 加载
-            if (githubToken && githubOwner && githubRepo) {
+            if (githubConfig.token && githubConfig.owner && githubConfig.repo) {
                 try {
-                    const url = `https://api.github.com/repos/${githubOwner}/${githubRepo}/contents/posts.json`;
+                    const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/posts.json`;
                     const response = await fetch(url, {
-                        headers: { 'Authorization': `token ${githubToken}` }
+                        headers: { 'Authorization': `token ${githubConfig.token}` }
                     });
                     if (response.ok) {
                         const data = await response.json();
                         const content = decodeURIComponent(escape(atob(data.content)));
                         const parsedPosts = JSON.parse(content);
-                        if (Array.isArray(parsedPosts)) {
+                        if (Array.isArray(parsedPosts) && parsedPosts.length > 0) {
                             posts = parsedPosts;
                             localStorage.setItem('blog_posts', JSON.stringify(posts));
                             renderPosts();
@@ -518,27 +616,16 @@
                 }
             }
             
-            // 从本地加载
             const saved = localStorage.getItem('blog_posts');
             if (saved) {
-                try {
-                    const parsed = JSON.parse(saved);
-                    if (Array.isArray(parsed)) {
-                        posts = parsed;
-                    } else {
-                        posts = getDefaultPosts();
-                    }
-                } catch(e) {
-                    console.error('解析本地数据失败:', e);
-                    posts = getDefaultPosts();
-                }
+                const parsed = JSON.parse(saved);
+                posts = Array.isArray(parsed) ? parsed : getDefaultPosts();
             } else {
                 posts = getDefaultPosts();
             }
             renderPosts();
         } catch(e) {
-            console.error('加载文章失败:', e);
-            showToast('加载文章失败', true);
+            console.error('加载失败:', e);
             posts = getDefaultPosts();
             renderPosts();
         }
@@ -573,13 +660,10 @@
                 return;
             }
             
-            // 使用 createElement 方式构建 DOM，避免 innerHTML 注入问题
             container.innerHTML = '';
-            
             posts.forEach(post => {
                 const card = document.createElement('div');
                 card.className = 'blog-card';
-                card.setAttribute('data-id', post.id);
                 card.onclick = () => viewPost(post.id);
                 
                 const title = document.createElement('div');
@@ -611,34 +695,29 @@
                 container.appendChild(card);
             });
         } catch(e) {
-            console.error('渲染文章失败:', e);
+            console.error('渲染失败:', e);
             container.innerHTML = '<div class="error-boundary">渲染失败，请刷新页面重试</div>';
         }
     }
     
     function viewPost(id) {
-        try {
-            const post = posts.find(p => p.id === id);
-            if (!post) return;
-            
-            document.getElementById('detailTitle').textContent = post.title || '无标题';
-            document.getElementById('detailBody').innerHTML = simpleMarkdown(post.content || '');
-            
-            const actionsDiv = document.getElementById('detailActions');
-            if (isAdmin) {
-                actionsDiv.innerHTML = `
-                    <button class="btn" onclick="editPost('${post.id}')">✏️ 编辑</button>
-                    <button class="btn btn-danger" onclick="deletePost('${post.id}')">🗑️ 删除</button>
-                `;
-            } else {
-                actionsDiv.innerHTML = '';
-            }
-            
-            document.getElementById('detailModal').style.display = 'flex';
-        } catch(e) {
-            console.error('查看文章失败:', e);
-            showToast('查看文章失败', true);
+        const post = posts.find(p => p.id === id);
+        if (!post) return;
+        
+        document.getElementById('detailTitle').textContent = post.title || '无标题';
+        document.getElementById('detailBody').innerHTML = simpleMarkdown(post.content || '');
+        
+        const actionsDiv = document.getElementById('detailActions');
+        if (isAdmin) {
+            actionsDiv.innerHTML = `
+                <button class="btn" onclick="editPost('${post.id}')">✏️ 编辑</button>
+                <button class="btn btn-danger" onclick="deletePost('${post.id}')">🗑️ 删除</button>
+            `;
+        } else {
+            actionsDiv.innerHTML = '';
         }
+        
+        document.getElementById('detailModal').style.display = 'flex';
     }
     
     function editPost(id) {
@@ -656,72 +735,47 @@
     
     async function deletePost(id) {
         if (confirm('确定要删除这篇文章吗？此操作不可撤销。')) {
-            try {
-                const index = posts.findIndex(p => p.id === id);
-                if (index !== -1) {
-                    posts.splice(index, 1);
-                    const success = await savePosts();
-                    if (success) {
-                        renderPosts();
-                        closeModal('detailModal');
-                        showToast('文章已删除');
-                    }
-                }
-            } catch(e) {
-                console.error('删除文章失败:', e);
-                showToast('删除失败: ' + e.message, true);
+            const index = posts.findIndex(p => p.id === id);
+            if (index !== -1) {
+                posts.splice(index, 1);
+                await savePosts();
+                renderPosts();
+                closeModal('detailModal');
+                showToast('文章已删除');
             }
         }
     }
     
     async function saveCurrentPost() {
-        try {
-            const title = document.getElementById('postTitle').value.trim();
-            const summary = document.getElementById('postSummary').value.trim();
-            const content = document.getElementById('postBody').value.trim();
-            
-            if (!title || !content) {
-                document.getElementById('editorError').textContent = '标题和内容不能为空';
-                return;
-            }
-            
-            document.getElementById('editorError').textContent = '';
-            
-            const now = new Date().toLocaleDateString('zh-CN');
-            
-            if (editPostId) {
-                const index = posts.findIndex(p => p.id === editPostId);
-                if (index !== -1) {
-                    posts[index] = {
-                        ...posts[index],
-                        title: title,
-                        summary: summary,
-                        content: content,
-                        date: now
-                    };
-                }
-                editPostId = null;
-            } else {
-                const newPost = {
-                    id: Date.now().toString(),
-                    title: title,
-                    summary: summary,
-                    content: content,
-                    date: now
-                };
-                posts.unshift(newPost);
-            }
-            
-            const success = await savePosts();
-            if (success) {
-                renderPosts();
-                closeModal('editorModal');
-                showToast('文章已保存');
-            }
-        } catch(e) {
-            console.error('保存文章失败:', e);
-            showToast('保存失败: ' + e.message, true);
+        const title = document.getElementById('postTitle').value.trim();
+        const summary = document.getElementById('postSummary').value.trim();
+        const content = document.getElementById('postBody').value.trim();
+        
+        if (!title || !content) {
+            document.getElementById('editorError').textContent = '标题和内容不能为空';
+            return;
         }
+        
+        document.getElementById('editorError').textContent = '';
+        const now = new Date().toLocaleDateString('zh-CN');
+        
+        if (editPostId) {
+            const index = posts.findIndex(p => p.id === editPostId);
+            if (index !== -1) {
+                posts[index] = { ...posts[index], title, summary, content, date: now };
+            }
+            editPostId = null;
+        } else {
+            posts.unshift({
+                id: Date.now().toString(),
+                title, summary, content, date: now
+            });
+        }
+        
+        await savePosts();
+        renderPosts();
+        closeModal('editorModal');
+        showToast('文章已保存');
     }
     
     function login(remember = false) {
@@ -742,14 +796,6 @@
             document.getElementById('loginUser').value = '';
             document.getElementById('loginPass').value = '';
             document.getElementById('loginErrorMsg').textContent = '';
-            
-            if (!githubToken) {
-                setTimeout(() => {
-                    if (confirm('是否配置 GitHub 备份？\n配置后文章会自动同步到仓库')) {
-                        configureGitHub();
-                    }
-                }, 500);
-            }
         } else {
             document.getElementById('loginErrorMsg').textContent = '用户名或密码错误 (admin / 123456)';
         }
@@ -764,87 +810,194 @@
         showToast('已退出登录');
     }
     
-    function configureGitHub() {
-        const token = prompt('请输入 GitHub Personal Access Token (需要 repo 权限):');
-        if (!token) return;
-        const owner = prompt('GitHub 用户名:');
-        if (!owner) return;
-        const repo = prompt('仓库名称:');
-        if (!repo) return;
-        
-        githubToken = token;
-        githubOwner = owner;
-        githubRepo = repo;
-        
-        localStorage.setItem('gh_token', token);
-        localStorage.setItem('gh_owner', owner);
-        localStorage.setItem('gh_repo', repo);
-        
-        showToast('GitHub 配置已保存');
-        loadPosts();
+    function updateUIForAdmin(loggedIn) {
+        const loginSection = document.getElementById('loginSection');
+        const adminSection = document.getElementById('adminSection');
+        if (loggedIn) {
+            if (loginSection) loginSection.style.display = 'none';
+            if (adminSection) adminSection.style.display = 'flex';
+        } else {
+            if (loginSection) loginSection.style.display = 'block';
+            if (adminSection) adminSection.style.display = 'none';
+        }
     }
     
-    // 初始化事件绑定
+    function loadAdminState() {
+        const savedLogin = localStorage.getItem('admin_logged_in');
+        const loginExpiry = localStorage.getItem('admin_expiry');
+        if (savedLogin === 'true' && loginExpiry && Date.now() < parseInt(loginExpiry)) {
+            isAdmin = true;
+            updateUIForAdmin(true);
+        }
+    }
+    
+    // 打开 GitHub 配置模态框
+    function openGithubConfig() {
+        document.getElementById('githubTokenInput').value = githubConfig.token || '';
+        document.getElementById('githubOwnerInput').value = githubConfig.owner || '';
+        document.getElementById('githubRepoInput').value = githubConfig.repo || '';
+        document.getElementById('githubConfigModal').style.display = 'flex';
+    }
+    
+    // 保存 GitHub 配置（从表单）
+    function saveGithubFromForm() {
+        const token = document.getElementById('githubTokenInput').value.trim();
+        const owner = document.getElementById('githubOwnerInput').value.trim();
+        const repo = document.getElementById('githubRepoInput').value.trim();
+        
+        if (!token || !owner || !repo) {
+            showToast('请填写完整信息', true);
+            return;
+        }
+        
+        saveGithubConfig(token, owner, repo);
+        closeModal('githubConfigModal');
+        loadPosts(); // 重新加载文章
+    }
+    
+    // 初始化
     document.addEventListener('DOMContentLoaded', () => {
-        loadConfig();
+        loadGithubConfig();
+        loadAdminState();
         loadPosts();
         
-        const showLoginBtn = document.getElementById('showLoginBtn');
-        const loginBtn = document.getElementById('loginBtn');
-        const rememberLoginBtn = document.getElementById('rememberLoginBtn');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const newPostBtn = document.getElementById('newPostBtn');
-        const savePostBtn = document.getElementById('savePostBtn');
-        const homeLink = document.getElementById('homeLink');
-        const logoHome = document.getElementById('logoHome');
+        // 绑定事件
+        document.getElementById('showLoginBtn')?.addEventListener('click', () => {
+            document.getElementById('loginModal').style.displayEventListener('click', () => = 'flex';
+        });
+        document {
+            document.getElementById('loginModal').style.display = 'flex';
+        });
+        document.getElementById('.getElementById('loginBtn')?.addEventListener('clickloginBtn')?.addEventListener('click', () => login(false));
+', () => login(false));
+        document        document.getElementById('rememberLoginBtn')?.addEventListener('click',.getElementById('rememberLoginBtn')?.addEventListener('click', () => login(true () => login(true));
+        document.getElementById));
+        document.getElementById('logoutBtn')('logoutBtn')?.addEventListener('?.addEventListener('click', logout);
+        document.getElementById('newPostBtn')?.addEventListener('click', logout);
+        document.getElementById('newPostBtn')?.addEventListener('click', () =>click', () => {
+            editPost {
+            editPostId =Id = null;
+            document null;
+            document.getElementById('editorTitle.getElementById('editorTitle').textContent = '写新文章';
+            document.getElementById('post').textContent = '写新文章';
+            document.getElementById('postTitle').value =Title').value = '';
+            '';
+            document.getElementById('post document.getElementById('postSummary').value = '';
+            document.getElementById('postBody').Summary').value = '';
+            document.getElementById('postBody').value =value = '';
+            document.getElementById('editor '';
+            document.getElementById('editorModal').style.displayModal').style.display = 'flex';
+        });
+ = 'flex';
+        });
+        document.getElementById('savePostBtn')?.addEventListener('        document.getElementById('savePostBtn')?.addEventListener('click',click', saveCurrentPost);
+ saveCurrentPost);
+        document        document.getElementById('.getElementById('homeLink')?.homeLink')?.addEventListener('click', (e) => {
+            e.preventDefault();
+addEventListener('click', (e) => {
+            e.preventDefault();
+            render            renderPosts();
+        });
+Posts();
+        });
+        document        document.getElementById('logoHome.getElementById('logoHome')?.addEventListener('click', () => renderPosts());
+')?.addEventListener('click', () => renderPosts());
         
-        if (showLoginBtn) {
-            showLoginBtn.addEventListener('click', () => {
-                document.getElementById('loginModal').style.display = 'flex';
-            });
+        // GitHub        
+        // GitHub 配置按钮
+ 配置按钮
+        const githubStatus        const githubStatusBadgeBadge = document.getElementById('githubStatusBadge');
+        if (githubStatus = document.getElementById('githubStatusBadge');
+        if (githubStatusBadge) {
+            githubBadge) {
+            githubStatusBadge.addEventListener('clickStatusBadge.addEventListener('click', openGithub', openGithubConfig);
+            githubStatusBadge.style.cursorConfig);
+            githubStatusBadge.style.cursor = ' = 'pointer';
+        }
+pointer';
         }
         
-        if (loginBtn) loginBtn.addEventListener('click', () => login(false));
-        if (rememberLoginBtn) rememberLoginBtn.addEventListener('click', () => login(true));
-        if (logoutBtn) logoutBtn.addEventListener('click', logout);
+        document.getElementById        
+        document.getElementById('save('saveGithubConfigBtn')?.addEventListener('click', saveGithubGithubConfigBtn')?.addEventListener('click', saveFromForm);
+        document.getElementByIdGithubFromForm);
+        document.getElementById('clear('clearGithubConfigBtnGithubConfigBtn')?.addEventListener('click', () => {
+            if')?.addEventListener('click', () => {
+            if (confirm('确定要 (confirm清除 GitHub 配置吗？')) {
+                clearGithubConfig();
+                closeModal('githubConfigModal');
+                load('确定要清除 GitHub 配置吗？')) {
+                clearGithubConfig();
+                closeModal('githubConfigModal');
+                loadPosts();
+            }
+        });
+Posts();
+            }
+        });
+        document        document.getElementById('testGithubBtn').getElementById('testGithubBtn')?.addEventListener?.addEventListener('click', async () => {
+            const token('click', async () => {
+            const token = document.getElementById('githubToken = document.getElementById('githubTokenInput').Input').value.trimvalue.trim();
+            const owner = document.getElementById('githubOwnerInput').value.trim();
+            const owner = document.getElementById('githubOwnerInput').value.trim();
+            const repo = document();
+            const repo = document.getElementById('.getElementById('githubRepoInput').value.trim();
+            
+            if (!token || !ownergithubRepoInput').value.trim();
+            
+            if (!token || !owner || !repo || !repo) {
+                showToast('请先填写) {
+                showToast('请先填写配置信息', true);
+                return;
+            }
+配置信息', true);
+                return;
+            }
+            
+            // 临时测试
+            const testConfig = { token, owner, repo };
+            try {
+                const url = `https://api.github.com/repos/${owner}/${repo}`;
+                const response = await fetch(url, {
+                    headers: { 'Authorization': `token ${token}` }
+                });
+                if (response.ok) {
+                    showToast('✓ 连接成功！可以保存配置了', false);
+                } else if (response.status === 401) {
+                    showToast('✗ Token 无效', true);
+                } else if (response.status === 404) {
+                    showToast('✗ 仓库不存在', true);
+                } else {
+                    showToast(`✗ 连接失败: ${response.status}`, true);
+                }
+            } catch(e) {
+                showToast('✗ 网络错误', true);
+            }
+        });
         
-        if (newPostBtn) {
-            newPostBtn.addEventListener('click', () => {
-                editPostId = null;
-                document.getElementById('editorTitle').textContent = '写新文章';
-                document.getElementById('postTitle').value = '';
-                document.getElementById('postSummary').value = '';
-                document.getElementById('postBody').value = '';
-                document.getElementById('editorModal').style.display = 'flex';
-            });
-        }
+        window.onclick = (e) => {
+            if (e.target.classList && e.target.classList.contains('modal')) {
+                e.target.style.display = '            
+            // 临时测试
+            const testConfig = { token, owner, repo };
+            try {
+                const url = `https://api.github.com/repos/${owner}/${repo}`;
+                const response = await fetch(url, {
+                    headers: { 'Authorization': `token ${token}` }
+                });
+                if (response.ok) {
+                    showToast('✓ 连接成功！可以保存配置了', false);
+                } else if (response.status === 401) {
+                    showToast('✗ Token 无效', true);
+                } else if (response.status === 404) {
+                    showToast('✗ 仓库不存在', true);
+                } else {
+                    showToast(`✗ 连接失败: ${response.status}`, true);
+                }
+            } catch(e) {
+                showToast('✗ 网络错误', true);
+            }
+        });
         
-        if (savePostBtn) savePostBtn.addEventListener('click', saveCurrentPost);
-        
-        if (homeLink) {
-            homeLink.addEventListener('click', (e) => {
-                e.preventDefault();
-                renderPosts();
-            });
-        }
-        
-        if (logoHome) {
-            logoHome.addEventListener('click', () => renderPosts());
-        }
-        
-        // 添加 GitHub 配置按钮
-        const adminSection = document.getElementById('adminSection');
-        if (adminSection && !document.getElementById('ghConfigBtn')) {
-            const ghBtn = document.createElement('button');
-            ghBtn.id = 'ghConfigBtn';
-            ghBtn.className = 'btn';
-            ghBtn.textContent = '⚙️ GitHub';
-            ghBtn.style.marginLeft = '5px';
-            ghBtn.onclick = configureGitHub;
-            adminSection.appendChild(ghBtn);
-        }
-        
-        // 点击模态框背景关闭
         window.onclick = (e) => {
             if (e.target.classList && e.target.classList.contains('modal')) {
                 e.target.style.display = 'none';
@@ -852,7 +1005,6 @@
         };
     });
     
-    // 全局函数
     window.viewPost = viewPost;
     window.editPost = editPost;
     window.deletePost = deletePost;
