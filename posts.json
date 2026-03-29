@@ -1,1 +1,10 @@
-[]
+[
+  {
+    "id": "2",
+    "title": "使用 Markdown 书写",
+    "excerpt": "支持丰富排版，让想法自由流淌",
+    "content": "## 流畅书写\n你可以使用 **粗体**、*斜体* 以及列表：\n- 优雅\n- 专注\n- 高效\n\n### 代码示例\n```javascript\nconsole.log('Hello Blog');\n```",
+    "date": "2025-02-20",
+    "slug": "markdown-writing"
+  }
+]
