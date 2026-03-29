@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>极简主义博客 | 现代个人创作空间</title>
     <!-- 引入字体与图标库 -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- 用于Markdown预览的简单库 -->
+    <!-- 用于Markdown预览 -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         * {
@@ -17,21 +18,19 @@
         }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', 'WenQuanYi Micro Hei', sans-serif;
             background-color: #fafaf9;
             color: #1c1917;
             line-height: 1.5;
             scroll-behavior: smooth;
         }
 
-        /* 极简容器 */
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 0 24px;
         }
 
-        /* 头部导航 */
         .navbar {
             padding: 24px 0 16px;
             border-bottom: 1px solid #e7e5e4;
@@ -64,6 +63,7 @@
             display: flex;
             gap: 28px;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .nav-link {
@@ -95,23 +95,6 @@
             border-color: #a8a29e;
         }
 
-        /* 主区域动画 */
-        .fade-up {
-            animation: fadeUp 0.5s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
-        }
-
-        @keyframes fadeUp {
-            from {
-                opacity: 0;
-                transform: translateY(18px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* 博客卡片网格 */
         .blog-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -140,6 +123,7 @@
             font-weight: 600;
             margin-bottom: 12px;
             line-height: 1.3;
+            word-break: break-word;
         }
 
         .blog-meta {
@@ -155,9 +139,9 @@
             font-size: 0.95rem;
             margin-bottom: 20px;
             line-height: 1.5;
+            word-break: break-word;
         }
 
-        /* 模态窗样式 */
         .modal {
             display: none;
             position: fixed;
@@ -170,7 +154,6 @@
             align-items: center;
             justify-content: center;
             z-index: 1000;
-            animation: fadeIn 0.2s;
         }
 
         .modal-card {
@@ -240,10 +223,6 @@
             margin-top: 6px;
         }
 
-        .success-msg {
-            color: #15803d;
-        }
-
         .toast {
             position: fixed;
             bottom: 24px;
@@ -255,6 +234,7 @@
             font-size: 0.9rem;
             z-index: 1100;
             animation: slideUp 0.3s;
+            font-family: monospace;
         }
 
         @keyframes slideUp {
@@ -266,12 +246,6 @@
                 opacity: 1;
                 transform: translateY(0);
             }
-        }
-
-        .admin-actions {
-            display: flex;
-            gap: 12px;
-            margin-top: 16px;
         }
 
         .danger-btn {
@@ -290,12 +264,6 @@
             font-size: 0.8rem;
         }
 
-        hr {
-            margin: 16px 0;
-            border-color: #f0efea;
-        }
-
-        /* 登录状态指示器 */
         .login-status {
             font-size: 0.75rem;
             color: #15803d;
@@ -316,6 +284,31 @@
             .blog-title {
                 font-size: 1.3rem;
             }
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-content {
+            line-height: 1.7;
+        }
+        .markdown-content h1 { font-size: 1.8rem; margin: 1.5rem 0 1rem; }
+        .markdown-content h2 { font-size: 1.5rem; margin: 1.2rem 0 0.8rem; }
+        .markdown-content h3 { font-size: 1.3rem; margin: 1rem 0 0.6rem; }
+        .markdown-content p { margin: 0.8rem 0; }
+        .markdown-content code {
+            background: #f5f5f4;
+            padding: 0.2rem 0.4rem;
+            border-radius: 6px;
+            font-family: monospace;
+        }
+        .markdown-content pre {
+            background: #f5f5f4;
+            padding: 1rem;
+            border-radius: 12px;
+            overflow-x: auto;
+        }
+        .markdown-content img {
+            max-width: 100%;
+            border-radius: 12px;
         }
     </style>
 </head>
@@ -339,8 +332,7 @@
 </div>
 
 <main class="container" id="mainContent">
-    <!-- 博客列表将动态渲染到这里 -->
-    <div id="blogListContainer" class="blog-grid fade-up"></div>
+    <div id="blogListContainer" class="blog-grid"></div>
 </main>
 
 <!-- 登录模态窗 -->
@@ -365,7 +357,7 @@
     </div>
 </div>
 
-<!-- 文章编辑/新建模态窗 -->
+<!-- 文章编辑模态窗 -->
 <div id="editorModal" class="modal">
     <div class="modal-card">
         <div class="modal-header">
@@ -381,7 +373,7 @@
             <textarea id="postContent" rows="8" placeholder="# 精彩内容&#10;支持markdown语法..."></textarea>
             <div id="editorError" class="error-msg"></div>
             <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 16px;">
-                <button id="savePostBtn" style="background:#2b2a27;">保存文章</button>
+                <button id="savePostBtn">保存文章</button>
                 <button id="cancelEditorBtn" class="danger-btn" onclick="closeModal('editorModal')">取消</button>
             </div>
         </div>
@@ -395,20 +387,19 @@
             <span id="detailTitle">文章详情</span>
             <button class="close-modal" onclick="closeModal('detailModal')">&times;</button>
         </div>
-        <div id="detailContent" style="line-height: 1.6; margin-bottom: 20px;"></div>
+        <div id="detailContent" class="markdown-content" style="margin-bottom: 20px;"></div>
         <div id="detailAdminActions" style="display: flex; gap: 12px; justify-content: flex-end;"></div>
     </div>
 </div>
 
 <script>
-    // ------------------- 全局配置 -------------------
-    // 使用 localStorage 持久化存储登录状态、GitHub 配置、登录时间戳等
-    let currentUser = null;          // 当前登录用户
-    let loginExpiry = null;          // 登录过期时间戳 (用于"记住我"功能)
-    let articles = [];               // 存储文章数组
-    let editId = null;              // 编辑时的文章id
+    // 确保中文正常显示
+    document.charset = "UTF-8";
     
-    // GitHub 配置参数
+    let currentUser = null;
+    let articles = [];
+    let editId = null;
+    
     let githubConfig = {
         token: '',
         owner: '',
@@ -416,11 +407,9 @@
         filePath: 'posts.json'
     };
     
-    // ---------- 登录状态持久化管理 ----------
-    const SESSION_DURATION_REMEMBER = 30 * 24 * 60 * 60 * 1000;  // 记住我: 30天
-    const SESSION_DURATION_DEFAULT = 24 * 60 * 60 * 1000;        // 普通登录: 24小时
+    const SESSION_DURATION_REMEMBER = 30 * 24 * 60 * 60 * 1000;
+    const SESSION_DURATION_DEFAULT = 24 * 60 * 60 * 1000;
     
-    // 保存登录状态到 localStorage
     function persistLoginState(rememberMe = false) {
         const loginData = {
             isLoggedIn: true,
@@ -432,7 +421,6 @@
         currentUser = 'admin';
     }
     
-    // 检查并恢复登录状态
     function checkAndRestoreLoginState() {
         const savedState = localStorage.getItem('blog_login_state');
         if (!savedState) return false;
@@ -443,12 +431,10 @@
                 const now = Date.now();
                 const elapsed = now - loginData.loginTime;
                 if (elapsed < loginData.expiryDuration) {
-                    // 登录状态仍然有效
                     currentUser = loginData.username || 'admin';
                     updateUIBasedOnLoginState(true);
                     return true;
                 } else {
-                    // 登录已过期，清除状态
                     clearLoginState();
                     return false;
                 }
@@ -459,22 +445,18 @@
         return false;
     }
     
-    // 清除登录状态
     function clearLoginState() {
         localStorage.removeItem('blog_login_state');
         currentUser = null;
         updateUIBasedOnLoginState(false);
     }
     
-    // 退出登录
     function logout() {
         clearLoginState();
         showToast('已安全退出登录');
-        // 刷新文章列表 (去掉管理按钮)
         renderBlogList();
     }
     
-    // 根据登录状态更新 UI
     function updateUIBasedOnLoginState(isLoggedIn) {
         const authSection = document.getElementById('authSection');
         const adminTools = document.getElementById('adminTools');
@@ -487,24 +469,20 @@
         }
     }
     
-    // 处理登录 (支持"记住我")
     function handleLogin(rememberMe = false) {
         const username = document.getElementById('loginUsername').value.trim();
         const pwd = document.getElementById('loginPassword').value;
         
-        // 演示账户验证
         if (username === 'admin' && pwd === 'admin123') {
             persistLoginState(rememberMe);
             updateUIBasedOnLoginState(true);
             closeModal('loginModal');
             showToast(rememberMe ? '登录成功，状态将保持30天' : '登录成功，24小时后自动过期');
             
-            // 清除输入框错误提示
             document.getElementById('loginError').innerText = '';
             document.getElementById('loginUsername').value = '';
             document.getElementById('loginPassword').value = '';
             
-            // 检测并提示 GitHub 配置
             if (!githubConfig.token) {
                 setTimeout(() => {
                     if (confirm('是否配置 GitHub 仓库以实现文章永久保存？\n点击确定进行配置，取消则使用本地演示数据')) {
@@ -517,7 +495,6 @@
         }
     }
     
-    // ---------- GitHub 相关函数 ----------
     function loadGitHubConfig() {
         const savedToken = localStorage.getItem('github_token');
         const savedOwner = localStorage.getItem('github_owner');
@@ -559,10 +536,8 @@
         setTimeout(() => toast.remove(), 3000);
     }
     
-    // 从 GitHub 获取文章
     async function fetchPostsFromGitHub() {
         if(!githubConfig.token || !githubConfig.owner || !githubConfig.repo) {
-            console.log('未配置 GitHub，使用本地数据');
             return null;
         }
         const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${githubConfig.filePath}`;
@@ -598,7 +573,7 @@
             }
         } catch(e) {}
         const payload = {
-            message: `更新博客 - ${new Date().toLocaleString()}`,
+            message: `更新博客 - ${new Date().toLocaleString('zh-CN')}`,
             content: content,
             branch: 'main'
         };
@@ -622,7 +597,6 @@
         }
     }
     
-    // 本地存储文章备份
     function saveArticlesToLocalBackup(articlesData) {
         localStorage.setItem('blog_articles_backup', JSON.stringify(articlesData));
     }
@@ -637,7 +611,6 @@
         return null;
     }
     
-    // 获取演示文章
     function getDemoArticles() {
         return [
             { id: "1", title: "极简主义的诗意", excerpt: "回归内容本身，设计克制却充满力量", content: "# 极简主义的诗意\n\n在这个信息过载的时代，保持克制是一种美德。这篇博客系统旨在提供纯粹的写作与阅读体验。\n\n## 设计理念\n- 干净留白\n- 流畅动画\n- 专注阅读", date: "2025-02-18", slug: "minimal-poem" },
@@ -645,11 +618,9 @@
         ];
     }
     
-    // 刷新文章列表 (智能数据源)
     async function refreshArticles() {
         let data = await fetchPostsFromGitHub();
         if (data === null) {
-            // GitHub 不可用，尝试本地备份
             const backup = loadArticlesFromLocalBackup();
             if (backup && backup.length > 0) {
                 articles = backup;
@@ -659,7 +630,6 @@
                 showToast('使用演示数据 (配置GitHub可永久保存)', false);
             }
         } else if (data.length === 0) {
-            // GitHub 上无数据，尝试备份或演示
             const backup = loadArticlesFromLocalBackup();
             articles = (backup && backup.length) ? backup : getDemoArticles();
         } else {
@@ -669,7 +639,6 @@
         renderBlogList();
     }
     
-    // 保存文章（同时更新本地和远程）
     async function saveCurrentPost() {
         if (!currentUser) {
             showToast('请先登录', true);
@@ -695,10 +664,7 @@
             articles.push({ id: newId, title, excerpt, content, date: now, slug: title.replace(/\s/g,'-') });
         }
         
-        // 更新本地备份
         saveArticlesToLocalBackup(articles);
-        
-        // 尝试同步到 GitHub
         const success = await savePostsToGitHub(articles);
         if (!success && githubConfig.token) {
             showToast('⚠️ 远程同步失败，但已保存到本地', true);
@@ -718,7 +684,16 @@
         showToast('文章已删除');
     }
     
-    // 渲染博客列表
+    function escapeHtml(str) { 
+        if(!str) return '';
+        return str.replace(/[&<>]/g, function(m){
+            if(m==='&') return '&amp;'; 
+            if(m==='<') return '&lt;'; 
+            if(m==='>') return '&gt;'; 
+            return m;
+        });
+    }
+    
     function renderBlogList() {
         const container = document.getElementById('blogListContainer');
         if(!container) return;
@@ -729,7 +704,7 @@
         container.innerHTML = articles.map(article => `
             <div class="blog-card" data-id="${article.id}">
                 <div class="blog-title">${escapeHtml(article.title)}</div>
-                <div class="blog-meta"><span><i class="far fa-calendar-alt"></i> ${article.date || '未知日期'}</span></div>
+                <div class="blog-meta"><span><i class="far fa-calendar-alt"></i> ${escapeHtml(article.date || '未知日期')}</span></div>
                 <div class="blog-excerpt">${escapeHtml(article.excerpt || (article.content || '').substring(0,100))}...</div>
                 <button class="small-btn read-more-btn" data-id="${article.id}" style="background:transparent; border:1px solid #ddd; color:#2d2a27;">阅读全文 →</button>
             </div>
@@ -751,22 +726,12 @@
         });
     }
     
-    function escapeHtml(str) { 
-        if(!str) return '';
-        return str.replace(/[&<>]/g, function(m){
-            if(m==='&') return '&amp;'; 
-            if(m==='<') return '&lt;'; 
-            if(m==='>') return '&gt;'; 
-            return m;
-        });
-    }
-    
     async function showArticleDetail(id) {
         const article = articles.find(a => a.id == id);
         if(!article) return;
         document.getElementById('detailTitle').innerText = article.title;
         const renderedContent = marked.parse(article.content || '');
-        document.getElementById('detailContent').innerHTML = `<div style="margin-bottom:16px;"><span class="blog-meta">${article.date}</span></div><div>${renderedContent}</div>`;
+        document.getElementById('detailContent').innerHTML = `<div style="margin-bottom:16px;"><span class="blog-meta">${escapeHtml(article.date)}</span></div><div>${renderedContent}</div>`;
         const adminDiv = document.getElementById('detailAdminActions');
         if(currentUser) {
             adminDiv.innerHTML = `<button id="editFromDetail" class="small-btn">✏️ 编辑</button><button id="deleteFromDetail" class="small-btn danger-btn">🗑️ 删除</button>`;
@@ -814,16 +779,11 @@
         if(modalId === 'editorModal') editId = null;
     }
     
-    // ---------- 页面初始化 ----------
     window.onload = async () => {
         loadGitHubConfig();
-        // 先恢复登录状态
         const isLoggedIn = checkAndRestoreLoginState();
-        
-        // 加载文章数据
         await refreshArticles();
         
-        // 绑定事件
         document.getElementById('adminLoginBtn')?.addEventListener('click', () => {
             document.getElementById('loginModal').style.display = 'flex';
             document.getElementById('loginUsername').value = '';
@@ -838,7 +798,6 @@
         document.getElementById('homeLink')?.addEventListener('click', (e) => { e.preventDefault(); renderBlogList(); });
         document.getElementById('logoHome')?.addEventListener('click', () => renderBlogList());
         
-        // 为管理栏添加配置按钮
         const adminTools = document.getElementById('adminTools');
         if(adminTools && !document.getElementById('configGearBtn')) {
             const gearBtn = document.createElement('button');
@@ -850,7 +809,6 @@
             adminTools.appendChild(gearBtn);
         }
         
-        // 点击模态窗外关闭
         window.onclick = (e) => { if(e.target.classList.contains('modal')) e.target.style.display = 'none'; };
         
         if(isLoggedIn) {
