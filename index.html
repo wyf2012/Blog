@@ -2,945 +2,861 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>个人博客 | Personal Blog</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>极简主义博客 | 现代个人创作空间</title>
+    <!-- 引入字体与图标库 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- 用于Markdown预览的简单库 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
-        :root {
-            --primary: #1a1a1a;
-            --accent: #ff6b6b;
-            --bilibili: #00AEEC;
-            --bg: #fafafa;
-            --text: #2d2d2d;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        
+
         body {
             font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            overflow-x: hidden;
+            background-color: #fafaf9;
+            color: #1c1917;
+            line-height: 1.5;
+            scroll-behavior: smooth;
         }
-        
-        .serif {
-            font-family: 'Noto Serif SC', serif;
+
+        /* 极简容器 */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
         }
-        
-        .bg-mesh {
+
+        /* 头部导航 */
+        .navbar {
+            padding: 24px 0 16px;
+            border-bottom: 1px solid #e7e5e4;
+            backdrop-filter: blur(8px);
+            background-color: rgba(250, 250, 249, 0.8);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #2b2a27, #57534e);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            cursor: pointer;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 28px;
+            align-items: center;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            font-weight: 500;
+            color: #44403c;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+        }
+
+        .nav-link:hover {
+            color: #000;
+        }
+
+        .admin-btn, .logout-btn {
+            background: none;
+            border: 1px solid #d6d3d1;
+            padding: 6px 16px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: 0.2s;
+            font-family: inherit;
+            background-color: white;
+        }
+
+        .admin-btn:hover, .logout-btn:hover {
+            background-color: #f5f5f4;
+            border-color: #a8a29e;
+        }
+
+        /* 主区域动画 */
+        .fade-up {
+            animation: fadeUp 0.5s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(18px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 博客卡片网格 */
+        .blog-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 32px;
+            margin: 48px 0;
+        }
+
+        .blog-card {
+            background: white;
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02), 0 1px 2px rgba(0, 0, 0, 0.03);
+            transition: all 0.25s ease;
+            border: 1px solid #ecece7;
+            cursor: pointer;
+        }
+
+        .blog-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 25px -12px rgba(0, 0, 0, 0.08);
+            border-color: #d4d4ce;
+        }
+
+        .blog-title {
+            font-size: 1.6rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            line-height: 1.3;
+        }
+
+        .blog-meta {
+            font-size: 0.8rem;
+            color: #78716c;
+            margin-bottom: 16px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .blog-excerpt {
+            color: #44403c;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        /* 模态窗样式 */
+        .modal {
+            display: none;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: -1;
-            background: 
-                radial-gradient(at 40% 20%, rgba(255,107,107,0.1) 0px, transparent 50%),
-                radial-gradient(at 80% 0%, rgba(0,174,236,0.1) 0px, transparent 50%);
-            animation: meshMove 20s ease infinite;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(6px);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.2s;
         }
-        
-        @keyframes meshMove {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(30px, -30px) scale(1.1); }
+
+        .modal-card {
+            background: white;
+            max-width: 650px;
+            width: 90%;
+            border-radius: 32px;
+            padding: 32px;
+            box-shadow: 0 25px 40px -12px black;
+            max-height: 85vh;
+            overflow-y: auto;
         }
-        
-        .glass {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            font-weight: 600;
+            font-size: 1.5rem;
         }
-        
-        .article-card {
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+        .close-modal {
+            font-size: 28px;
+            cursor: pointer;
+            background: none;
+            border: none;
         }
-        
-        .article-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-        }
-        
-        .modal-enter {
-            animation: modalIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        }
-        
-        @keyframes modalIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        
-        .editor-content {
-            min-height: 400px;
-            line-height: 1.8;
-        }
-        
-        .page-transition {
-            transition: opacity 0.3s, transform 0.3s;
-        }
-        
-        .hidden-page {
-            opacity: 0;
-            pointer-events: none;
-            position: absolute;
-            top: 0;
-            left: 0;
+
+        input, textarea {
             width: 100%;
+            padding: 12px 16px;
+            margin: 10px 0 16px;
+            border: 1px solid #e7e5e4;
+            border-radius: 20px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: 0.2s;
+            background: #fff;
         }
-        
-        .active-page {
-            opacity: 1;
-            pointer-events: all;
-            position: relative;
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #b9b5b0;
+            box-shadow: 0 0 0 2px #e7e5e4;
         }
-        
-        .editor-content img, .article-body img {
-            max-width: 100%;
-            border-radius: 8px;
-            margin: 1rem 0;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+
+        button {
+            background: #1c1917;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 40px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: inherit;
         }
-        
-        #toast {
+
+        button:hover {
+            background: #2d2a27;
+        }
+
+        .error-msg {
+            color: #b91c1c;
+            font-size: 0.8rem;
+            margin-top: 6px;
+        }
+
+        .success-msg {
+            color: #15803d;
+        }
+
+        .toast {
             position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            transform: translateY(100px);
-            opacity: 0;
-            transition: all 0.3s ease;
-            z-index: 9999;
+            bottom: 24px;
+            right: 24px;
+            background: #1c1917;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 60px;
+            font-size: 0.9rem;
+            z-index: 1100;
+            animation: slideUp 0.3s;
         }
-        
-        #toast.show {
-            transform: translateY(0);
-            opacity: 1;
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
-        
-        .loader {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #24292f;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
+
+        .admin-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
         }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+
+        .danger-btn {
+            background: white;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
         }
-        
-        .config-alert {
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            border-left: 4px solid #f59e0b;
+
+        .danger-btn:hover {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .small-btn {
+            padding: 6px 14px;
+            font-size: 0.8rem;
+        }
+
+        hr {
+            margin: 16px 0;
+            border-color: #f0efea;
+        }
+
+        /* 登录状态指示器 */
+        .login-status {
+            font-size: 0.75rem;
+            color: #15803d;
+            margin-left: 8px;
+            background: #eef2ff;
+            padding: 4px 10px;
+            border-radius: 30px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        @media (max-width: 700px) {
+            .nav-content {
+                flex-direction: column;
+                gap: 12px;
+            }
+            .blog-title {
+                font-size: 1.3rem;
+            }
         }
     </style>
 </head>
-<body class="antialiased">
-    <div class="bg-mesh"></div>
+<body>
 
-    <!-- 导航栏 -->
-    <nav class="fixed top-0 w-full z-50 glass border-b border-gray-200/50">
-        <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-            <div class="flex items-center gap-3 cursor-pointer" onclick="showHome()">
-                <div class="w-10 h-10 bg-gradient-to-br from-gray-800 to-gray-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">B</div>
-                <span class="text-xl font-bold tracking-tight serif">我的博客</span>
+<div class="navbar">
+    <div class="container nav-content">
+        <div class="logo" id="logoHome">⌘ 极简日志</div>
+        <div class="nav-links">
+            <a href="#" class="nav-link" id="homeLink">首页</a>
+            <div id="authSection">
+                <button class="admin-btn" id="adminLoginBtn">管理登录</button>
             </div>
-            
-            <div class="flex items-center gap-4">
-                <button onclick="showHome()" class="px-4 py-2 rounded-full hover:bg-gray-100 transition text-sm font-medium">首页</button>
-                <button onclick="showAbout()" class="px-4 py-2 rounded-full hover:bg-gray-100 transition text-sm font-medium">关于</button>
-                <button id="adminBtn" onclick="toggleLoginModal()" class="px-5 py-2 bg-gray-900 text-white rounded-full hover:bg-gray-800 transition text-sm font-medium shadow-lg">管理员登录</button>
-                <button id="newPostBtn" onclick="showEditor()" class="hidden px-5 py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full hover:shadow-lg transition text-sm font-medium shadow-lg">+ 写文章</button>
-                <button id="logoutBtn" onclick="logout()" class="hidden px-4 py-2 text-gray-500 hover:text-gray-700 transition text-sm">退出</button>
-            </div>
-        </div>
-    </nav>
-
-    <main class="pt-24 pb-12 px-6 max-w-6xl mx-auto min-h-screen">
-        
-        <!-- 当前配置显示 -->
-        <div id="currentConfigBanner" class="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-4 hidden">
-            <div class="flex justify-between items-center">
-                <p class="text-sm text-blue-800">当前仓库：<span id="currentRepoDisplay" class="font-bold"></span></p>
-                <button onclick="showConfigModal()" class="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition">修改配置</button>
-            </div>
-        </div>
-
-        <!-- 配置提示 -->
-        <div id="configAlert" class="config-alert rounded-xl p-4 mb-6 hidden">
-            <div class="flex items-start gap-3">
-                <svg class="w-6 h-6 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                </svg>
-                <div>
-                    <h3 class="font-bold text-yellow-800 mb-1">需要配置 GitHub 仓库</h3>
-                    <p class="text-sm text-yellow-700 mb-2">默认使用：wyf2012/blog</p>
-                    <div class="flex gap-2">
-                        <button onclick="useDefaultConfig()" class="text-sm bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">使用默认配置</button>
-                        <button onclick="showConfigModal()" class="text-sm bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition">自定义配置</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 首页 -->
-        <div id="homePage" class="page-transition active-page">
-            <div class="mb-12 text-center py-12">
-                <h1 class="text-5xl md:text-6xl font-bold serif mb-4 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 via-gray-700 to-gray-900">思考与记录</h1>
-                <p class="text-gray-500 text-lg max-w-2xl mx-auto leading-relaxed">基于 GitHub Issues 的个人博客系统</p>
-            </div>
-
-            <div class="mb-8 flex flex-col md:flex-row gap-4 items-center justify-between">
-                <div class="relative w-full md:w-96">
-                    <input type="text" id="searchInput" placeholder="搜索文章..." class="w-full pl-12 pr-4 py-3 rounded-2xl border border-gray-200 focus:border-gray-400 focus:outline-none transition bg-white/80 backdrop-blur" oninput="filterArticles()">
-                    <svg class="absolute left-4 top-3.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                </div>
-                <div class="flex gap-2 overflow-x-auto pb-2" id="tagFilters">
-                    <button onclick="filterByTag('all')" class="tag px-4 py-2 rounded-full bg-gray-900 text-white text-sm font-medium">全部</button>
-                </div>
-            </div>
-
-            <div id="loadingState" class="hidden flex justify-center py-20">
-                <div class="loader"></div>
-            </div>
-
-            <div id="articlesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-            
-            <div id="emptyState" class="hidden text-center py-20">
-                <div class="w-24 h-24 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
-                    <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-                    </svg>
-                </div>
-                <p class="text-gray-500">暂无文章，登录后开始创作吧</p>
-            </div>
-        </div>
-
-        <!-- 文章详情页 -->
-        <div id="articlePage" class="page-transition hidden-page">
-            <button onclick="showHome()" class="mb-6 flex items-center gap-2 text-gray-500 hover:text-gray-900 transition">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-                返回列表
-            </button>
-            
-            <article class="max-w-4xl mx-auto">
-                <div id="articleCover" class="hidden w-full h-64 md:h-96 rounded-2xl overflow-hidden mb-8 shadow-2xl">
-                    <img id="articleCoverImg" src="" alt="Cover" class="w-full h-full object-cover" onerror="this.style.display='none'">
-                </div>
-                
-                <div class="mb-6">
-                    <div id="articleTags" class="flex gap-2 mb-4"></div>
-                    <h1 id="articleTitle" class="text-4xl md:text-5xl font-bold serif mb-4 text-gray-900"></h1>
-                    <div class="flex items-center gap-4 text-sm text-gray-500">
-                        <span id="articleDate"></span>
-                        <span>·</span>
-                        <span id="articleReadTime"></span>
-                        <span id="articleNumber" class="text-gray-400"></span>
-                    </div>
-                </div>
-                
-                <div id="articleContent" class="article-body prose prose-lg max-w-none"></div>
-                
-                <div class="mt-12 pt-8 border-t border-gray-200">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-white font-bold">A</div>
-                            <div>
-                                <p class="font-medium text-gray-900">管理员</p>
-                                <p class="text-sm text-gray-500">博主</p>
-                            </div>
-                        </div>
-                        <div class="flex gap-2">
-                            <a id="githubIssueLink" href="#" target="_blank" class="hidden px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition text-sm flex items-center gap-2">
-                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-                                在 GitHub 上查看
-                            </a>
-                            <button onclick="deleteCurrentArticle()" id="deleteArticleBtn" class="hidden px-4 py-2 text-red-500 hover:bg-red-50 rounded-lg transition text-sm">删除文章</button>
-                        </div>
-                    </div>
-                </div>
-            </article>
-        </div>
-
-        <!-- 编辑器页面 -->
-        <div id="editorPage" class="page-transition hidden-page">
-            <div class="max-w-4xl mx-auto">
-                <div class="flex items-center justify-between mb-8">
-                    <h2 class="text-3xl font-bold serif">撰写新文章</h2>
-                    <div class="flex gap-3">
-                        <button onclick="showHome()" class="px-6 py-2 rounded-full border border-gray-300 hover:bg-gray-50 transition">取消</button>
-                        <button onclick="publishArticle()" class="px-6 py-2 rounded-full bg-gray-900 text-white hover:bg-gray-800 transition shadow-lg flex items-center gap-2">
-                            <span id="publishText">发布文章</span>
-                            <div id="publishLoader" class="hidden w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="space-y-6">
-                    <div>
-                        <input type="text" id="editorTitle" placeholder="输入文章标题..." class="w-full text-3xl md:text-4xl font-bold serif placeholder-gray-300 border-none focus:outline-none bg-transparent">
-                    </div>
-
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <span class="text-gray-500 text-sm">标签：</span>
-                        <input type="text" id="editorTags" placeholder="输入标签，用逗号分隔" class="flex-1 px-4 py-2 rounded-lg border border-gray-200 focus:border-gray-400 focus:outline-none text-sm">
-                    </div>
-
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <span class="text-gray-500 text-sm">封面URL：</span>
-                        <input type="text" id="coverUrlInput" placeholder="https://example.com/cover.jpg（先上传到图床）" class="flex-1 px-4 py-2 rounded-lg border border-gray-200 focus:border-gray-400 focus:outline-none text-sm">
-                        <button onclick="previewCover()" class="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition text-sm">预览</button>
-                    </div>
-                    
-                    <div id="coverPreviewBox" class="hidden rounded-xl overflow-hidden h-48 bg-gray-100">
-                        <img id="coverPreviewImg" src="" class="w-full h-full object-cover">
-                    </div>
-
-                    <div class="glass rounded-2xl p-6">
-                        <div class="flex flex-wrap gap-2 mb-4 pb-4 border-b border-gray-200">
-                            <button onclick="formatText('bold')" class="p-2 hover:bg-gray-100 rounded transition font-bold">B</button>
-                            <button onclick="formatText('italic')" class="p-2 hover:bg-gray-100 rounded transition italic">I</button>
-                            <button onclick="formatText('insertUnorderedList')" class="p-2 hover:bg-gray-100 rounded transition">• 列表</button>
-                            <button onclick="insertImage()" class="p-2 hover:bg-gray-100 rounded transition text-blue-600">📷 图片</button>
-                            <button onclick="insertBilibili()" class="p-2 hover:bg-gray-100 rounded transition text-[#00AEEC]">📺 B站</button>
-                        </div>
-                        
-                        <div id="editorBody" contenteditable="true" class="editor-content prose max-w-none focus:outline-none min-h-[400px]">
-                            <p>开始你的创作...</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 关于页面 -->
-        <div id="aboutPage" class="page-transition hidden-page">
-            <div class="max-w-3xl mx-auto text-center py-20">
-                <div class="w-32 h-32 mx-auto mb-8 rounded-full bg-gradient-to-br from-gray-800 to-gray-600 flex items-center justify-center text-white text-4xl font-bold shadow-2xl">B</div>
-                <h2 class="text-4xl font-bold serif mb-6">关于这个博客</h2>
-                <p class="text-gray-600 leading-relaxed mb-8 text-lg">
-                    基于 GitHub Issues 构建的无服务器博客系统。<br>
-                    当前仓库：<span id="aboutRepoName" class="font-bold text-blue-600"></span>
-                </p>
-            </div>
-        </div>
-    </main>
-
-    <!-- 登录模态框 -->
-    <div id="loginModal" class="fixed inset-0 z-[100] hidden">
-        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="toggleLoginModal()"></div>
-        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md p-6">
-            <div class="glass rounded-3xl p-8 shadow-2xl modal-enter">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-2xl font-bold serif">管理员登录</h3>
-                    <button onclick="toggleLoginModal()" class="text-gray-400 hover:text-gray-600">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                    </button>
-                </div>
-                
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">GitHub Token</label>
-                        <input type="password" id="githubToken" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-gray-400 focus:outline-none transition text-sm" placeholder="ghp_xxxxxxxxxxxx">
-                        <p class="text-xs text-gray-500 mt-1">需要 <code>repo</code> 权限 <a href="https://github.com/settings/tokens" target="_blank" class="text-blue-600 hover:underline">去创建</a></p>
-                    </div>
-                    <div id="loginError" class="hidden text-red-500 text-sm bg-red-50 p-3 rounded-lg whitespace-pre-line"></div>
-                    <button onclick="verifyToken()" class="w-full py-3 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition font-medium shadow-lg flex items-center justify-center gap-2">
-                        <span id="loginBtnText">验证并登录</span>
-                        <div id="loginLoader" class="hidden w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    </button>
-                </div>
+            <div id="adminTools" style="display: none;">
+                <button class="admin-btn" id="newPostBtn">+ 写新文章</button>
+                <button class="logout-btn" id="logoutBtn">退出</button>
+                <span id="statusBadge" class="login-status"><i class="fas fa-check-circle"></i> 已登录</span>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- 配置模态框 -->
-    <div id="configModal" class="fixed inset-0 z-[100] hidden">
-        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeConfigModal()"></div>
-        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-lg p-6">
-            <div class="glass rounded-3xl p-8 shadow-2xl modal-enter">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-2xl font-bold serif">配置 GitHub 仓库</h3>
-                    <button onclick="closeConfigModal()" class="text-gray-400 hover:text-gray-600">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                    </button>
-                </div>
-                
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">仓库所有者 (Owner)</label>
-                        <input type="text" id="configOwner" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-gray-400 focus:outline-none transition" placeholder="wyf2012">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">仓库名称 (Repo)</label>
-                        <input type="text" id="configRepo" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-gray-400 focus:outline-none transition" placeholder="blog">
-                    </div>
-                    <div class="p-3 bg-yellow-50 rounded-lg text-xs text-yellow-800">
-                        <p class="font-medium mb-1">⚠️ 重要提示</p>
-                        <p>1. 仓库必须是<strong>公开的</strong></p>
-                        <p>2. 必须开启 <strong>Issues</strong> 功能</p>
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="saveConfig()" class="flex-1 py-3 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition font-medium shadow-lg">保存配置</button>
-                        <button onclick="useDefaultConfig()" class="flex-1 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition font-medium">使用默认</button>
-                    </div>
-                </div>
+<main class="container" id="mainContent">
+    <!-- 博客列表将动态渲染到这里 -->
+    <div id="blogListContainer" class="blog-grid fade-up"></div>
+</main>
+
+<!-- 登录模态窗 -->
+<div id="loginModal" class="modal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <span>管理员验证</span>
+            <button class="close-modal" onclick="closeModal('loginModal')">&times;</button>
+        </div>
+        <div>
+            <label>用户名</label>
+            <input type="text" id="loginUsername" placeholder="username" autocomplete="off">
+            <label>密码</label>
+            <input type="password" id="loginPassword" placeholder="password">
+            <div id="loginError" class="error-msg"></div>
+            <div style="display: flex; gap: 12px; margin-top: 12px;">
+                <button id="confirmLoginBtn" style="flex:1;">登录</button>
+                <button id="rememberLoginBtn" style="flex:1; background: #4b5563;">记住我并登录</button>
+            </div>
+            <div style="margin-top: 16px; font-size: 0.75rem; color:#78716c; text-align:center;">演示账户: admin / admin123<br>勾选「记住我」后登录状态将长期保存</div>
+        </div>
+    </div>
+</div>
+
+<!-- 文章编辑/新建模态窗 -->
+<div id="editorModal" class="modal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <span id="editorTitle">发布文章</span>
+            <button class="close-modal" onclick="closeModal('editorModal')">&times;</button>
+        </div>
+        <div>
+            <label>文章标题</label>
+            <input type="text" id="postTitle" placeholder="标题...">
+            <label>摘要 / 简短描述</label>
+            <input type="text" id="postExcerpt" placeholder="摘要（会在首页展示）">
+            <label>正文内容 (Markdown 支持)</label>
+            <textarea id="postContent" rows="8" placeholder="# 精彩内容&#10;支持markdown语法..."></textarea>
+            <div id="editorError" class="error-msg"></div>
+            <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 16px;">
+                <button id="savePostBtn" style="background:#2b2a27;">保存文章</button>
+                <button id="cancelEditorBtn" class="danger-btn" onclick="closeModal('editorModal')">取消</button>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- 图片插入模态框 -->
-    <div id="imageModal" class="fixed inset-0 z-[100] hidden">
-        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeImageModal()"></div>
-        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md p-6">
-            <div class="glass rounded-3xl p-6 shadow-2xl modal-enter">
-                <h3 class="text-xl font-bold mb-4">插入图片</h3>
-                <input type="text" id="imageUrl" placeholder="https://example.com/image.jpg" class="w-full px-4 py-3 rounded-xl border border-gray-200 mb-3">
-                <p class="text-xs text-gray-500 mb-4">推荐图床：<a href="https://sm.ms" target="_blank" class="text-blue-600">SM.MS</a>、<a href="https://imgbb.com" target="_blank" class="text-blue-600">ImgBB</a></p>
-                <button onclick="confirmInsertImage()" class="w-full py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition">插入</button>
-            </div>
+<!-- 文章详情模态窗 -->
+<div id="detailModal" class="modal">
+    <div class="modal-card" style="max-width: 750px;">
+        <div class="modal-header">
+            <span id="detailTitle">文章详情</span>
+            <button class="close-modal" onclick="closeModal('detailModal')">&times;</button>
         </div>
+        <div id="detailContent" style="line-height: 1.6; margin-bottom: 20px;"></div>
+        <div id="detailAdminActions" style="display: flex; gap: 12px; justify-content: flex-end;"></div>
     </div>
+</div>
 
-    <!-- B站视频模态框 -->
-    <div id="bilibiliModal" class="fixed inset-0 z-[100] hidden">
-        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeBilibiliModal()"></div>
-        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md p-6">
-            <div class="glass rounded-3xl p-6 shadow-2xl modal-enter">
-                <h3 class="text-xl font-bold mb-4">插入B站视频</h3>
-                <input type="text" id="bilibiliUrl" placeholder="BV1xx411c7mD 或完整链接" class="w-full px-4 py-3 rounded-xl border border-gray-200 mb-3">
-                <input type="text" id="bilibiliTitle" placeholder="标题（可选）" class="w-full px-4 py-3 rounded-xl border border-gray-200 mb-4">
-                <button onclick="confirmInsertBilibili()" class="w-full py-3 bg-[#00AEEC] text-white rounded-xl hover:bg-[#0090C0] transition">插入</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Toast -->
-    <div id="toast" class="glass px-6 py-3 rounded-full shadow-lg flex items-center gap-3">
-        <span id="toastIcon">✓</span>
-        <span id="toastMessage" class="font-medium">操作成功</span>
-    </div>
-
-    <script>
-        // ==================== 配置 ====================
-        // 默认配置：你的仓库
-        const DEFAULT_CONFIG = {
-            owner: 'wyf2012',
-            repo: 'blog',
-            issueLabel: 'blog-post'
+<script>
+    // ------------------- 全局配置 -------------------
+    // 使用 localStorage 持久化存储登录状态、GitHub 配置、登录时间戳等
+    let currentUser = null;          // 当前登录用户
+    let loginExpiry = null;          // 登录过期时间戳 (用于"记住我"功能)
+    let articles = [];               // 存储文章数组
+    let editId = null;              // 编辑时的文章id
+    
+    // GitHub 配置参数
+    let githubConfig = {
+        token: '',
+        owner: '',
+        repo: '',
+        filePath: 'posts.json'
+    };
+    
+    // ---------- 登录状态持久化管理 ----------
+    const SESSION_DURATION_REMEMBER = 30 * 24 * 60 * 60 * 1000;  // 记住我: 30天
+    const SESSION_DURATION_DEFAULT = 24 * 60 * 60 * 1000;        // 普通登录: 24小时
+    
+    // 保存登录状态到 localStorage
+    function persistLoginState(rememberMe = false) {
+        const loginData = {
+            isLoggedIn: true,
+            username: 'admin',
+            loginTime: Date.now(),
+            expiryDuration: rememberMe ? SESSION_DURATION_REMEMBER : SESSION_DURATION_DEFAULT
         };
+        localStorage.setItem('blog_login_state', JSON.stringify(loginData));
+        currentUser = 'admin';
+    }
+    
+    // 检查并恢复登录状态
+    function checkAndRestoreLoginState() {
+        const savedState = localStorage.getItem('blog_login_state');
+        if (!savedState) return false;
         
-        // 配置版本号（修改默认配置时+1）
-        const CONFIG_VERSION = '2';
-        
-        let config = {};
-        let articles = [];
-        let currentArticle = null;
-        let githubToken = '';
-
-        // 初始化（强制更新版本）
-        function initConfig() {
-            const saved = localStorage.getItem('blog_config');
-            const savedVersion = localStorage.getItem('blog_config_version');
-            
-            // 版本不匹配或没有保存过，使用默认配置
-            if (!saved || savedVersion !== CONFIG_VERSION) {
-                console.log('使用默认配置: wyf2012/blog');
-                config = {...DEFAULT_CONFIG};
-                localStorage.setItem('blog_config', JSON.stringify(config));
-                localStorage.setItem('blog_config_version', CONFIG_VERSION);
-            } else {
-                config = JSON.parse(saved);
-                console.log('使用已保存配置:', config);
-            }
-            
-            // 显示当前配置
-            updateConfigDisplay();
-            
-            // 恢复登录状态
-            githubToken = localStorage.getItem('blog_token') || '';
-            if (githubToken) checkAuth();
-        }
-
-        // 更新配置显示
-        function updateConfigDisplay() {
-            const repoText = `${config.owner}/${config.repo}`;
-            
-            // 顶部横幅
-            if (config.owner && config.repo) {
-                document.getElementById('currentConfigBanner').classList.remove('hidden');
-                document.getElementById('currentRepoDisplay').textContent = repoText;
-                document.getElementById('aboutRepoName').textContent = repoText;
-            } else {
-                document.getElementById('currentConfigBanner').classList.add('hidden');
-                document.getElementById('configAlert').classList.remove('hidden');
-            }
-        }
-
-        // 使用默认配置
-        function useDefaultConfig() {
-            config = {...DEFAULT_CONFIG};
-            localStorage.setItem('blog_config', JSON.stringify(config));
-            localStorage.setItem('blog_config_version', CONFIG_VERSION);
-            
-            updateConfigDisplay();
-            showToast('已使用默认配置: wyf2012/blog');
-            
-            // 尝试加载文章
-            if (githubToken) {
-                loadArticles();
-            } else {
-                toggleLoginModal();
-            }
-        }
-
-        // GitHub API 调用
-        async function githubAPI(endpoint, options = {}) {
-            const url = `https://api.github.com/repos/${config.owner}/${config.repo}${endpoint}`;
-            
-            const headers = {
-                'Accept': 'application/vnd.github.v3+json',
-                'User-Agent': 'Blog-App'
-            };
-            
-            if (githubToken) {
-                headers['Authorization'] = `token ${githubToken}`;
-            }
-            
-            console.log('API 请求:', url);
-            
-            const response = await fetch(url, {
-                ...options,
-                headers: {...headers, ...options.headers}
-            });
-            
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                console.error('API 错误:', response.status, errorData);
-                
-                let message = `请求失败 (${response.status})`;
-                
-                if (response.status === 404) {
-                    message = `仓库不存在或 Issues 未开启。\n\n请检查：\n1. 仓库 ${config.owner}/${config.repo} 是否存在\n2. 是否为公开仓库\n3. Issues 功能是否已开启\n4. Token 是否有 repo 权限`;
-                } else if (response.status === 401) {
-                    message = 'Token 无效或已过期';
-                } else if (errorData.message) {
-                    message = errorData.message;
+        try {
+            const loginData = JSON.parse(savedState);
+            if (loginData.isLoggedIn && loginData.loginTime && loginData.expiryDuration) {
+                const now = Date.now();
+                const elapsed = now - loginData.loginTime;
+                if (elapsed < loginData.expiryDuration) {
+                    // 登录状态仍然有效
+                    currentUser = loginData.username || 'admin';
+                    updateUIBasedOnLoginState(true);
+                    return true;
+                } else {
+                    // 登录已过期，清除状态
+                    clearLoginState();
+                    return false;
                 }
-                
-                throw new Error(message);
             }
-            
-            return response.json();
+        } catch(e) {
+            console.error('恢复登录状态失败', e);
         }
-
-        // 加载文章
-        async function loadArticles() {
-            if (!config.owner || !config.repo) {
-                showToast('请先配置仓库', 'error');
-                return;
+        return false;
+    }
+    
+    // 清除登录状态
+    function clearLoginState() {
+        localStorage.removeItem('blog_login_state');
+        currentUser = null;
+        updateUIBasedOnLoginState(false);
+    }
+    
+    // 退出登录
+    function logout() {
+        clearLoginState();
+        showToast('已安全退出登录');
+        // 刷新文章列表 (去掉管理按钮)
+        renderBlogList();
+    }
+    
+    // 根据登录状态更新 UI
+    function updateUIBasedOnLoginState(isLoggedIn) {
+        const authSection = document.getElementById('authSection');
+        const adminTools = document.getElementById('adminTools');
+        if (isLoggedIn && currentUser) {
+            authSection.style.display = 'none';
+            adminTools.style.display = 'flex';
+        } else {
+            authSection.style.display = 'block';
+            adminTools.style.display = 'none';
+        }
+    }
+    
+    // 处理登录 (支持"记住我")
+    function handleLogin(rememberMe = false) {
+        const username = document.getElementById('loginUsername').value.trim();
+        const pwd = document.getElementById('loginPassword').value;
+        
+        // 演示账户验证
+        if (username === 'admin' && pwd === 'admin123') {
+            persistLoginState(rememberMe);
+            updateUIBasedOnLoginState(true);
+            closeModal('loginModal');
+            showToast(rememberMe ? '登录成功，状态将保持30天' : '登录成功，24小时后自动过期');
+            
+            // 清除输入框错误提示
+            document.getElementById('loginError').innerText = '';
+            document.getElementById('loginUsername').value = '';
+            document.getElementById('loginPassword').value = '';
+            
+            // 检测并提示 GitHub 配置
+            if (!githubConfig.token) {
+                setTimeout(() => {
+                    if (confirm('是否配置 GitHub 仓库以实现文章永久保存？\n点击确定进行配置，取消则使用本地演示数据')) {
+                        promptGitHubConfig();
+                    }
+                }, 500);
             }
-            
-            document.getElementById('loadingState').classList.remove('hidden');
-            
-            try {
-                const issues = await githubAPI(`/issues?labels=${config.issueLabel}&state=open&sort=created&direction=desc`);
-                
-                articles = issues.map(issue => {
-                    const body = issue.body || '';
-                    const coverMatch = body.match(/<!-- cover: (.*?) -->/);
-                    const tagsMatch = body.match(/<!-- tags: (.*?) -->/);
-                    const contentMatch = body.match(/<!-- content -->([\s\S]*)/);
-                    
-                    const cover = coverMatch ? coverMatch[1] : null;
-                    const tags = tagsMatch ? tagsMatch[1].split(',').map(t => t.trim()) : ['未分类'];
-                    const content = contentMatch ? contentMatch[1].trim() : body;
-                    
-                    return {
-                        id: issue.number,
-                        title: issue.title,
-                        content: content,
-                        tags: tags,
-                        cover: cover,
-                        date: new Date(issue.created_at).toISOString().split('T')[0],
-                        readTime: Math.ceil(content.replace(/<[^>]*>/g, '').length / 300) + ' 分钟',
-                        issueUrl: issue.html_url
-                    };
-                });
-                
-                renderArticles();
-            } catch (error) {
-                showToast(error.message, 'error', 5000);
-            } finally {
-                document.getElementById('loadingState').classList.add('hidden');
-            }
+        } else {
+            document.getElementById('loginError').innerText = '用户名或密码错误 (admin / admin123)';
         }
-
-        // 渲染文章
-        function renderArticles(filterTag = 'all', searchQuery = '') {
-            const grid = document.getElementById('articlesGrid');
-            const emptyState = document.getElementById('emptyState');
-            
-            let filtered = articles;
-            if (filterTag !== 'all') filtered = filtered.filter(a => a.tags.includes(filterTag));
-            if (searchQuery) filtered = filtered.filter(a => 
-                a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                a.content.toLowerCase().includes(searchQuery.toLowerCase())
-            );
-            
-            if (filtered.length === 0) {
-                grid.innerHTML = '';
-                emptyState.classList.remove('hidden');
-                return;
-            }
-            
-            emptyState.classList.add('hidden');
-            grid.innerHTML = filtered.map(article => `
-                <article class="article-card glass rounded-2xl overflow-hidden cursor-pointer" onclick="showArticle(${article.id})">
-                    ${article.cover ? `<div class="h-48 overflow-hidden"><img src="${article.cover}" class="w-full h-full object-cover hover:scale-105 transition duration-500" loading="lazy"></div>` : '<div class="h-2 bg-gradient-to-r from-blue-400 to-purple-400"></div>'}
-                    <div class="p-6">
-                        <div class="flex gap-2 mb-2 flex-wrap">
-                            ${article.tags.slice(0, 3).map(t => `<span class="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">${t}</span>`).join('')}
-                        </div>
-                        <h3 class="text-xl font-bold serif mb-2">${article.title}</h3>
-                        <p class="text-gray-500 text-sm line-clamp-2">${article.content.replace(/<[^>]*>/g, '').substring(0, 100)}...</p>
-                        <div class="flex justify-between text-xs text-gray-400 mt-4">
-                            <span>${article.date}</span>
-                            <span>${article.readTime}</span>
-                        </div>
-                    </div>
-                </article>
-            `).join('');
-            
-            updateTagFilters(filterTag);
+    }
+    
+    // ---------- GitHub 相关函数 ----------
+    function loadGitHubConfig() {
+        const savedToken = localStorage.getItem('github_token');
+        const savedOwner = localStorage.getItem('github_owner');
+        const savedRepo = localStorage.getItem('github_repo');
+        if(savedToken && savedOwner && savedRepo) {
+            githubConfig.token = savedToken;
+            githubConfig.owner = savedOwner;
+            githubConfig.repo = savedRepo;
         }
-
-        function updateTagFilters(activeTag) {
-            const allTags = [...new Set(articles.flatMap(a => a.tags))];
-            const container = document.getElementById('tagFilters');
-            container.innerHTML = `
-                <button onclick="filterByTag('all')" class="px-4 py-2 rounded-full text-sm ${activeTag === 'all' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600'}">全部</button>
-                ${allTags.map(tag => `<button onclick="filterByTag('${tag}')" class="px-4 py-2 rounded-full text-sm ${activeTag === tag ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600'}">${tag}</button>`).join('')}
-            `;
+    }
+    
+    function saveGitHubConfig(token, owner, repo) {
+        githubConfig.token = token;
+        githubConfig.owner = owner;
+        githubConfig.repo = repo;
+        localStorage.setItem('github_token', token);
+        localStorage.setItem('github_owner', owner);
+        localStorage.setItem('github_repo', repo);
+    }
+    
+    function promptGitHubConfig() {
+        const token = prompt('请输入 GitHub Personal Access Token (需具备 repo 权限):');
+        if(!token) return;
+        const owner = prompt('GitHub 用户名/组织名:');
+        if(!owner) return;
+        const repo = prompt('仓库名称 (例如 myblog):');
+        if(!repo) return;
+        saveGitHubConfig(token, owner, repo);
+        showToast('✅ GitHub 配置已保存，文章将同步到仓库');
+        refreshArticles();
+    }
+    
+    function showToast(msg, isError = false) {
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.innerText = msg;
+        toast.style.backgroundColor = isError ? '#b91c1c' : '#1c1917';
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+    
+    // 从 GitHub 获取文章
+    async function fetchPostsFromGitHub() {
+        if(!githubConfig.token || !githubConfig.owner || !githubConfig.repo) {
+            console.log('未配置 GitHub，使用本地数据');
+            return null;
         }
-
-        function filterByTag(tag) {
-            renderArticles(tag, document.getElementById('searchInput').value);
-        }
-
-        function filterArticles() {
-            const query = document.getElementById('searchInput').value;
-            const activeTag = document.querySelector('#tagFilters button.bg-gray-900')?.textContent === '全部' ? 'all' : document.querySelector('#tagFilters button.bg-gray-900')?.textContent || 'all';
-            renderArticles(activeTag, query);
-        }
-
-        // 显示文章
-        function showArticle(id) {
-            const article = articles.find(a => a.id === id);
-            if (!article) return;
-            
-            currentArticle = article;
-            document.getElementById('articleTitle').textContent = article.title;
-            document.getElementById('articleDate').textContent = article.date;
-            document.getElementById('articleReadTime').textContent = `阅读时间 ${article.readTime}`;
-            document.getElementById('articleNumber').textContent = `#${article.id}`;
-            document.getElementById('articleContent').innerHTML = article.content;
-            
-            const coverEl = document.getElementById('articleCover');
-            if (article.cover) {
-                document.getElementById('articleCoverImg').src = article.cover;
-                coverEl.classList.remove('hidden');
-            } else {
-                coverEl.classList.add('hidden');
-            }
-            
-            document.getElementById('articleTags').innerHTML = article.tags.map(t => `<span class="px-3 py-1 bg-gray-100 rounded-full text-sm">${t}</span>`).join('');
-            document.getElementById('githubIssueLink').href = article.issueUrl;
-            document.getElementById('githubIssueLink').classList.remove('hidden');
-            document.getElementById('deleteArticleBtn').classList.toggle('hidden', !githubToken);
-            
-            showPage('articlePage');
-        }
-
-        // 发布文章
-        async function publishArticle() {
-            if (!githubToken) {
-                showToast('请先登录', 'error');
-                toggleLoginModal();
-                return;
-            }
-            
-            const title = document.getElementById('editorTitle').value.trim();
-            const content = document.getElementById('editorBody').innerHTML;
-            const tagsStr = document.getElementById('editorTags').value.trim();
-            const coverUrl = document.getElementById('coverUrlInput').value.trim();
-            
-            if (!title || content === '<p>开始你的创作...</p>' || !content.trim()) {
-                showToast('请填写标题和内容', 'error');
-                return;
-            }
-            
-            const tags = tagsStr ? tagsStr.split(/[,，]/).map(t => t.trim()).filter(t => t) : ['未分类'];
-            const issueBody = `<!-- cover: ${coverUrl} -->\n<!-- tags: ${tags.join(', ')} -->\n<!-- content -->\n${content}`;
-            
-            document.getElementById('publishText').textContent = '发布中...';
-            document.getElementById('publishLoader').classList.remove('hidden');
-            
-            try {
-                await githubAPI('/issues', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        title: title,
-                        body: issueBody,
-                        labels: [config.issueLabel, ...tags]
-                    })
-                });
-                
-                showToast('发布成功！');
-                resetEditor();
-                await loadArticles();
-                showHome();
-            } catch (error) {
-                showToast(error.message, 'error', 5000);
-            } finally {
-                document.getElementById('publishText').textContent = '发布文章';
-                document.getElementById('publishLoader').classList.add('hidden');
-            }
-        }
-
-        // 删除文章
-        async function deleteCurrentArticle() {
-            if (!currentArticle || !confirm('确定删除这篇文章？')) return;
-            if (!githubToken) return;
-            
-            try {
-                await githubAPI(`/issues/${currentArticle.id}`, {
-                    method: 'PATCH',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({state: 'closed'})
-                });
-                showToast('已删除');
-                await loadArticles();
-                showHome();
-            } catch (error) {
-                showToast(error.message, 'error');
-            }
-        }
-
-        // 编辑器功能
-        function resetEditor() {
-            document.getElementById('editorTitle').value = '';
-            document.getElementById('editorTags').value = '';
-            document.getElementById('editorBody').innerHTML = '<p>开始你的创作...</p>';
-            document.getElementById('coverUrlInput').value = '';
-            document.getElementById('coverPreviewBox').classList.add('hidden');
-        }
-
-        function formatText(cmd) {
-            document.execCommand(cmd, false, null);
-            document.getElementById('editorBody').focus();
-        }
-
-        function previewCover() {
-            const url = document.getElementById('coverUrlInput').value.trim();
-            if (!url) return;
-            document.getElementById('coverPreviewImg').src = url;
-            document.getElementById('coverPreviewBox').classList.remove('hidden');
-        }
-
-        // 插入图片
-        function insertImage() {
-            document.getElementById('imageModal').classList.remove('hidden');
-        }
-
-        function closeImageModal() {
-            document.getElementById('imageModal').classList.add('hidden');
-        }
-
-        function confirmInsertImage() {
-            const url = document.getElementById('imageUrl').value.trim();
-            if (!url) return;
-            
-            const img = `<img src="${url}" style="max-width:100%;border-radius:8px;margin:1rem 0;" loading="lazy">`;
-            document.getElementById('editorBody').insertAdjacentHTML('beforeend', img);
-            closeImageModal();
-            document.getElementById('imageUrl').value = '';
-            showToast('图片已插入');
-        }
-
-        // B站视频
-        function insertBilibili() {
-            document.getElementById('bilibiliModal').classList.remove('hidden');
-        }
-
-        function closeBilibiliModal() {
-            document.getElementById('bilibiliModal').classList.add('hidden');
-        }
-
-        function confirmInsertBilibili() {
-            const url = document.getElementById('bilibiliUrl').value.trim();
-            const title = document.getElementById('bilibiliTitle').value.trim() || '哔哩哔哩视频';
-            
-            let bvid = '';
-            if (url.includes('bilibili.com')) {
-                const match = url.match(/BV\w+/);
-                if (match) bvid = match[0];
-            } else if (url.startsWith('BV')) {
-                bvid = url;
-            }
-            
-            if (!bvid) {
-                showToast('无效的BV号', 'error');
-                return;
-            }
-            
-            const card = `
-                <div class="my-4 p-4 bg-gradient-to-r from-[#00AEEC]/10 to-[#00AEEC]/5 rounded-xl border border-[#00AEEC]/20 cursor-pointer" onclick="window.open('https://www.bilibili.com/video/${bvid}', '_blank')">
-                    <div class="flex items-center gap-4">
-                        <div class="w-16 h-16 rounded-lg bg-[#00AEEC] flex items-center justify-center text-white flex-shrink-0">
-                            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                        </div>
-                        <div class="flex-1">
-                            <h4 class="font-bold text-gray-900">${title}</h4>
-                            <p class="text-sm text-[#00AEEC]">${bvid}</p>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            document.getElementById('editorBody').insertAdjacentHTML('beforeend', card);
-            closeBilibiliModal();
-            showToast('视频卡片已插入');
-        }
-
-        // 登录配置
-        function toggleLoginModal() {
-            document.getElementById('loginModal').classList.toggle('hidden');
-        }
-
-        async function verifyToken() {
-            const token = document.getElementById('githubToken').value.trim();
-            if (!token) return;
-            
-            document.getElementById('loginBtnText').textContent = '验证中...';
-            document.getElementById('loginLoader').classList.remove('hidden');
-            document.getElementById('loginError').classList.add('hidden');
-            
-            try {
-                const res = await fetch('https://api.github.com/user', {
-                    headers: {'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json'}
-                });
-                
-                if (!res.ok) throw new Error('Token 无效');
-                
-                const user = await res.json();
-                githubToken = token;
-                localStorage.setItem('blog_token', token);
-                
-                showToast(`欢迎 ${user.login}！`);
-                checkAuth();
-                toggleLoginModal();
-                await loadArticles();
-            } catch (error) {
-                document.getElementById('loginError').textContent = error.message;
-                document.getElementById('loginError').classList.remove('hidden');
-            } finally {
-                document.getElementById('loginBtnText').textContent = '验证并登录';
-                document.getElementById('loginLoader').classList.add('hidden');
-            }
-        }
-
-        function showConfigModal() {
-            document.getElementById('configModal').classList.remove('hidden');
-            document.getElementById('configOwner').value = config.owner || '';
-            document.getElementById('configRepo').value = config.repo || '';
-        }
-
-        function closeConfigModal() {
-            document.getElementById('configModal').classList.add('hidden');
-        }
-
-        function saveConfig() {
-            const owner = document.getElementById('configOwner').value.trim();
-            const repo = document.getElementById('configRepo').value.trim();
-            
-            if (!owner || !repo) {
-                showToast('请填写完整信息', 'error');
-                return;
-            }
-            
-            config.owner = owner;
-            config.repo = repo;
-            localStorage.setItem('blog_config', JSON.stringify(config));
-            localStorage.setItem('blog_config_version', CONFIG_VERSION);
-            
-            closeConfigModal();
-            updateConfigDisplay();
-            showToast('配置已保存');
-            loadArticles();
-        }
-
-        function logout() {
-            githubToken = '';
-            localStorage.removeItem('blog_token');
-            checkAuth();
-            showToast('已退出');
-        }
-
-        function checkAuth() {
-            const isLogin = !!githubToken;
-            document.getElementById('adminBtn').classList.toggle('hidden', isLogin);
-            document.getElementById('newPostBtn').classList.toggle('hidden', !isLogin);
-            document.getElementById('logoutBtn').classList.toggle('hidden', !isLogin);
-        }
-
-        // 页面切换
-        function showPage(pageId) {
-            ['homePage', 'articlePage', 'editorPage', 'aboutPage'].forEach(id => {
-                const el = document.getElementById(id);
-                el.classList.toggle('hidden-page', id !== pageId);
-                el.classList.toggle('active-page', id === pageId);
+        const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${githubConfig.filePath}`;
+        try {
+            const response = await fetch(url, {
+                headers: { 'Authorization': `token ${githubConfig.token}`, 'Accept': 'application/vnd.github.v3+json' }
             });
-            window.scrollTo(0, 0);
+            if(response.status === 404) return [];
+            if(!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+            const content = atob(data.content);
+            const parsed = JSON.parse(content);
+            return Array.isArray(parsed) ? parsed : [];
+        } catch(err) {
+            console.error('GitHub读取失败', err);
+            return null;
         }
-
-        function showHome() {
-            showPage('homePage');
-            if (articles.length === 0 && config.owner && config.repo) loadArticles();
+    }
+    
+    async function savePostsToGitHub(posts) {
+        if(!githubConfig.token || !githubConfig.owner || !githubConfig.repo) {
+            showToast('未配置 GitHub，文章仅保存在本地浏览器中', true);
+            return false;
         }
-
-        function showAbout() {
-            showPage('aboutPage');
-        }
-
-        function showEditor() {
-            if (!githubToken) {
-                showToast('请先登录', 'error');
-                toggleLoginModal();
-                return;
+        const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${githubConfig.filePath}`;
+        const content = btoa(unescape(encodeURIComponent(JSON.stringify(posts, null, 2))));
+        let sha = null;
+        try {
+            const getRes = await fetch(url, { headers: { 'Authorization': `token ${githubConfig.token}` } });
+            if(getRes.ok) {
+                const fileData = await getRes.json();
+                sha = fileData.sha;
             }
-            showPage('editorPage');
-            resetEditor();
-        }
-
-        // 工具函数
-        function showToast(message, type = 'success', duration = 3000) {
-            const toast = document.getElementById('toast');
-            document.getElementById('toastIcon').textContent = type === 'success' ? '✓' : '✕';
-            document.getElementById('toastIcon').className = type === 'success' ? 'text-green-500' : 'text-red-500';
-            document.getElementById('toastMessage').textContent = message;
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), duration);
-        }
-
-        // 初始化
-        window.onload = function() {
-            initConfig();
-            checkAuth();
-            if (config.owner && config.repo) loadArticles();
+        } catch(e) {}
+        const payload = {
+            message: `更新博客 - ${new Date().toLocaleString()}`,
+            content: content,
+            branch: 'main'
         };
-    </script>
+        if(sha) payload.sha = sha;
+        try {
+            const resp = await fetch(url, {
+                method: 'PUT',
+                headers: { 'Authorization': `token ${githubConfig.token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if(resp.ok) {
+                showToast('✓ 文章已同步到 GitHub');
+                return true;
+            } else {
+                const errData = await resp.json();
+                throw new Error(errData.message);
+            }
+        } catch(err) {
+            showToast(`保存失败: ${err.message}`, true);
+            return false;
+        }
+    }
+    
+    // 本地存储文章备份
+    function saveArticlesToLocalBackup(articlesData) {
+        localStorage.setItem('blog_articles_backup', JSON.stringify(articlesData));
+    }
+    
+    function loadArticlesFromLocalBackup() {
+        const backup = localStorage.getItem('blog_articles_backup');
+        if(backup) {
+            try {
+                return JSON.parse(backup);
+            } catch(e) { return null; }
+        }
+        return null;
+    }
+    
+    // 获取演示文章
+    function getDemoArticles() {
+        return [
+            { id: "1", title: "极简主义的诗意", excerpt: "回归内容本身，设计克制却充满力量", content: "# 极简主义的诗意\n\n在这个信息过载的时代，保持克制是一种美德。这篇博客系统旨在提供纯粹的写作与阅读体验。\n\n## 设计理念\n- 干净留白\n- 流畅动画\n- 专注阅读", date: "2025-02-18", slug: "minimal-poem" },
+            { id: "2", title: "使用 Markdown 书写", excerpt: "支持丰富排版，让想法自由流淌", content: "## 流畅书写\n你可以使用 **粗体**、*斜体* 以及列表：\n- 优雅\n- 专注\n- 高效\n\n### 代码示例\n```javascript\nconsole.log('Hello Blog');\n```", date: "2025-02-20", slug: "markdown-writing" }
+        ];
+    }
+    
+    // 刷新文章列表 (智能数据源)
+    async function refreshArticles() {
+        let data = await fetchPostsFromGitHub();
+        if (data === null) {
+            // GitHub 不可用，尝试本地备份
+            const backup = loadArticlesFromLocalBackup();
+            if (backup && backup.length > 0) {
+                articles = backup;
+                showToast('使用本地缓存的文章数据', false);
+            } else {
+                articles = getDemoArticles();
+                showToast('使用演示数据 (配置GitHub可永久保存)', false);
+            }
+        } else if (data.length === 0) {
+            // GitHub 上无数据，尝试备份或演示
+            const backup = loadArticlesFromLocalBackup();
+            articles = (backup && backup.length) ? backup : getDemoArticles();
+        } else {
+            articles = data;
+            saveArticlesToLocalBackup(articles);
+        }
+        renderBlogList();
+    }
+    
+    // 保存文章（同时更新本地和远程）
+    async function saveCurrentPost() {
+        if (!currentUser) {
+            showToast('请先登录', true);
+            return;
+        }
+        const title = document.getElementById('postTitle').value.trim();
+        const excerpt = document.getElementById('postExcerpt').value.trim();
+        const content = document.getElementById('postContent').value.trim();
+        if(!title || !content) {
+            document.getElementById('editorError').innerText = '标题和内容不能为空';
+            return;
+        }
+        document.getElementById('editorError').innerText = '';
+        const now = new Date().toISOString().slice(0,10);
+        
+        if(editId) {
+            const index = articles.findIndex(a => a.id == editId);
+            if(index !== -1) {
+                articles[index] = { ...articles[index], title, excerpt, content, date: now };
+            }
+        } else {
+            const newId = Date.now().toString();
+            articles.push({ id: newId, title, excerpt, content, date: now, slug: title.replace(/\s/g,'-') });
+        }
+        
+        // 更新本地备份
+        saveArticlesToLocalBackup(articles);
+        
+        // 尝试同步到 GitHub
+        const success = await savePostsToGitHub(articles);
+        if (!success && githubConfig.token) {
+            showToast('⚠️ 远程同步失败，但已保存到本地', true);
+        }
+        
+        await refreshArticles();
+        closeModal('editorModal');
+        showToast('文章已保存' + (success ? '并同步' : '（本地）'));
+        editId = null;
+    }
+    
+    async function deleteArticleById(id) {
+        articles = articles.filter(a => a.id != id);
+        saveArticlesToLocalBackup(articles);
+        await savePostsToGitHub(articles);
+        await refreshArticles();
+        showToast('文章已删除');
+    }
+    
+    // 渲染博客列表
+    function renderBlogList() {
+        const container = document.getElementById('blogListContainer');
+        if(!container) return;
+        if(articles.length === 0) {
+            container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:60px;">✨ 暂无文章，管理员请登录后发布第一篇 ~</div>`;
+            return;
+        }
+        container.innerHTML = articles.map(article => `
+            <div class="blog-card" data-id="${article.id}">
+                <div class="blog-title">${escapeHtml(article.title)}</div>
+                <div class="blog-meta"><span><i class="far fa-calendar-alt"></i> ${article.date || '未知日期'}</span></div>
+                <div class="blog-excerpt">${escapeHtml(article.excerpt || (article.content || '').substring(0,100))}...</div>
+                <button class="small-btn read-more-btn" data-id="${article.id}" style="background:transparent; border:1px solid #ddd; color:#2d2a27;">阅读全文 →</button>
+            </div>
+        `).join('');
+        
+        document.querySelectorAll('.read-more-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const id = btn.getAttribute('data-id');
+                showArticleDetail(id);
+            });
+        });
+        document.querySelectorAll('.blog-card').forEach(card => {
+            card.addEventListener('click', (e) => {
+                if(e.target.classList.contains('read-more-btn')) return;
+                const id = card.getAttribute('data-id');
+                showArticleDetail(id);
+            });
+        });
+    }
+    
+    function escapeHtml(str) { 
+        if(!str) return '';
+        return str.replace(/[&<>]/g, function(m){
+            if(m==='&') return '&amp;'; 
+            if(m==='<') return '&lt;'; 
+            if(m==='>') return '&gt;'; 
+            return m;
+        });
+    }
+    
+    async function showArticleDetail(id) {
+        const article = articles.find(a => a.id == id);
+        if(!article) return;
+        document.getElementById('detailTitle').innerText = article.title;
+        const renderedContent = marked.parse(article.content || '');
+        document.getElementById('detailContent').innerHTML = `<div style="margin-bottom:16px;"><span class="blog-meta">${article.date}</span></div><div>${renderedContent}</div>`;
+        const adminDiv = document.getElementById('detailAdminActions');
+        if(currentUser) {
+            adminDiv.innerHTML = `<button id="editFromDetail" class="small-btn">✏️ 编辑</button><button id="deleteFromDetail" class="small-btn danger-btn">🗑️ 删除</button>`;
+            document.getElementById('editFromDetail')?.addEventListener('click', () => {
+                closeModal('detailModal');
+                openEditor(article.id);
+            });
+            document.getElementById('deleteFromDetail')?.addEventListener('click', async () => {
+                if(confirm('确定永久删除这篇文章吗？')) {
+                    await deleteArticleById(article.id);
+                    closeModal('detailModal');
+                }
+            });
+        } else {
+            adminDiv.innerHTML = '';
+        }
+        document.getElementById('detailModal').style.display = 'flex';
+    }
+    
+    function openEditor(id = null) {
+        if(!currentUser) { showToast('请先登录', true); return; }
+        editId = id;
+        const titleInput = document.getElementById('postTitle');
+        const excerptInput = document.getElementById('postExcerpt');
+        const contentInput = document.getElementById('postContent');
+        if(id) {
+            const post = articles.find(a => a.id == id);
+            if(post) {
+                titleInput.value = post.title;
+                excerptInput.value = post.excerpt || '';
+                contentInput.value = post.content;
+                document.getElementById('editorTitle').innerText = '编辑文章';
+            }
+        } else {
+            titleInput.value = '';
+            excerptInput.value = '';
+            contentInput.value = '';
+            document.getElementById('editorTitle').innerText = '写新文章';
+        }
+        document.getElementById('editorModal').style.display = 'flex';
+    }
+    
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+        if(modalId === 'editorModal') editId = null;
+    }
+    
+    // ---------- 页面初始化 ----------
+    window.onload = async () => {
+        loadGitHubConfig();
+        // 先恢复登录状态
+        const isLoggedIn = checkAndRestoreLoginState();
+        
+        // 加载文章数据
+        await refreshArticles();
+        
+        // 绑定事件
+        document.getElementById('adminLoginBtn')?.addEventListener('click', () => {
+            document.getElementById('loginModal').style.display = 'flex';
+            document.getElementById('loginUsername').value = '';
+            document.getElementById('loginPassword').value = '';
+            document.getElementById('loginError').innerText = '';
+        });
+        document.getElementById('confirmLoginBtn')?.addEventListener('click', () => handleLogin(false));
+        document.getElementById('rememberLoginBtn')?.addEventListener('click', () => handleLogin(true));
+        document.getElementById('logoutBtn')?.addEventListener('click', logout);
+        document.getElementById('newPostBtn')?.addEventListener('click', () => openEditor(null));
+        document.getElementById('savePostBtn')?.addEventListener('click', saveCurrentPost);
+        document.getElementById('homeLink')?.addEventListener('click', (e) => { e.preventDefault(); renderBlogList(); });
+        document.getElementById('logoHome')?.addEventListener('click', () => renderBlogList());
+        
+        // 为管理栏添加配置按钮
+        const adminTools = document.getElementById('adminTools');
+        if(adminTools && !document.getElementById('configGearBtn')) {
+            const gearBtn = document.createElement('button');
+            gearBtn.id = 'configGearBtn';
+            gearBtn.innerHTML = '<i class="fas fa-cog"></i> 配置GitHub';
+            gearBtn.className = 'admin-btn';
+            gearBtn.style.marginLeft = '8px';
+            gearBtn.onclick = () => promptGitHubConfig();
+            adminTools.appendChild(gearBtn);
+        }
+        
+        // 点击模态窗外关闭
+        window.onclick = (e) => { if(e.target.classList.contains('modal')) e.target.style.display = 'none'; };
+        
+        if(isLoggedIn) {
+            showToast('欢迎回来，登录状态已恢复', false);
+        }
+    };
+</script>
 </body>
 </html>
