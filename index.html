@@ -5,7 +5,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>极简博客 | 现代创作空间</title>
+    <title>极简博客 | 支持图片和视频</title>
     
     <style>
         * {
@@ -93,16 +93,6 @@
             background: #fee2e2;
         }
 
-        .btn-success {
-            background: #10b981;
-            color: white;
-            border: none;
-        }
-
-        .btn-success:hover {
-            background: #059669;
-        }
-
         .blog-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -162,7 +152,7 @@
 
         .modal-content {
             background: white;
-            max-width: 600px;
+            max-width: 700px;
             width: 90%;
             max-height: 85vh;
             overflow-y: auto;
@@ -246,6 +236,7 @@
             display: inline-flex;
             align-items: center;
             gap: 5px;
+            cursor: pointer;
         }
 
         .github-status.configured {
@@ -253,6 +244,124 @@
             color: #065f46;
         }
 
+        /* 文章内容样式 */
+        .article-content {
+            line-height: 1.8;
+        }
+        
+        .article-content img {
+            max-width: 100%;
+            border-radius: 12px;
+            margin: 20px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .article-content .bilibili-video {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 比例 */
+            height: 0;
+            margin: 20px 0;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .article-content .bilibili-video iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .article-content h1 {
+            font-size: 2rem;
+            margin: 1.5rem 0 1rem;
+            border-left: 4px solid #3498db;
+            padding-left: 20px;
+        }
+        
+        .article-content h2 {
+            font-size: 1.5rem;
+            margin: 1.2rem 0 0.8rem;
+            color: #2c3e50;
+        }
+        
+        .article-content h3 {
+            font-size: 1.2rem;
+            margin: 1rem 0 0.6rem;
+            color: #4a5568;
+        }
+        
+        .article-content p {
+            margin: 1rem 0;
+        }
+        
+        .article-content code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        .article-content pre {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 12px;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        
+        .article-content blockquote {
+            border-left: 4px solid #3498db;
+            padding-left: 20px;
+            margin: 1rem 0;
+            color: #666;
+            font-style: italic;
+        }
+        
+        .article-content ul, .article-content ol {
+            margin: 1rem 0;
+            padding-left: 2rem;
+        }
+        
+        .article-content a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        
+        .article-content a:hover {
+            text-decoration: underline;
+        }
+
+        /* 工具栏按钮 */
+        .toolbar {
+            background: #f9fafb;
+            padding: 10px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .tool-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .tool-btn:hover {
+            background: #e5e7eb;
+        }
+        
         .config-info {
             background: #f9fafb;
             padding: 12px;
@@ -261,16 +370,7 @@
             font-size: 13px;
             word-break: break-all;
         }
-
-        .error-boundary {
-            color: #dc2626;
-            padding: 20px;
-            text-align: center;
-            background: #fef2f2;
-            border-radius: 12px;
-            margin: 20px 0;
-        }
-
+        
         @media (max-width: 768px) {
             .blog-grid {
                 grid-template-columns: 1fr;
@@ -325,8 +425,6 @@
             <label>仓库名称</label>
             <input type="text" id="githubRepoInput" placeholder="myblog">
             
-            <div id="configStatus" class="config-info" style="display: none;"></div>
-            
             <div style="display: flex; gap: 10px; margin-top: 20px;">
                 <button class="btn btn-primary" id="saveGithubConfigBtn" style="flex:1;">💾 保存配置</button>
                 <button class="btn btn-danger" id="clearGithubConfigBtn" style="flex:1;">🗑️ 清除配置</button>
@@ -360,19 +458,37 @@
 
 <!-- 文章编辑模态框 -->
 <div id="editorModal" class="modal">
-    <div class="modal-content">
+    <div class="modal-content" style="max-width: 800px;">
         <div class="modal-header">
             <span id="editorTitle">写新文章</span>
             <button class="close-btn" onclick="closeModal('editorModal')">&times;</button>
         </div>
         <div>
+            <div class="toolbar">
+                <button class="tool-btn" onclick="insertImage()">🖼️ 插入图片</button>
+                <button class="tool-btn" onclick="insertBilibiliVideo()">📺 插入B站视频</button>
+                <button class="tool-btn" onclick="insertLink()">🔗 插入链接</button>
+                <button class="tool-btn" onclick="insertCode()">💻 插入代码块</button>
+            </div>
+            
             <input type="text" id="postTitle" placeholder="文章标题">
             <input type="text" id="postSummary" placeholder="摘要（可选）">
-            <textarea id="postBody" rows="10" placeholder="文章内容..."></textarea>
+            <textarea id="postBody" rows="12" placeholder="支持 Markdown 语法...
+            
+📝 快捷插入：
+- 图片：![描述](图片URL)
+- B站视频：@bilibili:BV号
+- 链接：[文字](链接URL)"></textarea>
             <div id="editorError" style="color: red; font-size: 12px;"></div>
             <div style="display: flex; gap: 10px; margin-top: 15px;">
                 <button class="btn btn-primary" id="savePostBtn" style="flex:1;">保存</button>
                 <button class="btn" onclick="closeModal('editorModal')">取消</button>
+            </div>
+            <div class="config-info" style="margin-top: 15px; background: #fef9e3;">
+                💡 提示：<br>
+                - 图片：使用 ![](图片URL) 格式<br>
+                - B站视频：使用 @bilibili:BV号 格式（例如 @bilibili:BV1x8411y7Vv）<br>
+                - 支持标准 Markdown 语法
             </div>
         </div>
     </div>
@@ -380,48 +496,131 @@
 
 <!-- 文章详情模态框 -->
 <div id="detailModal" class="modal">
-    <div class="modal-content" style="max-width: 700px;">
+    <div class="modal-content" style="max-width: 900px;">
         <div class="modal-header">
             <span id="detailTitle"></span>
             <button class="close-btn" onclick="closeModal('detailModal')">&times;</button>
         </div>
-        <div id="detailBody" style="line-height: 1.7;"></div>
+        <div id="detailBody" class="article-content"></div>
         <div id="detailActions" style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;"></div>
     </div>
 </div>
 
 <script>
-    // 安全的文本转义函数
-    function escapeHtml(text) {
-        if (!text) return '';
-        return text
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;')
-            .replace(/`/g, '&#96;');
+    // 插入图片的辅助函数
+    function insertImage() {
+        const url = prompt('请输入图片URL地址:', 'https://example.com/image.jpg');
+        if (url) {
+            const textarea = document.getElementById('postBody');
+            const insertText = `![图片描述](${url})`;
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            textarea.value = textarea.value.substring(0, start) + insertText + textarea.value.substring(end);
+            textarea.focus();
+            textarea.selectionStart = start + insertText.length;
+            textarea.selectionEnd = start + insertText.length;
+        }
     }
     
-    // 简单的 Markdown 解析器
-    function simpleMarkdown(text) {
+    // 插入B站视频
+    function insertBilibiliVideo() {
+        const bv = prompt('请输入B站视频BV号:', 'BV1xx411x7xx');
+        if (bv) {
+            const textarea = document.getElementById('postBody');
+            const insertText = `@bilibili:${bv}`;
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            textarea.value = textarea.value.substring(0, start) + insertText + textarea.value.substring(end);
+            textarea.focus();
+            textarea.selectionStart = start + insertText.length;
+            textarea.selectionEnd = start + insertText.length;
+        }
+    }
+    
+    // 插入链接
+    function insertLink() {
+        const text = prompt('请输入链接文字:', '点击查看');
+        if (text) {
+            const url = prompt('请输入链接URL:', 'https://');
+            if (url) {
+                const textarea = document.getElementById('postBody');
+                const insertText = `[${text}](${url})`;
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+                textarea.value = textarea.value.substring(0, start) + insertText + textarea.value.substring(end);
+                textarea.focus();
+                textarea.selectionStart = start + insertText.length;
+                textarea.selectionEnd = start + insertText.length;
+            }
+        }
+    }
+    
+    // 插入代码块
+    function insertCode() {
+        const textarea = document.getElementById('postBody');
+        const insertText = '```\n代码内容\n```';
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        textarea.value = textarea.value.substring(0, start) + insertText + textarea.value.substring(end);
+        textarea.focus();
+        textarea.selectionStart = start + insertText.length;
+        textarea.selectionEnd = start + insertText.length;
+    }
+    
+    // 增强的 Markdown 解析器（支持图片和B站视频）
+    function enhancedMarkdown(text) {
         if (!text) return '';
-        let html = escapeHtml(text);
         
+        // 先处理 B站视频特殊标记
+        let html = text.replace(/@bilibili:([A-Za-z0-9]+)/g, function(match, bv) {
+            return `<div class="bilibili-video">
+                <iframe src="//player.bilibili.com/player.html?bvid=${bv}&page=1&high_quality=1&danmaku=0" 
+                        allowfullscreen="allowfullscreen">
+                </iframe>
+            </div>`;
+        });
+        
+        // 转义 HTML 特殊字符（但保留已处理的标签）
+        html = html.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+        
+        // 处理图片
+        html = html.replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" loading="lazy">');
+        
+        // 处理链接
+        html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+        
+        // 标题
         html = html.replace(/^### (.*)$/gm, '<h3>$1</h3>');
         html = html.replace(/^## (.*)$/gm, '<h2>$1</h2>');
         html = html.replace(/^# (.*)$/gm, '<h1>$1</h1>');
+        
+        // 粗体和斜体
+        html = html.replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>');
         html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+        
+        // 代码块
+        html = html.replace(/```(.*?)```/gs, '<pre><code>$1</code></pre>');
         html = html.replace(/`(.*?)`/g, '<code>$1</code>');
-        html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+        
+        // 列表
         html = html.replace(/^\s*-\s(.*)$/gm, '<li>$1</li>');
         html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
         
+        // 引用
+        html = html.replace(/^\s*>\s(.*)$/gm, '<blockquote>$1</blockquote>');
+        
+        // 段落
         let paragraphs = html.split('\n\n');
         html = paragraphs.map(p => {
             p = p.trim();
-            if (p && !p.startsWith('<h') && !p.startsWith('<ul') && !p.startsWith('<pre')) {
+            if (p && !p.startsWith('<h') && !p.startsWith('<ul') && !p.startsWith('<pre') && 
+                !p.startsWith('<blockquote') && !p.startsWith('<div')) {
                 return '<p>' + p + '</p>';
             }
             return p;
@@ -430,12 +629,23 @@
         return html;
     }
     
+    // 安全的文本转义函数
+    function escapeHtml(text) {
+        if (!text) return '';
+        return text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+    
     // 数据存储
     let posts = [];
     let isAdmin = false;
     let editPostId = null;
     
-    // GitHub 配置（持久化存储）
+    // GitHub 配置
     let githubConfig = {
         token: '',
         owner: '',
@@ -636,15 +846,61 @@
             {
                 id: '1',
                 title: '欢迎使用极简博客',
-                summary: '这是一个干净、优雅的个人博客系统',
-                content: '## 功能介绍\n\n- 支持 Markdown 格式\n- 文章管理功能\n- GitHub 同步备份\n\n开始创作吧！',
+                summary: '支持图片和B站视频的现代博客系统',
+                content: `## 功能介绍
+
+### 🖼️ 插入图片
+使用 Markdown 语法：\`![](图片URL)\`
+
+示例：
+![示例图片](https://picsum.photos/600/400?random=1)
+
+### 📺 插入B站视频
+使用特殊语法：\`@bilibili:BV号\`
+
+示例视频：
+@bilibili:BV1GJ411x7h7
+
+### ✨ 其他功能
+- 支持标准 Markdown 语法
+- GitHub 自动备份
+- 响应式设计
+
+开始创作吧！`,
                 date: new Date().toLocaleDateString('zh-CN')
             },
             {
                 id: '2',
-                title: 'Markdown 示例',
+                title: 'Markdown 完整示例',
                 summary: '学习如何使用 Markdown 书写文章',
-                content: '# 标题示例\n\n## 二级标题\n\n**粗体文字** *斜体文字*\n\n- 列表项 1\n- 列表项 2\n\n[链接示例](https://github.com)',
+                content: `# 一级标题
+
+## 二级标题
+
+### 三级标题
+
+**粗体文字** *斜体文字* ***粗斜体***
+
+- 列表项 1
+- 列表项 2
+- 列表项 3
+
+1. 有序列表 1
+2. 有序列表 2
+3. 有序列表 3
+
+[链接示例](https://github.com)
+
+> 这是一段引用文字
+
+\`行内代码\`
+
+\`\`\`javascript
+// 代码块
+console.log('Hello World');
+\`\`\`
+
+![风景图片](https://picsum.photos/600/400?random=2)`,
                 date: new Date().toLocaleDateString('zh-CN')
             }
         ];
@@ -676,7 +932,7 @@
                 
                 const excerpt = document.createElement('div');
                 excerpt.className = 'blog-excerpt';
-                const summaryText = post.summary || (post.content || '').substring(0, 100);
+                const summaryText = post.summary || (post.content || '').replace(/[#*`>]/g, '').substring(0, 100);
                 excerpt.textContent = summaryText + '...';
                 
                 const button = document.createElement('button');
@@ -705,7 +961,7 @@
         if (!post) return;
         
         document.getElementById('detailTitle').textContent = post.title || '无标题';
-        document.getElementById('detailBody').innerHTML = simpleMarkdown(post.content || '');
+        document.getElementById('detailBody').innerHTML = enhancedMarkdown(post.content || '');
         
         const actionsDiv = document.getElementById('detailActions');
         if (isAdmin) {
@@ -831,7 +1087,6 @@
         }
     }
     
-    // 打开 GitHub 配置模态框
     function openGithubConfig() {
         document.getElementById('githubTokenInput').value = githubConfig.token || '';
         document.getElementById('githubOwnerInput').value = githubConfig.owner || '';
@@ -839,7 +1094,6 @@
         document.getElementById('githubConfigModal').style.display = 'flex';
     }
     
-    // 保存 GitHub 配置（从表单）
     function saveGithubFromForm() {
         const token = document.getElementById('githubTokenInput').value.trim();
         const owner = document.getElementById('githubOwnerInput').value.trim();
@@ -852,7 +1106,7 @@
         
         saveGithubConfig(token, owner, repo);
         closeModal('githubConfigModal');
-        loadPosts(); // 重新加载文章
+        loadPosts();
     }
     
     // 初始化
@@ -863,122 +1117,50 @@
         
         // 绑定事件
         document.getElementById('showLoginBtn')?.addEventListener('click', () => {
-            document.getElementById('loginModal').style.displayEventListener('click', () => = 'flex';
-        });
-        document {
             document.getElementById('loginModal').style.display = 'flex';
         });
-        document.getElementById('.getElementById('loginBtn')?.addEventListener('clickloginBtn')?.addEventListener('click', () => login(false));
-', () => login(false));
-        document        document.getElementById('rememberLoginBtn')?.addEventListener('click',.getElementById('rememberLoginBtn')?.addEventListener('click', () => login(true () => login(true));
-        document.getElementById));
-        document.getElementById('logoutBtn')('logoutBtn')?.addEventListener('?.addEventListener('click', logout);
-        document.getElementById('newPostBtn')?.addEventListener('click', logout);
-        document.getElementById('newPostBtn')?.addEventListener('click', () =>click', () => {
-            editPost {
-            editPostId =Id = null;
-            document null;
-            document.getElementById('editorTitle.getElementById('editorTitle').textContent = '写新文章';
-            document.getElementById('post').textContent = '写新文章';
-            document.getElementById('postTitle').value =Title').value = '';
-            '';
-            document.getElementById('post document.getElementById('postSummary').value = '';
-            document.getElementById('postBody').Summary').value = '';
-            document.getElementById('postBody').value =value = '';
-            document.getElementById('editor '';
-            document.getElementById('editorModal').style.displayModal').style.display = 'flex';
+        document.getElementById('loginBtn')?.addEventListener('click', () => login(false));
+        document.getElementById('rememberLoginBtn')?.addEventListener('click', () => login(true));
+        document.getElementById('logoutBtn')?.addEventListener('click', logout);
+        document.getElementById('newPostBtn')?.addEventListener('click', () => {
+            editPostId = null;
+            document.getElementById('editorTitle').textContent = '写新文章';
+            document.getElementById('postTitle').value = '';
+            document.getElementById('postSummary').value = '';
+            document.getElementById('postBody').value = '';
+            document.getElementById('editorModal').style.display = 'flex';
         });
- = 'flex';
-        });
-        document.getElementById('savePostBtn')?.addEventListener('        document.getElementById('savePostBtn')?.addEventListener('click',click', saveCurrentPost);
- saveCurrentPost);
-        document        document.getElementById('.getElementById('homeLink')?.homeLink')?.addEventListener('click', (e) => {
+        document.getElementById('savePostBtn')?.addEventListener('click', saveCurrentPost);
+        document.getElementById('homeLink')?.addEventListener('click', (e) => {
             e.preventDefault();
-addEventListener('click', (e) => {
-            e.preventDefault();
-            render            renderPosts();
+            renderPosts();
         });
-Posts();
-        });
-        document        document.getElementById('logoHome.getElementById('logoHome')?.addEventListener('click', () => renderPosts());
-')?.addEventListener('click', () => renderPosts());
+        document.getElementById('logoHome')?.addEventListener('click', () => renderPosts());
         
-        // GitHub        
         // GitHub 配置按钮
- 配置按钮
-        const githubStatus        const githubStatusBadgeBadge = document.getElementById('githubStatusBadge');
-        if (githubStatus = document.getElementById('githubStatusBadge');
+        const githubStatusBadge = document.getElementById('githubStatusBadge');
         if (githubStatusBadge) {
-            githubBadge) {
-            githubStatusBadge.addEventListener('clickStatusBadge.addEventListener('click', openGithub', openGithubConfig);
-            githubStatusBadge.style.cursorConfig);
-            githubStatusBadge.style.cursor = ' = 'pointer';
-        }
-pointer';
+            githubStatusBadge.addEventListener('click', openGithubConfig);
         }
         
-        document.getElementById        
-        document.getElementById('save('saveGithubConfigBtn')?.addEventListener('click', saveGithubGithubConfigBtn')?.addEventListener('click', saveFromForm);
-        document.getElementByIdGithubFromForm);
-        document.getElementById('clear('clearGithubConfigBtnGithubConfigBtn')?.addEventListener('click', () => {
-            if')?.addEventListener('click', () => {
-            if (confirm('确定要 (confirm清除 GitHub 配置吗？')) {
-                clearGithubConfig();
-                closeModal('githubConfigModal');
-                load('确定要清除 GitHub 配置吗？')) {
+        document.getElementById('saveGithubConfigBtn')?.addEventListener('click', saveGithubFromForm);
+        document.getElementById('clearGithubConfigBtn')?.addEventListener('click', () => {
+            if (confirm('确定要清除 GitHub 配置吗？')) {
                 clearGithubConfig();
                 closeModal('githubConfigModal');
                 loadPosts();
             }
         });
-Posts();
-            }
-        });
-        document        document.getElementById('testGithubBtn').getElementById('testGithubBtn')?.addEventListener?.addEventListener('click', async () => {
-            const token('click', async () => {
-            const token = document.getElementById('githubToken = document.getElementById('githubTokenInput').Input').value.trimvalue.trim();
+        document.getElementById('testGithubBtn')?.addEventListener('click', async () => {
+            const token = document.getElementById('githubTokenInput').value.trim();
             const owner = document.getElementById('githubOwnerInput').value.trim();
-            const owner = document.getElementById('githubOwnerInput').value.trim();
-            const repo = document();
-            const repo = document.getElementById('.getElementById('githubRepoInput').value.trim();
+            const repo = document.getElementById('githubRepoInput').value.trim();
             
-            if (!token || !ownergithubRepoInput').value.trim();
-            
-            if (!token || !owner || !repo || !repo) {
-                showToast('请先填写) {
+            if (!token || !owner || !repo) {
                 showToast('请先填写配置信息', true);
                 return;
             }
-配置信息', true);
-                return;
-            }
             
-            // 临时测试
-            const testConfig = { token, owner, repo };
-            try {
-                const url = `https://api.github.com/repos/${owner}/${repo}`;
-                const response = await fetch(url, {
-                    headers: { 'Authorization': `token ${token}` }
-                });
-                if (response.ok) {
-                    showToast('✓ 连接成功！可以保存配置了', false);
-                } else if (response.status === 401) {
-                    showToast('✗ Token 无效', true);
-                } else if (response.status === 404) {
-                    showToast('✗ 仓库不存在', true);
-                } else {
-                    showToast(`✗ 连接失败: ${response.status}`, true);
-                }
-            } catch(e) {
-                showToast('✗ 网络错误', true);
-            }
-        });
-        
-        window.onclick = (e) => {
-            if (e.target.classList && e.target.classList.contains('modal')) {
-                e.target.style.display = '            
-            // 临时测试
-            const testConfig = { token, owner, repo };
             try {
                 const url = `https://api.github.com/repos/${owner}/${repo}`;
                 const response = await fetch(url, {
@@ -1005,10 +1187,15 @@ Posts();
         };
     });
     
+    // 全局函数
     window.viewPost = viewPost;
     window.editPost = editPost;
     window.deletePost = deletePost;
     window.closeModal = closeModal;
+    window.insertImage = insertImage;
+    window.insertBilibiliVideo = insertBilibiliVideo;
+    window.insertLink = insertLink;
+    window.insertCode = insertCode;
 </script>
 </body>
 </html>
