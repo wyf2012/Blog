@@ -27,7 +27,6 @@
             padding: 0 24px;
         }
 
-        /* 导航栏 */
         .navbar {
             padding: 20px 0;
             border-bottom: 1px solid #e5e5e5;
@@ -94,7 +93,6 @@
             background: #fee2e2;
         }
 
-        /* 文章网格 */
         .blog-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -122,6 +120,7 @@
             font-weight: 600;
             margin-bottom: 12px;
             color: #1a1a1a;
+            word-break: break-word;
         }
 
         .blog-meta {
@@ -134,9 +133,9 @@
             color: #555;
             margin-bottom: 20px;
             line-height: 1.5;
+            word-break: break-word;
         }
 
-        /* 模态框 */
         .modal {
             display: none;
             position: fixed;
@@ -228,6 +227,15 @@
             gap: 5px;
         }
 
+        .error-boundary {
+            color: #dc2626;
+            padding: 20px;
+            text-align: center;
+            background: #fef2f2;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+
         @media (max-width: 768px) {
             .blog-grid {
                 grid-template-columns: 1fr;
@@ -316,46 +324,69 @@
 </div>
 
 <script>
-    // 简单的 Markdown 解析器（避免外部库问题）
+    // 安全的文本转义函数 - 防止 XSS 和 HTML 解析错误
+    function escapeHtml(text) {
+        if (!text) return '';
+        return text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;')
+            .replace(/`/g, '&#96;');
+    }
+    
+    // 安全的文本截取
+    function safeSubstring(text, maxLength) {
+        if (!text) return '';
+        const plainText = text.replace(/[#*`>]/g, '').substring(0, maxLength);
+        return escapeHtml(plainText);
+    }
+    
+    // 简单的 Markdown 解析器（安全版本）
     function simpleMarkdown(text) {
         if (!text) return '';
         
-        // 转义 HTML
-        let html = text.replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
+        // 先转义 HTML 特殊字符
+        let html = escapeHtml(text);
+        
+        // 处理代码块（需要特殊处理，因为代码块内不应该转义）
+        html = html.replace(/&lt;pre&gt;&lt;code&gt;(.*?)&lt;\/code&gt;&lt;\/pre&gt;/gs, function(match, code) {
+            return '<pre><code>' + code + '</code></pre>';
         });
         
         // 标题
-        html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
-        html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
-        html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+        html = html.replace(/^### (.*)$/gm, '<h3>$1</h3>');
+        html = html.replace(/^## (.*)$/gm, '<h2>$1</h2>');
+        html = html.replace(/^# (.*)$/gm, '<h1>$1</h1>');
         
         // 粗体和斜体
         html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
         
-        // 代码块
-        html = html.replace(/```(.*?)```/gs, '<pre><code>$1</code></pre>');
+        // 行内代码
         html = html.replace(/`(.*?)`/g, '<code>$1</code>');
         
         // 链接
-        html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>');
+        html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
         
-        // 列表
+        // 无序列表
         html = html.replace(/^\s*-\s(.*)$/gm, '<li>$1</li>');
         html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
         
         // 段落
-        html = html.replace(/\n\n/g, '</p><p>');
-        html = '<p>' + html + '</p>';
-        html = html.replace(/<p><\/p>/g, '');
+        let paragraphs = html.split('\n\n');
+        html = paragraphs.map(p => {
+            p = p.trim();
+            if (p && !p.startsWith('<h') && !p.startsWith('<ul') && !p.startsWith('<pre')) {
+                return '<p>' + p + '</p>';
+            }
+            return p;
+        }).join('');
         
         return html;
     }
-
+    
     // 数据存储
     let posts = [];
     let isAdmin = false;
@@ -380,7 +411,7 @@
                 updateUIForAdmin(true);
             }
         } catch(e) {
-            console.log('加载配置失败');
+            console.error('加载配置失败:', e);
         }
     }
     
@@ -388,11 +419,11 @@
         const loginSection = document.getElementById('loginSection');
         const adminSection = document.getElementById('adminSection');
         if (loggedIn) {
-            loginSection.style.display = 'none';
-            adminSection.style.display = 'flex';
+            if (loginSection) loginSection.style.display = 'none';
+            if (adminSection) adminSection.style.display = 'flex';
         } else {
-            loginSection.style.display = 'block';
-            adminSection.style.display = 'none';
+            if (loginSection) loginSection.style.display = 'block';
+            if (adminSection) adminSection.style.display = 'none';
         }
     }
     
@@ -412,81 +443,105 @@
     
     // 保存文章到本地和 GitHub
     async function savePosts() {
-        // 保存到本地
-        localStorage.setItem('blog_posts', JSON.stringify(posts));
-        
-        // 如果配置了 GitHub，同步到远程
-        if (githubToken && githubOwner && githubRepo) {
-            try {
-                const content = btoa(encodeURIComponent(JSON.stringify(posts, null, 2)));
-                const url = `https://api.github.com/repos/${githubOwner}/${githubRepo}/contents/posts.json`;
-                
-                let sha = '';
-                const getRes = await fetch(url, {
-                    headers: { 'Authorization': `token ${githubToken}` }
-                });
-                if (getRes.ok) {
-                    const data = await getRes.json();
-                    sha = data.sha;
+        try {
+            // 保存到本地
+            const postsData = JSON.stringify(posts);
+            localStorage.setItem('blog_posts', postsData);
+            
+            // 如果配置了 GitHub，同步到远程
+            if (githubToken && githubOwner && githubRepo) {
+                try {
+                    const content = btoa(encodeURIComponent(postsData));
+                    const url = `https://api.github.com/repos/${githubOwner}/${githubRepo}/contents/posts.json`;
+                    
+                    let sha = '';
+                    const getRes = await fetch(url, {
+                        headers: { 'Authorization': `token ${githubToken}` }
+                    });
+                    if (getRes.ok) {
+                        const data = await getRes.json();
+                        sha = data.sha;
+                    }
+                    
+                    const response = await fetch(url, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `token ${githubToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            message: `更新博客 - ${new Date().toLocaleString('zh-CN')}`,
+                            content: content,
+                            sha: sha,
+                            branch: 'main'
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        console.log('已同步到 GitHub');
+                    }
+                } catch(e) {
+                    console.log('GitHub 同步失败:', e);
                 }
-                
-                const response = await fetch(url, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `token ${githubToken}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        message: `更新博客 - ${new Date().toLocaleString('zh-CN')}`,
-                        content: content,
-                        sha: sha,
-                        branch: 'main'
-                    })
-                });
-                
-                if (response.ok) {
-                    showToast('已同步到 GitHub');
-                }
-            } catch(e) {
-                console.log('GitHub 同步失败:', e);
             }
+            return true;
+        } catch(e) {
+            console.error('保存文章失败:', e);
+            showToast('保存失败: ' + e.message, true);
+            return false;
         }
     }
     
     // 加载文章
     async function loadPosts() {
-        // 尝试从 GitHub 加载
-        if (githubToken && githubOwner && githubRepo) {
-            try {
-                const url = `https://api.github.com/repos/${githubOwner}/${githubRepo}/contents/posts.json`;
-                const response = await fetch(url, {
-                    headers: { 'Authorization': `token ${githubToken}` }
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    const content = decodeURIComponent(escape(atob(data.content)));
-                    posts = JSON.parse(content);
-                    localStorage.setItem('blog_posts', JSON.stringify(posts));
-                    renderPosts();
-                    return;
+        try {
+            // 尝试从 GitHub 加载
+            if (githubToken && githubOwner && githubRepo) {
+                try {
+                    const url = `https://api.github.com/repos/${githubOwner}/${githubRepo}/contents/posts.json`;
+                    const response = await fetch(url, {
+                        headers: { 'Authorization': `token ${githubToken}` }
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        const content = decodeURIComponent(escape(atob(data.content)));
+                        const parsedPosts = JSON.parse(content);
+                        if (Array.isArray(parsedPosts)) {
+                            posts = parsedPosts;
+                            localStorage.setItem('blog_posts', JSON.stringify(posts));
+                            renderPosts();
+                            return;
+                        }
+                    }
+                } catch(e) {
+                    console.log('从 GitHub 加载失败:', e);
                 }
-            } catch(e) {
-                console.log('从 GitHub 加载失败');
             }
-        }
-        
-        // 从本地加载
-        const saved = localStorage.getItem('blog_posts');
-        if (saved) {
-            try {
-                posts = JSON.parse(saved);
-            } catch(e) {
+            
+            // 从本地加载
+            const saved = localStorage.getItem('blog_posts');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    if (Array.isArray(parsed)) {
+                        posts = parsed;
+                    } else {
+                        posts = getDefaultPosts();
+                    }
+                } catch(e) {
+                    console.error('解析本地数据失败:', e);
+                    posts = getDefaultPosts();
+                }
+            } else {
                 posts = getDefaultPosts();
             }
-        } else {
+            renderPosts();
+        } catch(e) {
+            console.error('加载文章失败:', e);
+            showToast('加载文章失败', true);
             posts = getDefaultPosts();
+            renderPosts();
         }
-        renderPosts();
     }
     
     function getDefaultPosts() {
@@ -496,16 +551,14 @@
                 title: '欢迎使用极简博客',
                 summary: '这是一个干净、优雅的个人博客系统',
                 content: '## 功能介绍\n\n- 支持 Markdown 格式\n- 文章管理功能\n- GitHub 同步备份\n\n开始创作吧！',
-                date: new Date().toLocaleDateString('zh-CN'),
-                slug: 'welcome'
+                date: new Date().toLocaleDateString('zh-CN')
             },
             {
                 id: '2',
                 title: 'Markdown 示例',
                 summary: '学习如何使用 Markdown 书写文章',
                 content: '# 标题示例\n\n## 二级标题\n\n**粗体文字** *斜体文字*\n\n- 列表项 1\n- 列表项 2\n\n[链接示例](https://github.com)',
-                date: new Date().toLocaleDateString('zh-CN'),
-                slug: 'markdown-example'
+                date: new Date().toLocaleDateString('zh-CN')
             }
         ];
     }
@@ -514,46 +567,78 @@
         const container = document.getElementById('postsContainer');
         if (!container) return;
         
-        if (posts.length === 0) {
-            container.innerHTML = '<div style="text-align: center; padding: 60px; color: #999;">暂无文章，管理员请登录后发布</div>';
-            return;
+        try {
+            if (!posts || posts.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 60px; color: #999;">✨ 暂无文章，管理员请登录后发布第一篇</div>';
+                return;
+            }
+            
+            // 使用 createElement 方式构建 DOM，避免 innerHTML 注入问题
+            container.innerHTML = '';
+            
+            posts.forEach(post => {
+                const card = document.createElement('div');
+                card.className = 'blog-card';
+                card.setAttribute('data-id', post.id);
+                card.onclick = () => viewPost(post.id);
+                
+                const title = document.createElement('div');
+                title.className = 'blog-title';
+                title.textContent = post.title || '无标题';
+                
+                const meta = document.createElement('div');
+                meta.className = 'blog-meta';
+                meta.textContent = `📅 ${post.date || '未知日期'}`;
+                
+                const excerpt = document.createElement('div');
+                excerpt.className = 'blog-excerpt';
+                const summaryText = post.summary || (post.content || '').substring(0, 100);
+                excerpt.textContent = summaryText + '...';
+                
+                const button = document.createElement('button');
+                button.className = 'btn';
+                button.style.cssText = 'font-size: 13px; padding: 6px 16px;';
+                button.textContent = '阅读全文 →';
+                button.onclick = (e) => {
+                    e.stopPropagation();
+                    viewPost(post.id);
+                };
+                
+                card.appendChild(title);
+                card.appendChild(meta);
+                card.appendChild(excerpt);
+                card.appendChild(button);
+                container.appendChild(card);
+            });
+        } catch(e) {
+            console.error('渲染文章失败:', e);
+            container.innerHTML = '<div class="error-boundary">渲染失败，请刷新页面重试</div>';
         }
-        
-        container.innerHTML = posts.map(post => `
-            <div class="blog-card" onclick="viewPost('${post.id}')">
-                <div class="blog-title">${escapeHtml(post.title)}</div>
-                <div class="blog-meta">📅 ${escapeHtml(post.date)}</div>
-                <div class="blog-excerpt">${escapeHtml(post.summary || post.content.substring(0, 100))}...</div>
-                <button class="btn" style="font-size: 13px; padding: 6px 16px;">阅读全文 →</button>
-            </div>
-        `).join('');
-    }
-    
-    function escapeHtml(text) {
-        if (!text) return '';
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
     }
     
     function viewPost(id) {
-        const post = posts.find(p => p.id === id);
-        if (!post) return;
-        
-        document.getElementById('detailTitle').textContent = post.title;
-        document.getElementById('detailBody').innerHTML = simpleMarkdown(post.content);
-        
-        const actionsDiv = document.getElementById('detailActions');
-        if (isAdmin) {
-            actionsDiv.innerHTML = `
-                <button class="btn" onclick="editPost('${post.id}')">✏️ 编辑</button>
-                <button class="btn btn-danger" onclick="deletePost('${post.id}')">🗑️ 删除</button>
-            `;
-        } else {
-            actionsDiv.innerHTML = '';
+        try {
+            const post = posts.find(p => p.id === id);
+            if (!post) return;
+            
+            document.getElementById('detailTitle').textContent = post.title || '无标题';
+            document.getElementById('detailBody').innerHTML = simpleMarkdown(post.content || '');
+            
+            const actionsDiv = document.getElementById('detailActions');
+            if (isAdmin) {
+                actionsDiv.innerHTML = `
+                    <button class="btn" onclick="editPost('${post.id}')">✏️ 编辑</button>
+                    <button class="btn btn-danger" onclick="deletePost('${post.id}')">🗑️ 删除</button>
+                `;
+            } else {
+                actionsDiv.innerHTML = '';
+            }
+            
+            document.getElementById('detailModal').style.display = 'flex';
+        } catch(e) {
+            console.error('查看文章失败:', e);
+            showToast('查看文章失败', true);
         }
-        
-        document.getElementById('detailModal').style.display = 'flex';
     }
     
     function editPost(id) {
@@ -562,68 +647,83 @@
         if (post) {
             editPostId = id;
             document.getElementById('editorTitle').textContent = '编辑文章';
-            document.getElementById('postTitle').value = post.title;
+            document.getElementById('postTitle').value = post.title || '';
             document.getElementById('postSummary').value = post.summary || '';
-            document.getElementById('postBody').value = post.content;
+            document.getElementById('postBody').value = post.content || '';
             document.getElementById('editorModal').style.display = 'flex';
         }
     }
     
     async function deletePost(id) {
-        if (confirm('确定要删除这篇文章吗？')) {
-            posts = posts.filter(p => p.id !== id);
-            await savePosts();
-            renderPosts();
-            closeModal('detailModal');
-            showToast('文章已删除');
+        if (confirm('确定要删除这篇文章吗？此操作不可撤销。')) {
+            try {
+                const index = posts.findIndex(p => p.id === id);
+                if (index !== -1) {
+                    posts.splice(index, 1);
+                    const success = await savePosts();
+                    if (success) {
+                        renderPosts();
+                        closeModal('detailModal');
+                        showToast('文章已删除');
+                    }
+                }
+            } catch(e) {
+                console.error('删除文章失败:', e);
+                showToast('删除失败: ' + e.message, true);
+            }
         }
     }
     
     async function saveCurrentPost() {
-        const title = document.getElementById('postTitle').value.trim();
-        const summary = document.getElementById('postSummary').value.trim();
-        const content = document.getElementById('postBody').value.trim();
-        
-        if (!title || !content) {
-            document.getElementById('editorError').textContent = '标题和内容不能为空';
-            return;
-        }
-        
-        document.getElementById('editorError').textContent = '';
-        
-        const now = new Date().toLocaleDateString('zh-CN');
-        
-        if (editPostId) {
-            const index = posts.findIndex(p => p.id === editPostId);
-            if (index !== -1) {
-                posts[index] = {
-                    ...posts[index],
+        try {
+            const title = document.getElementById('postTitle').value.trim();
+            const summary = document.getElementById('postSummary').value.trim();
+            const content = document.getElementById('postBody').value.trim();
+            
+            if (!title || !content) {
+                document.getElementById('editorError').textContent = '标题和内容不能为空';
+                return;
+            }
+            
+            document.getElementById('editorError').textContent = '';
+            
+            const now = new Date().toLocaleDateString('zh-CN');
+            
+            if (editPostId) {
+                const index = posts.findIndex(p => p.id === editPostId);
+                if (index !== -1) {
+                    posts[index] = {
+                        ...posts[index],
+                        title: title,
+                        summary: summary,
+                        content: content,
+                        date: now
+                    };
+                }
+                editPostId = null;
+            } else {
+                const newPost = {
+                    id: Date.now().toString(),
                     title: title,
                     summary: summary,
                     content: content,
                     date: now
                 };
+                posts.unshift(newPost);
             }
-            editPostId = null;
-        } else {
-            const newPost = {
-                id: Date.now().toString(),
-                title: title,
-                summary: summary,
-                content: content,
-                date: now,
-                slug: title.replace(/\s+/g, '-')
-            };
-            posts.unshift(newPost);
+            
+            const success = await savePosts();
+            if (success) {
+                renderPosts();
+                closeModal('editorModal');
+                showToast('文章已保存');
+            }
+        } catch(e) {
+            console.error('保存文章失败:', e);
+            showToast('保存失败: ' + e.message, true);
         }
-        
-        await savePosts();
-        renderPosts();
-        closeModal('editorModal');
-        showToast('文章已保存');
     }
     
-    // 登录处理
     function login(remember = false) {
         const username = document.getElementById('loginUser').value;
         const password = document.getElementById('loginPass').value;
@@ -643,7 +743,6 @@
             document.getElementById('loginPass').value = '';
             document.getElementById('loginErrorMsg').textContent = '';
             
-            // 提示配置 GitHub
             if (!githubToken) {
                 setTimeout(() => {
                     if (confirm('是否配置 GitHub 备份？\n配置后文章会自动同步到仓库')) {
@@ -652,7 +751,7 @@
                 }, 500);
             }
         } else {
-            document.getElementById('loginErrorMsg').textContent = '用户名或密码错误';
+            document.getElementById('loginErrorMsg').textContent = '用户名或密码错误 (admin / 123456)';
         }
     }
     
@@ -682,37 +781,58 @@
         localStorage.setItem('gh_repo', repo);
         
         showToast('GitHub 配置已保存');
-        loadPosts(); // 重新加载，尝试从 GitHub 同步
+        loadPosts();
     }
     
-    // 事件绑定
+    // 初始化事件绑定
     document.addEventListener('DOMContentLoaded', () => {
         loadConfig();
         loadPosts();
         
-        document.getElementById('showLoginBtn')?.addEventListener('click', () => {
-            document.getElementById('loginModal').style.display = 'flex';
-        });
+        const showLoginBtn = document.getElementById('showLoginBtn');
+        const loginBtn = document.getElementById('loginBtn');
+        const rememberLoginBtn = document.getElementById('rememberLoginBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const newPostBtn = document.getElementById('newPostBtn');
+        const savePostBtn = document.getElementById('savePostBtn');
+        const homeLink = document.getElementById('homeLink');
+        const logoHome = document.getElementById('logoHome');
         
-        document.getElementById('loginBtn')?.addEventListener('click', () => login(false));
-        document.getElementById('rememberLoginBtn')?.addEventListener('click', () => login(true));
-        document.getElementById('logoutBtn')?.addEventListener('click', logout);
-        document.getElementById('newPostBtn')?.addEventListener('click', () => {
-            editPostId = null;
-            document.getElementById('editorTitle').textContent = '写新文章';
-            document.getElementById('postTitle').value = '';
-            document.getElementById('postSummary').value = '';
-            document.getElementById('postBody').value = '';
-            document.getElementById('editorModal').style.display = 'flex';
-        });
-        document.getElementById('savePostBtn')?.addEventListener('click', saveCurrentPost);
-        document.getElementById('homeLink')?.addEventListener('click', (e) => {
-            e.preventDefault();
-            renderPosts();
-        });
-        document.getElementById('logoHome')?.addEventListener('click', () => renderPosts());
+        if (showLoginBtn) {
+            showLoginBtn.addEventListener('click', () => {
+                document.getElementById('loginModal').style.display = 'flex';
+            });
+        }
         
-        // 添加 GitHub 配置按钮到管理栏
+        if (loginBtn) loginBtn.addEventListener('click', () => login(false));
+        if (rememberLoginBtn) rememberLoginBtn.addEventListener('click', () => login(true));
+        if (logoutBtn) logoutBtn.addEventListener('click', logout);
+        
+        if (newPostBtn) {
+            newPostBtn.addEventListener('click', () => {
+                editPostId = null;
+                document.getElementById('editorTitle').textContent = '写新文章';
+                document.getElementById('postTitle').value = '';
+                document.getElementById('postSummary').value = '';
+                document.getElementById('postBody').value = '';
+                document.getElementById('editorModal').style.display = 'flex';
+            });
+        }
+        
+        if (savePostBtn) savePostBtn.addEventListener('click', saveCurrentPost);
+        
+        if (homeLink) {
+            homeLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                renderPosts();
+            });
+        }
+        
+        if (logoHome) {
+            logoHome.addEventListener('click', () => renderPosts());
+        }
+        
+        // 添加 GitHub 配置按钮
         const adminSection = document.getElementById('adminSection');
         if (adminSection && !document.getElementById('ghConfigBtn')) {
             const ghBtn = document.createElement('button');
