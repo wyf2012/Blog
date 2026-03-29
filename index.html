@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人博客 | Personal Blog</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1a1a1a;
+            --accent: #ff6b6b;
+            --bilibili: #00AEEC;
+            --bg: #fafafa;
+            --text: #2d2d2d;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+        }
+        
+        .serif {
+            font-family: 'Noto Serif SC', serif;
+        }
+        
+        .bg-mesh {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: 
+                radial-gradient(at 40% 20%, rgba(255,107,107,0.1) 0px, transparent 50%),
+                radial-gradient(at 80% 0%, rgba(0,174,236,0.1) 0px, transparent 50%);
+            animation: meshMove 20s ease infinite;
+        }
+        
+        @keyframes meshMove {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.1); }
+        }
+        
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .article-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .article-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .modal-enter {
+            animation: modalIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        .editor-content {
+            min-height: 400px;
+            line-height: 1.8;
+        }
+        
+        .page-transition {
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        
+        .hidden-page {
+            opacity: 0;
+            pointer-events: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+        }
+        
+        .active-page {
+            opacity: 1;
+            pointer-events: all;
+            position: relative;
+        }
+        
+        .editor-content img, .article-body img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin: 1rem 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        #toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 9999;
+        }
+        
+        #toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #24292f;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .config-alert {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-left: 4px solid #f59e0b;
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="bg-mesh"></div>
+
+    <!-- 导航栏 -->
+    <nav class="fixed top-0 w-full z-50 glass border-b border-gray-200/50">
+        <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="showHome()">
+                <div class="w-10 h-10 bg-gradient-to-br from-gray-800 to-gray-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">B</div>
+                <span class="text-xl font-bold tracking-tight serif">我的博客</span>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <button onclick="showHome()" class="px-4 py-2 rounded-full hover:bg-gray-100 transition text-sm font-medium">首页</button>
+                <button onclick="showAbout()" class="px-4 py-2 rounded-full hover:bg-gray-100 transition text-sm font-medium">关于</button>
+                <button id="adminBtn" onclick="toggleLoginModal()" class="px-5 py-2 bg-gray-900 text-white rounded-full hover:bg-gray-800 transition text-sm font-medium shadow-lg">管理员登录</button>
+                <button id="newPostBtn" onclick="showEditor()" class="hidden px-5 py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full hover:shadow-lg transition text-sm font-medium shadow-lg">+ 写文章</button>
+                <button id="logoutBtn" onclick="logout()" class="hidden px-4 py-2 text-gray-500 hover:text-gray-700 transition text-sm">退出</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="pt-24 pb-12 px-6 max-w-6xl mx-auto min-h-screen">
+        
+        <!-- 配置提示 -->
+        <div id="configAlert" class="config-alert rounded-xl p-4 mb-6 hidden">
+            <div class="flex items-start gap-3">
+                <svg class="w-6 h-6 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <div>
+                    <h3 class="font-bold text-yellow-800 mb-1">需要配置 GitHub 仓库</h3>
+                    <p class="text-sm text-yellow-700 mb-2">你的仓库：wyf2012/blog</p>
+                    <button onclick="showConfigModal()" class="text-sm bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition">立即配置</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 首页 -->
+        <div id="homePage" class="page-transition active-page">
+            <div class="mb-12 text-center py-12">
+                <h1 class="text-5xl md:text-6xl font-bold serif mb-4 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 via-gray-700 to-gray-900">思考与记录</h1>
+                <p class="text-gray-500 text-lg max-w-2xl mx-auto leading-relaxed">基于 GitHub Issues 的个人博客系统</p>
+            </div>
+
+            <div class="mb-8 flex flex-col md:flex-row gap-4 items-center justify-between">
+                <div class="relative w-full md:w-96">
+                    <input type="text" id="searchInput" placeholder="搜索文章..." class="w-full pl-12 pr-4 py-3 rounded-2xl border border-gray-200 focus:border-gray-400 focus:outline-none transition bg-white/80 backdrop-blur" oninput="filterArticles()">
+                    <svg class="absolute left-4 top-3.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
+                <div class="flex gap-2 overflow-x-auto pb-2" id="tagFilters">
+                    <button onclick="filterByTag('all')" class="tag px-4 py-2 rounded-full bg-gray-900 text-white text-sm font-medium">全部</button>
+                </div>
+            </div>
+
+            <div id="loadingState" class="hidden flex justify-center py-20">
+                <div class="loader"></div>
+            </div>
+
+            <div id="articlesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            
+            <div id="emptyState" class="hidden text-center py-20">
+                <div class="w-24 h-24 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+                    <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                    </svg>
+                </div>
+                <p class="text-gray-500">暂无文章，登录后开始创作吧</p>
+            </div>
+        </div>
+
+        <!-- 文章详情页 -->
+        <div id="articlePage" class="page-transition hidden-page">
+            <button onclick="showHome()" class="mb-6 flex items-center gap-2 text-gray-500 hover:text-gray-900 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                返回列表
+            </button>
+            
+            <article class="max-w-4xl mx-auto">
+                <div id="articleCover" class="hidden w-full h-64 md:h-96 rounded-2xl overflow-hidden mb-8 shadow-2xl">
+                    <img id="articleCoverImg" src="" alt="Cover" class="w-full h-full object-cover" onerror="this.style.display='none'">
+                </div>
+                
+                <div class="mb-6">
+                    <div id="articleTags" class="flex gap-2 mb-4"></div>
+                    <h1 id="articleTitle" class="text-4xl md:text-5xl font-bold serif mb-4 text-gray-900"></h1>
+                    <div class="flex items-center gap-4 text-sm text-gray-500">
+                        <span id="articleDate"></span>
+                        <span>·</span>
+                        <span id="articleReadTime"></span>
+                        <span id="articleNumber" class="text-gray-400"></span>
+                    </div>
+                </div>
+                
+                <div id="articleContent" class="article-body prose prose-lg max-w-none"></div>
+                
+                <div class="mt-12 pt-8 border-t border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-white font-bold">A</div>
+                            <div>
+                                <p class="font-medium text-gray-900">管理员</p>
+                                <p class="text-sm text-gray-500">博主</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <a id="githubIssueLink" href="#" target="_blank" class="hidden px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition text-sm flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                                在 GitHub 上查看
+                            </a>
+                            <button onclick="deleteCurrentArticle()" id="deleteArticleBtn" class="hidden px-4 py-2 text-red-500 hover:bg-red-50 rounded-lg transition text-sm">删除文章</button>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+
+        <!-- 编辑器页面 -->
+        <div id="editorPage" class="page-transition hidden-page">
+            <div class="max-w-4xl mx-auto">
+                <div class="flex items-center justify-between mb-8">
+                    <h2 class="text-3xl font-bold serif">撰写新文章</h2>
+                    <div class="flex gap-3">
+                        <button onclick="showHome()" class="px-6 py-2 rounded-full border border-gray-300 hover:bg-gray-50 transition">取消</button>
+                        <button onclick="publishArticle()" class="px-6 py-2 rounded-full bg-gray-900 text-white hover:bg-gray-800 transition shadow-lg flex items-center gap-2">
+                            <span id="publishText">发布文章</span>
+                            <div id="publishLoader" class="hidden w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div>
+                        <input type="text" id="editorTitle" placeholder="输入文章标题..." class="w-full text-3xl md:text-4xl font-bold serif placeholder-gray-300 border-none focus:outline-none bg-transparent">
+                    </div>
+
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-gray-500 text-sm">标签：</span>
+                        <input type="text" id="editorTags" placeholder="输入标签，用逗号分隔" class="flex-1 px-4 py-2 rounded-lg border border-gray-200 focus:border-gray-400 focus:outline-none text-sm">
+                    </div>
+
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-gray-500 text-sm">封面URL：</span>
+                        <input type="text" id="coverUrlInput" placeholder="https://example.com/cover.jpg（先上传到图床）" class="flex-1 px-4 py-2 rounded-lg border border-gray-200 focus:border-gray-400 focus:outline-none text-sm">
+                        <button onclick="previewCover()" class="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition text-sm">预览</button>
+                    </div>
+                    
+                    <div id="coverPreviewBox" class="hidden rounded-xl overflow-hidden h-48 bg-gray-100">
+                        <img id="coverPreviewImg" src="" class="w-full h-full object-cover">
+                    </div>
+
+                    <div class="glass rounded-2xl p-6">
+                        <div class="flex flex-wrap gap-2 mb-4 pb-4 border-b border-gray-200">
+                            <button onclick="formatText('bold')" class="p-2 hover:bg-gray-100 rounded transition font-bold">B</button>
+                            <button onclick="formatText('italic')" class="p-2 hover:bg-gray-100 rounded transition italic">I</button>
+                            <button onclick="formatText('insertUnorderedList')" class="p-2 hover:bg-gray-100 rounded transition">• 列表</button>
+                            <button onclick="insertImage()" class="p-2 hover:bg-gray-100 rounded transition text-blue-600">📷 图片</button>
+                            <button onclick="insertBilibili()" class="p-2 hover:bg-gray-100 rounded transition text-[#00AEEC]">📺 B站</button>
+                        </div>
+                        
+                        <div id="editorBody" contenteditable="true" class="editor-content prose max-w-none focus:outline-none min-h-[400px]">
+                            <p>开始你的创作...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 关于页面 -->
+        <div id="aboutPage" class="page-transition hidden-page">
+            <div class="max-w-3xl mx-auto text-center py-20">
+                <div class="w-32 h-32 mx-auto mb-8 rounded-full bg-gradient-to-br from-gray-800 to-gray-600 flex items-center justify-center text-white text-4xl font-bold shadow-2xl">B</div>
+                <h2 class="text-4xl font-bold serif mb-6">关于这个博客</h2>
+                <p class="text-gray-600 leading-relaxed mb-8 text-lg">
+                    基于 GitHub Issues 构建的无服务器博客系统。<br>
+                    仓库：wyf2012/blog
+                </p>
+                <div id="repoInfo" class="mt-8 p-4 bg-gray-50 rounded-xl text-left hidden max-w-md mx-auto">
+                    <h3 class="font-bold mb-2">当前配置</h3>
+                    <p class="text-sm text-gray-600 mb-1">仓库：<span id="repoName"></span></p>
+                    <p class="text-sm text-gray-600">状态：<span class="text-green-600">● 已连接</span></p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 登录模态框 -->
+    <div id="loginModal" class="fixed inset-0 z-[100] hidden">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="toggleLoginModal()"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md p-6">
+            <div class="glass rounded-3xl p-8 shadow-2xl modal-enter">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold serif">管理员登录</h3>
+                    <button onclick="toggleLoginModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">GitHub Token</label>
+                        <input type="password" id="githubToken" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-gray-400 focus:outline-none transition text-sm" placeholder="ghp_xxxxxxxxxxxx">
+                        <p class="text-xs text-gray-500 mt-1">需要 <code>repo</code> 权限 <a href="https://github.com/settings/tokens" target="_blank" class="text-blue-600 hover:underline">去创建</a></p>
+                    </div>
+                    <div id="loginError" class="hidden text-red-500 text-sm bg-red-50 p-3 rounded-lg whitespace-pre-line"></div>
+                    <button onclick="verifyToken()" class="w-full py-3 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition font-medium shadow-lg flex items-center justify-center gap-2">
+                        <span id="loginBtnText">验证并登录</span>
+                        <div id="loginLoader" class="hidden w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 配置模态框 -->
+    <div id="configModal" class="fixed inset-0 z-[100] hidden">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeConfigModal()"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-lg p-6">
+            <div class="glass rounded-3xl p-8 shadow-2xl modal-enter">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold serif">配置 GitHub 仓库</h3>
+                    <button onclick="closeConfigModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">仓库所有者 (Owner)</label>
+                        <input type="text" id="configOwner" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-gray-400 focus:outline-none transition" placeholder="wyf2012">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">仓库名称 (Repo)</label>
+                        <input type="text" id="configRepo" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-gray-400 focus:outline-none transition" placeholder="blog">
+                        <p class="text-xs text-gray-500 mt-1">你的仓库：wyf2012/blog</p>
+                    </div>
+                    <div class="p-3 bg-yellow-50 rounded-lg text-xs text-yellow-800">
+                        <p class="font-medium mb-1">⚠️ 重要提示</p>
+                        <p>1. 仓库必须是<strong>公开的</strong></p>
+                        <p>2. 必须开启 <strong>Issues</strong> 功能</p>
+                    </div>
+                    <button onclick="saveConfig()" class="w-full py-3 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition font-medium shadow-lg">保存配置</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图片插入模态框 -->
+    <div id="imageModal" class="fixed inset-0 z-[100] hidden">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeImageModal()"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md p-6">
+            <div class="glass rounded-3xl p-6 shadow-2xl modal-enter">
+                <h3 class="text-xl font-bold mb-4">插入图片</h3>
+                <input type="text" id="imageUrl" placeholder="https://example.com/image.jpg" class="w-full px-4 py-3 rounded-xl border border-gray-200 mb-3">
+                <p class="text-xs text-gray-500 mb-4">推荐图床：<a href="https://sm.ms" target="_blank" class="text-blue-600">SM.MS</a>、<a href="https://imgbb.com" target="_blank" class="text-blue-600">ImgBB</a></p>
+                <button onclick="confirmInsertImage()" class="w-full py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition">插入</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- B站视频模态框 -->
+    <div id="bilibiliModal" class="fixed inset-0 z-[100] hidden">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeBilibiliModal()"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md p-6">
+            <div class="glass rounded-3xl p-6 shadow-2xl modal-enter">
+                <h3 class="text-xl font-bold mb-4">插入B站视频</h3>
+                <input type="text" id="bilibiliUrl" placeholder="BV1xx411c7mD 或完整链接" class="w-full px-4 py-3 rounded-xl border border-gray-200 mb-3">
+                <input type="text" id="bilibiliTitle" placeholder="标题（可选）" class="w-full px-4 py-3 rounded-xl border border-gray-200 mb-4">
+                <button onclick="confirmInsertBilibili()" class="w-full py-3 bg-[#00AEEC] text-white rounded-xl hover:bg-[#0090C0] transition">插入</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="glass px-6 py-3 rounded-full shadow-lg flex items-center gap-3">
+        <span id="toastIcon">✓</span>
+        <span id="toastMessage" class="font-medium">操作成功</span>
+    </div>
+
+    <script>
+        // 配置
+        const DEFAULT_CONFIG = {
+            owner: 'wyf2012',  // 你的用户名
+            repo: 'blog',      // 你的仓库名
+            issueLabel: 'blog-post'
+        };
+
+        let config = {};
+        let articles = [];
+        let currentArticle = null;
+        let currentCover = null;
+        let githubToken = '';
+
+        // 初始化
+        function initConfig() {
+            const saved = localStorage.getItem('blog_config');
+            config = saved ? JSON.parse(saved) : DEFAULT_CONFIG;
+            
+            // 如果没有保存过配置，使用默认
+            if (!saved) {
+                config = {...DEFAULT_CONFIG};
+            }
+            
+            if (!config.owner || !config.repo) {
+                document.getElementById('configAlert').classList.remove('hidden');
+            } else {
+                document.getElementById('configAlert').classList.add('hidden');
+                document.getElementById('repoInfo').classList.remove('hidden');
+                document.getElementById('repoName').textContent = `${config.owner}/${config.repo}`;
+            }
+            
+            githubToken = localStorage.getItem('blog_token') || '';
+            if (githubToken) checkAuth();
+        }
+
+        // GitHub API 调用（修复版）
+        async function githubAPI(endpoint, options = {}) {
+            const url = `https://api.github.com/repos/${config.owner}/${config.repo}${endpoint}`;
+            
+            const headers = {
+                'Accept': 'application/vnd.github.v3+json',
+                'User-Agent': 'Blog-App'
+            };
+            
+            if (githubToken) {
+                headers['Authorization'] = `token ${githubToken}`;
+            }
+            
+            console.log('API 请求:', url);
+            
+            const response = await fetch(url, {
+                ...options,
+                headers: {...headers, ...options.headers}
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                console.error('API 错误:', response.status, errorData);
+                
+                let message = `请求失败 (${response.status})`;
+                
+                if (response.status === 404) {
+                    message = `仓库不存在或 Issues 未开启。\n\n请检查：\n1. 仓库 ${config.owner}/${config.repo} 是否存在\n2. 是否为公开仓库 (Settings > General > Visibility)\n3. Issues 功能是否已开启 (Settings > Features > Issues)\n4. Token 是否有 repo 权限`;
+                } else if (response.status === 401) {
+                    message = 'Token 无效或已过期';
+                } else if (response.status === 403) {
+                    message = 'API 速率限制或权限不足';
+                } else if (errorData.message) {
+                    message = errorData.message;
+                }
+                
+                throw new Error(message);
+            }
+            
+            return response.json();
+        }
+
+        // 加载文章
+        async function loadArticles() {
+            if (!config.owner || !config.repo) {
+                showToast('请先配置仓库', 'error');
+                return;
+            }
+            
+            document.getElementById('loadingState').classList.remove('hidden');
+            
+            try {
+                const issues = await githubAPI(`/issues?labels=${config.issueLabel}&state=open&sort=created&direction=desc`);
+                
+                articles = issues.map(issue => {
+                    const body = issue.body || '';
+                    const coverMatch = body.match(/<!-- cover: (.*?) -->/);
+                    const tagsMatch = body.match(/<!-- tags: (.*?) -->/);
+                    const contentMatch = body.match(/<!-- content -->([\s\S]*)/);
+                    
+                    const cover = coverMatch ? coverMatch[1] : null;
+                    const tags = tagsMatch ? tagsMatch[1].split(',').map(t => t.trim()) : ['未分类'];
+                    const content = contentMatch ? contentMatch[1].trim() : body;
+                    
+                    return {
+                        id: issue.number,
+                        title: issue.title,
+                        content: content,
+                        tags: tags,
+                        cover: cover,
+                        date: new Date(issue.created_at).toISOString().split('T')[0],
+                        readTime: Math.ceil(content.replace(/<[^>]*>/g, '').length / 300) + ' 分钟',
+                        issueUrl: issue.html_url
+                    };
+                });
+                
+                renderArticles();
+            } catch (error) {
+                showToast(error.message, 'error', 5000);
+            } finally {
+                document.getElementById('loadingState').classList.add('hidden');
+            }
+        }
+
+        // 渲染文章
+        function renderArticles(filterTag = 'all', searchQuery = '') {
+            const grid = document.getElementById('articlesGrid');
+            const emptyState = document.getElementById('emptyState');
+            
+            let filtered = articles;
+            if (filterTag !== 'all') filtered = filtered.filter(a => a.tags.includes(filterTag));
+            if (searchQuery) filtered = filtered.filter(a => 
+                a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                a.content.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+            
+            if (filtered.length === 0) {
+                grid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            grid.innerHTML = filtered.map(article => `
+                <article class="article-card glass rounded-2xl overflow-hidden cursor-pointer" onclick="showArticle(${article.id})">
+                    ${article.cover ? `<div class="h-48 overflow-hidden"><img src="${article.cover}" class="w-full h-full object-cover hover:scale-105 transition duration-500" loading="lazy"></div>` : '<div class="h-2 bg-gradient-to-r from-blue-400 to-purple-400"></div>'}
+                    <div class="p-6">
+                        <div class="flex gap-2 mb-2 flex-wrap">
+                            ${article.tags.slice(0, 3).map(t => `<span class="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">${t}</span>`).join('')}
+                        </div>
+                        <h3 class="text-xl font-bold serif mb-2">${article.title}</h3>
+                        <p class="text-gray-500 text-sm line-clamp-2">${article.content.replace(/<[^>]*>/g, '').substring(0, 100)}...</p>
+                        <div class="flex justify-between text-xs text-gray-400 mt-4">
+                            <span>${article.date}</span>
+                            <span>${article.readTime}</span>
+                        </div>
+                    </div>
+                </article>
+            `).join('');
+            
+            updateTagFilters(filterTag);
+        }
+
+        function updateTagFilters(activeTag) {
+            const allTags = [...new Set(articles.flatMap(a => a.tags))];
+            const container = document.getElementById('tagFilters');
+            container.innerHTML = `
+                <button onclick="filterByTag('all')" class="px-4 py-2 rounded-full text-sm ${activeTag === 'all' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600'}">全部</button>
+                ${allTags.map(tag => `<button onclick="filterByTag('${tag}')" class="px-4 py-2 rounded-full text-sm ${activeTag === tag ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600'}">${tag}</button>`).join('')}
+            `;
+        }
+
+        function filterByTag(tag) {
+            renderArticles(tag, document.getElementById('searchInput').value);
+        }
+
+        function filterArticles() {
+            const query = document.getElementById('searchInput').value;
+            const activeTag = document.querySelector('#tagFilters button.bg-gray-900')?.textContent === '全部' ? 'all' : document.querySelector('#tagFilters button.bg-gray-900')?.textContent || 'all';
+            renderArticles(activeTag, query);
+        }
+
+        // 显示文章
+        function showArticle(id) {
+            const article = articles.find(a => a.id === id);
+            if (!article) return;
+            
+            currentArticle = article;
+            document.getElementById('articleTitle').textContent = article.title;
+            document.getElementById('articleDate').textContent = article.date;
+            document.getElementById('articleReadTime').textContent = `阅读时间 ${article.readTime}`;
+            document.getElementById('articleNumber').textContent = `#${article.id}`;
+            document.getElementById('articleContent').innerHTML = article.content;
+            
+            const coverEl = document.getElementById('articleCover');
+            if (article.cover) {
+                document.getElementById('articleCoverImg').src = article.cover;
+                coverEl.classList.remove('hidden');
+            } else {
+                coverEl.classList.add('hidden');
+            }
+            
+            document.getElementById('articleTags').innerHTML = article.tags.map(t => `<span class="px-3 py-1 bg-gray-100 rounded-full text-sm">${t}</span>`).join('');
+            document.getElementById('githubIssueLink').href = article.issueUrl;
+            document.getElementById('githubIssueLink').classList.remove('hidden');
+            document.getElementById('deleteArticleBtn').classList.toggle('hidden', !githubToken);
+            
+            showPage('articlePage');
+        }
+
+        // 发布文章
+        async function publishArticle() {
+            if (!githubToken) {
+                showToast('请先登录', 'error');
+                toggleLoginModal();
+                return;
+            }
+            
+            const title = document.getElementById('editorTitle').value.trim();
+            const content = document.getElementById('editorBody').innerHTML;
+            const tagsStr = document.getElementById('editorTags').value.trim();
+            const coverUrl = document.getElementById('coverUrlInput').value.trim();
+            
+            if (!title || content === '<p>开始你的创作...</p>' || !content.trim()) {
+                showToast('请填写标题和内容', 'error');
+                return;
+            }
+            
+            const tags = tagsStr ? tagsStr.split(/[,，]/).map(t => t.trim()).filter(t => t) : ['未分类'];
+            const issueBody = `<!-- cover: ${coverUrl} -->\n<!-- tags: ${tags.join(', ')} -->\n<!-- content -->\n${content}`;
+            
+            document.getElementById('publishText').textContent = '发布中...';
+            document.getElementById('publishLoader').classList.remove('hidden');
+            
+            try {
+                await githubAPI('/issues', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        title: title,
+                        body: issueBody,
+                        labels: [config.issueLabel, ...tags]
+                    })
+                });
+                
+                showToast('发布成功！');
+                resetEditor();
+                await loadArticles();
+                showHome();
+            } catch (error) {
+                showToast(error.message, 'error', 5000);
+            } finally {
+                document.getElementById('publishText').textContent = '发布文章';
+                document.getElementById('publishLoader').classList.add('hidden');
+            }
+        }
+
+        // 删除文章
+        async function deleteCurrentArticle() {
+            if (!currentArticle || !confirm('确定删除这篇文章？')) return;
+            if (!githubToken) return;
+            
+            try {
+                await githubAPI(`/issues/${currentArticle.id}`, {
+                    method: 'PATCH',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({state: 'closed'})
+                });
+                showToast('已删除');
+                await loadArticles();
+                showHome();
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        // 编辑器功能
+        function resetEditor() {
+            document.getElementById('editorTitle').value = '';
+            document.getElementById('editorTags').value = '';
+            document.getElementById('editorBody').innerHTML = '<p>开始你的创作...</p>';
+            document.getElementById('coverUrlInput').value = '';
+            document.getElementById('coverPreviewBox').classList.add('hidden');
+            currentCover = null;
+        }
+
+        function formatText(cmd) {
+            document.execCommand(cmd, false, null);
+            document.getElementById('editorBody').focus();
+        }
+
+        function previewCover() {
+            const url = document.getElementById('coverUrlInput').value.trim();
+            if (!url) return;
+            document.getElementById('coverPreviewImg').src = url;
+            document.getElementById('coverPreviewBox').classList.remove('hidden');
+            currentCover = url;
+        }
+
+        // 插入图片
+        function insertImage() {
+            document.getElementById('imageModal').classList.remove('hidden');
+        }
+
+        function closeImageModal() {
+            document.getElementById('imageModal').classList.add('hidden');
+        }
+
+        function confirmInsertImage() {
+            const url = document.getElementById('imageUrl').value.trim();
+            if (!url) return;
+            
+            const img = `<img src="${url}" style="max-width:100%;border-radius:8px;margin:1rem 0;" loading="lazy">`;
+            document.getElementById('editorBody').insertAdjacentHTML('beforeend', img);
+            closeImageModal();
+            document.getElementById('imageUrl').value = '';
+            showToast('图片已插入');
+        }
+
+        // B站视频
+        function insertBilibili() {
+            document.getElementById('bilibiliModal').classList.remove('hidden');
+        }
+
+        function closeBilibiliModal() {
+            document.getElementById('bilibiliModal').classList.add('hidden');
+        }
+
+        function confirmInsertBilibili() {
+            const url = document.getElementById('bilibiliUrl').value.trim();
+            const title = document.getElementById('bilibiliTitle').value.trim() || '哔哩哔哩视频';
+            
+            let bvid = '';
+            if (url.includes('bilibili.com')) {
+                const match = url.match(/BV\w+/);
+                if (match) bvid = match[0];
+            } else if (url.startsWith('BV')) {
+                bvid = url;
+            }
+            
+            if (!bvid) {
+                showToast('无效的BV号', 'error');
+                return;
+            }
+            
+            const card = `
+                <div class="my-4 p-4 bg-gradient-to-r from-[#00AEEC]/10 to-[#00AEEC]/5 rounded-xl border border-[#00AEEC]/20 cursor-pointer" onclick="window.open('https://www.bilibili.com/video/${bvid}', '_blank')">
+                    <div class="flex items-center gap-4">
+                        <div class="w-16 h-16 rounded-lg bg-[#00AEEC] flex items-center justify-center text-white flex-shrink-0">
+                            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="font-bold text-gray-900">${title}</h4>
+                            <p class="text-sm text-[#00AEEC]">${bvid}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('editorBody').insertAdjacentHTML('beforeend', card);
+            closeBilibiliModal();
+            showToast('视频卡片已插入');
+        }
+
+        // 登录配置
+        function toggleLoginModal() {
+            document.getElementById('loginModal').classList.toggle('hidden');
+        }
+
+        async function verifyToken() {
+            const token = document.getElementById('githubToken').value.trim();
+            if (!token) return;
+            
+            document.getElementById('loginBtnText').textContent = '验证中...';
+            document.getElementById('loginLoader').classList.remove('hidden');
+            document.getElementById('loginError').classList.add('hidden');
+            
+            try {
+                const res = await fetch('https://api.github.com/user', {
+                    headers: {'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json'}
+                });
+                
+                if (!res.ok) throw new Error('Token 无效');
+                
+                const user = await res.json();
+                githubToken = token;
+                localStorage.setItem('blog_token', token);
+                
+                showToast(`欢迎 ${user.login}！`);
+                checkAuth();
+                toggleLoginModal();
+                await loadArticles();
+            } catch (error) {
+                document.getElementById('loginError').textContent = error.message;
+                document.getElementById('loginError').classList.remove('hidden');
+            } finally {
+                document.getElementById('loginBtnText').textContent = '验证并登录';
+                document.getElementById('loginLoader').classList.add('hidden');
+            }
+        }
+
+        function showConfigModal() {
+            document.getElementById('configModal').classList.remove('hidden');
+            document.getElementById('configOwner').value = config.owner || '';
+            document.getElementById('configRepo').value = config.repo || '';
+        }
+
+        function closeConfigModal() {
+            document.getElementById('configModal').classList.add('hidden');
+        }
+
+        function saveConfig() {
+            const owner = document.getElementById('configOwner').value.trim();
+            const repo = document.getElementById('configRepo').value.trim();
+            
+            if (!owner || !repo) {
+                showToast('请填写完整信息', 'error');
+                return;
+            }
+            
+            config.owner = owner;
+            config.repo = repo;
+            localStorage.setItem('blog_config', JSON.stringify(config));
+            
+            closeConfigModal();
+            document.getElementById('configAlert').classList.add('hidden');
+            document.getElementById('repoInfo').classList.remove('hidden');
+            document.getElementById('repoName').textContent = `${owner}/${repo}`;
+            showToast('配置已保存');
+            loadArticles();
+        }
+
+        function logout() {
+            githubToken = '';
+            localStorage.removeItem('blog_token');
+            checkAuth();
+            showToast('已退出');
+        }
+
+        function checkAuth() {
+            const isLogin = !!githubToken;
+            document.getElementById('adminBtn').classList.toggle('hidden', isLogin);
+            document.getElementById('newPostBtn').classList.toggle('hidden', !isLogin);
+            document.getElementById('logoutBtn').classList.toggle('hidden', !isLogin);
+        }
+
+        // 页面切换
+        function showPage(pageId) {
+            ['homePage', 'articlePage', 'editorPage', 'aboutPage'].forEach(id => {
+                const el = document.getElementById(id);
+                el.classList.toggle('hidden-page', id !== pageId);
+                el.classList.toggle('active-page', id === pageId);
+            });
+            window.scrollTo(0, 0);
+        }
+
+        function showHome() {
+            showPage('homePage');
+            if (articles.length === 0 && config.owner && config.repo) loadArticles();
+        }
+
+        function showAbout() {
+            showPage('aboutPage');
+        }
+
+        function showEditor() {
+            if (!githubToken) {
+                showToast('请先登录', 'error');
+                toggleLoginModal();
+                return;
+            }
+            showPage('editorPage');
+            resetEditor();
+        }
+
+        // 工具函数
+        function showToast(message, type = 'success', duration = 3000) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastIcon').textContent = type === 'success' ? '✓' : '✕';
+            document.getElementById('toastIcon').className = type === 'success' ? 'text-green-500' : 'text-red-500';
+            document.getElementById('toastMessage').textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), duration);
+        }
+
+        // 初始化
+        window.onload = function() {
+            initConfig();
+            checkAuth();
+            if (config.owner && config.repo) loadArticles();
+        };
+    </script>
+</body>
+</html>
