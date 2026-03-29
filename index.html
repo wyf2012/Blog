@@ -2,14 +2,11 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>极简主义博客 | 现代个人创作空间</title>
-    <!-- 引入字体与图标库 -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- 用于Markdown预览 -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>极简博客 | 现代创作空间</title>
+    
     <style>
         * {
             margin: 0;
@@ -18,11 +15,10 @@
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', 'WenQuanYi Micro Hei', sans-serif;
-            background-color: #fafaf9;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", "WenQuanYi Micro Hei", sans-serif;
+            background: #fafaf9;
             color: #1c1917;
-            line-height: 1.5;
-            scroll-behavior: smooth;
+            line-height: 1.6;
         }
 
         .container {
@@ -31,11 +27,12 @@
             padding: 0 24px;
         }
 
+        /* 导航栏 */
         .navbar {
-            padding: 24px 0 16px;
-            border-bottom: 1px solid #e7e5e4;
-            backdrop-filter: blur(8px);
-            background-color: rgba(250, 250, 249, 0.8);
+            padding: 20px 0;
+            border-bottom: 1px solid #e5e5e5;
+            background: rgba(250, 250, 249, 0.95);
+            backdrop-filter: blur(10px);
             position: sticky;
             top: 0;
             z-index: 100;
@@ -46,102 +43,100 @@
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
+            gap: 15px;
         }
 
         .logo {
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             font-weight: 700;
-            letter-spacing: -0.02em;
-            background: linear-gradient(135deg, #2b2a27, #57534e);
-            background-clip: text;
+            background: linear-gradient(135deg, #2c3e50, #3498db);
             -webkit-background-clip: text;
+            background-clip: text;
             color: transparent;
             cursor: pointer;
         }
 
         .nav-links {
             display: flex;
-            gap: 28px;
+            gap: 20px;
             align-items: center;
             flex-wrap: wrap;
         }
 
-        .nav-link {
-            text-decoration: none;
-            font-weight: 500;
-            color: #44403c;
-            transition: all 0.2s ease;
-            font-size: 0.95rem;
-        }
-
-        .nav-link:hover {
-            color: #000;
-        }
-
-        .admin-btn, .logout-btn {
-            background: none;
-            border: 1px solid #d6d3d1;
-            padding: 6px 16px;
-            border-radius: 40px;
+        .btn {
+            padding: 8px 20px;
+            border-radius: 30px;
+            border: 1px solid #ddd;
+            background: white;
             cursor: pointer;
-            font-weight: 500;
-            transition: 0.2s;
+            font-size: 14px;
             font-family: inherit;
-            background-color: white;
+            transition: all 0.2s;
         }
 
-        .admin-btn:hover, .logout-btn:hover {
-            background-color: #f5f5f4;
-            border-color: #a8a29e;
+        .btn-primary {
+            background: #1a1a1a;
+            color: white;
+            border: none;
         }
 
+        .btn-primary:hover {
+            background: #333;
+        }
+
+        .btn-danger {
+            background: white;
+            color: #dc2626;
+            border-color: #fecaca;
+        }
+
+        .btn-danger:hover {
+            background: #fee2e2;
+        }
+
+        /* 文章网格 */
         .blog-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 32px;
-            margin: 48px 0;
+            gap: 30px;
+            margin: 50px 0;
         }
 
         .blog-card {
             background: white;
-            border-radius: 24px;
-            padding: 24px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02), 0 1px 2px rgba(0, 0, 0, 0.03);
-            transition: all 0.25s ease;
-            border: 1px solid #ecece7;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border: 1px solid #f0f0f0;
+            transition: transform 0.2s, box-shadow 0.2s;
             cursor: pointer;
         }
 
         .blog-card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 20px 25px -12px rgba(0, 0, 0, 0.08);
-            border-color: #d4d4ce;
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.08);
         }
 
         .blog-title {
-            font-size: 1.6rem;
+            font-size: 1.5rem;
             font-weight: 600;
             margin-bottom: 12px;
-            line-height: 1.3;
-            word-break: break-word;
+            color: #1a1a1a;
         }
 
         .blog-meta {
             font-size: 0.8rem;
-            color: #78716c;
-            margin-bottom: 16px;
-            display: flex;
-            gap: 12px;
+            color: #888;
+            margin-bottom: 15px;
         }
 
         .blog-excerpt {
-            color: #44403c;
-            font-size: 0.95rem;
+            color: #555;
             margin-bottom: 20px;
             line-height: 1.5;
-            word-break: break-word;
         }
 
+        /* 模态框 */
         .modal {
             display: none;
             position: fixed;
@@ -149,166 +144,97 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(6px);
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
             align-items: center;
             justify-content: center;
-            z-index: 1000;
         }
 
-        .modal-card {
+        .modal-content {
             background: white;
-            max-width: 650px;
+            max-width: 600px;
             width: 90%;
-            border-radius: 32px;
-            padding: 32px;
-            box-shadow: 0 25px 40px -12px black;
             max-height: 85vh;
             overflow-y: auto;
+            border-radius: 24px;
+            padding: 30px;
         }
 
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
             font-weight: 600;
-            font-size: 1.5rem;
         }
 
-        .close-modal {
+        .close-btn {
             font-size: 28px;
             cursor: pointer;
             background: none;
             border: none;
+            color: #999;
         }
 
         input, textarea {
             width: 100%;
-            padding: 12px 16px;
-            margin: 10px 0 16px;
-            border: 1px solid #e7e5e4;
-            border-radius: 20px;
+            padding: 12px 15px;
+            margin: 10px 0 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
             font-family: inherit;
-            font-size: 0.95rem;
-            transition: 0.2s;
-            background: #fff;
+            font-size: 14px;
         }
 
         input:focus, textarea:focus {
             outline: none;
-            border-color: #b9b5b0;
-            box-shadow: 0 0 0 2px #e7e5e4;
-        }
-
-        button {
-            background: #1c1917;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 40px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: 0.2s;
-            font-family: inherit;
-        }
-
-        button:hover {
-            background: #2d2a27;
-        }
-
-        .error-msg {
-            color: #b91c1c;
-            font-size: 0.8rem;
-            margin-top: 6px;
+            border-color: #666;
         }
 
         .toast {
             position: fixed;
-            bottom: 24px;
-            right: 24px;
-            background: #1c1917;
+            bottom: 20px;
+            right: 20px;
+            background: #1f2937;
             color: white;
             padding: 12px 24px;
-            border-radius: 60px;
-            font-size: 0.9rem;
+            border-radius: 40px;
             z-index: 1100;
-            animation: slideUp 0.3s;
-            font-family: monospace;
+            animation: slideIn 0.3s;
+            font-size: 14px;
         }
 
-        @keyframes slideUp {
+        @keyframes slideIn {
             from {
+                transform: translateX(100%);
                 opacity: 0;
-                transform: translateY(20px);
             }
             to {
+                transform: translateX(0);
                 opacity: 1;
-                transform: translateY(0);
             }
         }
 
-        .danger-btn {
-            background: white;
-            color: #b91c1c;
-            border: 1px solid #fecaca;
-        }
-
-        .danger-btn:hover {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .small-btn {
-            padding: 6px 14px;
-            font-size: 0.8rem;
-        }
-
-        .login-status {
-            font-size: 0.75rem;
-            color: #15803d;
-            margin-left: 8px;
-            background: #eef2ff;
-            padding: 4px 10px;
-            border-radius: 30px;
+        .status-badge {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
         }
 
-        @media (max-width: 700px) {
+        @media (max-width: 768px) {
+            .blog-grid {
+                grid-template-columns: 1fr;
+            }
             .nav-content {
                 flex-direction: column;
-                gap: 12px;
             }
-            .blog-title {
-                font-size: 1.3rem;
-            }
-        }
-
-        /* Markdown 内容样式 */
-        .markdown-content {
-            line-height: 1.7;
-        }
-        .markdown-content h1 { font-size: 1.8rem; margin: 1.5rem 0 1rem; }
-        .markdown-content h2 { font-size: 1.5rem; margin: 1.2rem 0 0.8rem; }
-        .markdown-content h3 { font-size: 1.3rem; margin: 1rem 0 0.6rem; }
-        .markdown-content p { margin: 0.8rem 0; }
-        .markdown-content code {
-            background: #f5f5f4;
-            padding: 0.2rem 0.4rem;
-            border-radius: 6px;
-            font-family: monospace;
-        }
-        .markdown-content pre {
-            background: #f5f5f4;
-            padding: 1rem;
-            border-radius: 12px;
-            overflow-x: auto;
-        }
-        .markdown-content img {
-            max-width: 100%;
-            border-radius: 12px;
         }
     </style>
 </head>
@@ -316,505 +242,501 @@
 
 <div class="navbar">
     <div class="container nav-content">
-        <div class="logo" id="logoHome">⌘ 极简日志</div>
+        <div class="logo" id="logoHome">✍️ 极简日志</div>
         <div class="nav-links">
-            <a href="#" class="nav-link" id="homeLink">首页</a>
-            <div id="authSection">
-                <button class="admin-btn" id="adminLoginBtn">管理登录</button>
+            <a href="#" id="homeLink" style="text-decoration: none; color: #333;">首页</a>
+            <div id="loginSection">
+                <button class="btn" id="showLoginBtn">管理登录</button>
             </div>
-            <div id="adminTools" style="display: none;">
-                <button class="admin-btn" id="newPostBtn">+ 写新文章</button>
-                <button class="logout-btn" id="logoutBtn">退出</button>
-                <span id="statusBadge" class="login-status"><i class="fas fa-check-circle"></i> 已登录</span>
+            <div id="adminSection" style="display: none;">
+                <button class="btn" id="newPostBtn">+ 写文章</button>
+                <button class="btn" id="logoutBtn">退出</button>
+                <span class="status-badge">✓ 已登录</span>
             </div>
         </div>
     </div>
 </div>
 
-<main class="container" id="mainContent">
-    <div id="blogListContainer" class="blog-grid"></div>
+<main class="container">
+    <div id="postsContainer" class="blog-grid"></div>
 </main>
 
-<!-- 登录模态窗 -->
+<!-- 登录模态框 -->
 <div id="loginModal" class="modal">
-    <div class="modal-card">
+    <div class="modal-content">
         <div class="modal-header">
-            <span>管理员验证</span>
-            <button class="close-modal" onclick="closeModal('loginModal')">&times;</button>
+            <span>管理员登录</span>
+            <button class="close-btn" onclick="closeModal('loginModal')">&times;</button>
         </div>
         <div>
-            <label>用户名</label>
-            <input type="text" id="loginUsername" placeholder="username" autocomplete="off">
-            <label>密码</label>
-            <input type="password" id="loginPassword" placeholder="password">
-            <div id="loginError" class="error-msg"></div>
-            <div style="display: flex; gap: 12px; margin-top: 12px;">
-                <button id="confirmLoginBtn" style="flex:1;">登录</button>
-                <button id="rememberLoginBtn" style="flex:1; background: #4b5563;">记住我并登录</button>
+            <input type="text" id="loginUser" placeholder="用户名" autocomplete="off">
+            <input type="password" id="loginPass" placeholder="密码">
+            <div id="loginErrorMsg" style="color: red; font-size: 12px; margin: 5px 0;"></div>
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button class="btn btn-primary" id="loginBtn" style="flex:1;">登录</button>
+                <button class="btn" id="rememberLoginBtn" style="flex:1;">记住我</button>
             </div>
-            <div style="margin-top: 16px; font-size: 0.75rem; color:#78716c; text-align:center;">演示账户: admin / admin123<br>勾选「记住我」后登录状态将长期保存</div>
+            <div style="margin-top: 15px; font-size: 12px; color: #999; text-align: center;">
+                演示账号: admin / 123456
+            </div>
         </div>
     </div>
 </div>
 
-<!-- 文章编辑模态窗 -->
+<!-- 文章编辑模态框 -->
 <div id="editorModal" class="modal">
-    <div class="modal-card">
+    <div class="modal-content">
         <div class="modal-header">
-            <span id="editorTitle">发布文章</span>
-            <button class="close-modal" onclick="closeModal('editorModal')">&times;</button>
+            <span id="editorTitle">写新文章</span>
+            <button class="close-btn" onclick="closeModal('editorModal')">&times;</button>
         </div>
         <div>
-            <label>文章标题</label>
-            <input type="text" id="postTitle" placeholder="标题...">
-            <label>摘要 / 简短描述</label>
-            <input type="text" id="postExcerpt" placeholder="摘要（会在首页展示）">
-            <label>正文内容 (Markdown 支持)</label>
-            <textarea id="postContent" rows="8" placeholder="# 精彩内容&#10;支持markdown语法..."></textarea>
-            <div id="editorError" class="error-msg"></div>
-            <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 16px;">
-                <button id="savePostBtn">保存文章</button>
-                <button id="cancelEditorBtn" class="danger-btn" onclick="closeModal('editorModal')">取消</button>
+            <input type="text" id="postTitle" placeholder="文章标题">
+            <input type="text" id="postSummary" placeholder="摘要（可选）">
+            <textarea id="postBody" rows="10" placeholder="文章内容..."></textarea>
+            <div id="editorError" style="color: red; font-size: 12px;"></div>
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button class="btn btn-primary" id="savePostBtn" style="flex:1;">保存</button>
+                <button class="btn" onclick="closeModal('editorModal')">取消</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- 文章详情模态窗 -->
+<!-- 文章详情模态框 -->
 <div id="detailModal" class="modal">
-    <div class="modal-card" style="max-width: 750px;">
+    <div class="modal-content" style="max-width: 700px;">
         <div class="modal-header">
-            <span id="detailTitle">文章详情</span>
-            <button class="close-modal" onclick="closeModal('detailModal')">&times;</button>
+            <span id="detailTitle"></span>
+            <button class="close-btn" onclick="closeModal('detailModal')">&times;</button>
         </div>
-        <div id="detailContent" class="markdown-content" style="margin-bottom: 20px;"></div>
-        <div id="detailAdminActions" style="display: flex; gap: 12px; justify-content: flex-end;"></div>
+        <div id="detailBody" style="line-height: 1.7;"></div>
+        <div id="detailActions" style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;"></div>
     </div>
 </div>
 
 <script>
-    // 确保中文正常显示
-    document.charset = "UTF-8";
-    
-    let currentUser = null;
-    let articles = [];
-    let editId = null;
-    
-    let githubConfig = {
-        token: '',
-        owner: '',
-        repo: '',
-        filePath: 'posts.json'
-    };
-    
-    const SESSION_DURATION_REMEMBER = 30 * 24 * 60 * 60 * 1000;
-    const SESSION_DURATION_DEFAULT = 24 * 60 * 60 * 1000;
-    
-    function persistLoginState(rememberMe = false) {
-        const loginData = {
-            isLoggedIn: true,
-            username: 'admin',
-            loginTime: Date.now(),
-            expiryDuration: rememberMe ? SESSION_DURATION_REMEMBER : SESSION_DURATION_DEFAULT
-        };
-        localStorage.setItem('blog_login_state', JSON.stringify(loginData));
-        currentUser = 'admin';
-    }
-    
-    function checkAndRestoreLoginState() {
-        const savedState = localStorage.getItem('blog_login_state');
-        if (!savedState) return false;
+    // 简单的 Markdown 解析器（避免外部库问题）
+    function simpleMarkdown(text) {
+        if (!text) return '';
         
+        // 转义 HTML
+        let html = text.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+        
+        // 标题
+        html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+        html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+        html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+        
+        // 粗体和斜体
+        html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+        
+        // 代码块
+        html = html.replace(/```(.*?)```/gs, '<pre><code>$1</code></pre>');
+        html = html.replace(/`(.*?)`/g, '<code>$1</code>');
+        
+        // 链接
+        html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>');
+        
+        // 列表
+        html = html.replace(/^\s*-\s(.*)$/gm, '<li>$1</li>');
+        html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+        
+        // 段落
+        html = html.replace(/\n\n/g, '</p><p>');
+        html = '<p>' + html + '</p>';
+        html = html.replace(/<p><\/p>/g, '');
+        
+        return html;
+    }
+
+    // 数据存储
+    let posts = [];
+    let isAdmin = false;
+    let editPostId = null;
+    
+    // GitHub 配置
+    let githubToken = '';
+    let githubOwner = '';
+    let githubRepo = '';
+    
+    // 加载保存的配置
+    function loadConfig() {
         try {
-            const loginData = JSON.parse(savedState);
-            if (loginData.isLoggedIn && loginData.loginTime && loginData.expiryDuration) {
-                const now = Date.now();
-                const elapsed = now - loginData.loginTime;
-                if (elapsed < loginData.expiryDuration) {
-                    currentUser = loginData.username || 'admin';
-                    updateUIBasedOnLoginState(true);
-                    return true;
-                } else {
-                    clearLoginState();
-                    return false;
-                }
+            githubToken = localStorage.getItem('gh_token') || '';
+            githubOwner = localStorage.getItem('gh_owner') || '';
+            githubRepo = localStorage.getItem('gh_repo') || '';
+            
+            const savedLogin = localStorage.getItem('admin_logged_in');
+            const loginExpiry = localStorage.getItem('admin_expiry');
+            if (savedLogin === 'true' && loginExpiry && Date.now() < parseInt(loginExpiry)) {
+                isAdmin = true;
+                updateUIForAdmin(true);
             }
         } catch(e) {
-            console.error('恢复登录状态失败', e);
+            console.log('加载配置失败');
         }
-        return false;
     }
     
-    function clearLoginState() {
-        localStorage.removeItem('blog_login_state');
-        currentUser = null;
-        updateUIBasedOnLoginState(false);
-    }
-    
-    function logout() {
-        clearLoginState();
-        showToast('已安全退出登录');
-        renderBlogList();
-    }
-    
-    function updateUIBasedOnLoginState(isLoggedIn) {
-        const authSection = document.getElementById('authSection');
-        const adminTools = document.getElementById('adminTools');
-        if (isLoggedIn && currentUser) {
-            authSection.style.display = 'none';
-            adminTools.style.display = 'flex';
+    function updateUIForAdmin(loggedIn) {
+        const loginSection = document.getElementById('loginSection');
+        const adminSection = document.getElementById('adminSection');
+        if (loggedIn) {
+            loginSection.style.display = 'none';
+            adminSection.style.display = 'flex';
         } else {
-            authSection.style.display = 'block';
-            adminTools.style.display = 'none';
+            loginSection.style.display = 'block';
+            adminSection.style.display = 'none';
         }
-    }
-    
-    function handleLogin(rememberMe = false) {
-        const username = document.getElementById('loginUsername').value.trim();
-        const pwd = document.getElementById('loginPassword').value;
-        
-        if (username === 'admin' && pwd === 'admin123') {
-            persistLoginState(rememberMe);
-            updateUIBasedOnLoginState(true);
-            closeModal('loginModal');
-            showToast(rememberMe ? '登录成功，状态将保持30天' : '登录成功，24小时后自动过期');
-            
-            document.getElementById('loginError').innerText = '';
-            document.getElementById('loginUsername').value = '';
-            document.getElementById('loginPassword').value = '';
-            
-            if (!githubConfig.token) {
-                setTimeout(() => {
-                    if (confirm('是否配置 GitHub 仓库以实现文章永久保存？\n点击确定进行配置，取消则使用本地演示数据')) {
-                        promptGitHubConfig();
-                    }
-                }, 500);
-            }
-        } else {
-            document.getElementById('loginError').innerText = '用户名或密码错误 (admin / admin123)';
-        }
-    }
-    
-    function loadGitHubConfig() {
-        const savedToken = localStorage.getItem('github_token');
-        const savedOwner = localStorage.getItem('github_owner');
-        const savedRepo = localStorage.getItem('github_repo');
-        if(savedToken && savedOwner && savedRepo) {
-            githubConfig.token = savedToken;
-            githubConfig.owner = savedOwner;
-            githubConfig.repo = savedRepo;
-        }
-    }
-    
-    function saveGitHubConfig(token, owner, repo) {
-        githubConfig.token = token;
-        githubConfig.owner = owner;
-        githubConfig.repo = repo;
-        localStorage.setItem('github_token', token);
-        localStorage.setItem('github_owner', owner);
-        localStorage.setItem('github_repo', repo);
-    }
-    
-    function promptGitHubConfig() {
-        const token = prompt('请输入 GitHub Personal Access Token (需具备 repo 权限):');
-        if(!token) return;
-        const owner = prompt('GitHub 用户名/组织名:');
-        if(!owner) return;
-        const repo = prompt('仓库名称 (例如 myblog):');
-        if(!repo) return;
-        saveGitHubConfig(token, owner, repo);
-        showToast('✅ GitHub 配置已保存，文章将同步到仓库');
-        refreshArticles();
     }
     
     function showToast(msg, isError = false) {
         const toast = document.createElement('div');
         toast.className = 'toast';
-        toast.innerText = msg;
-        toast.style.backgroundColor = isError ? '#b91c1c' : '#1c1917';
+        toast.textContent = msg;
+        toast.style.background = isError ? '#dc2626' : '#1f2937';
         document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
-    }
-    
-    async function fetchPostsFromGitHub() {
-        if(!githubConfig.token || !githubConfig.owner || !githubConfig.repo) {
-            return null;
-        }
-        const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${githubConfig.filePath}`;
-        try {
-            const response = await fetch(url, {
-                headers: { 'Authorization': `token ${githubConfig.token}`, 'Accept': 'application/vnd.github.v3+json' }
-            });
-            if(response.status === 404) return [];
-            if(!response.ok) throw new Error(`HTTP ${response.status}`);
-            const data = await response.json();
-            const content = atob(data.content);
-            const parsed = JSON.parse(content);
-            return Array.isArray(parsed) ? parsed : [];
-        } catch(err) {
-            console.error('GitHub读取失败', err);
-            return null;
-        }
-    }
-    
-    async function savePostsToGitHub(posts) {
-        if(!githubConfig.token || !githubConfig.owner || !githubConfig.repo) {
-            showToast('未配置 GitHub，文章仅保存在本地浏览器中', true);
-            return false;
-        }
-        const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${githubConfig.filePath}`;
-        const content = btoa(unescape(encodeURIComponent(JSON.stringify(posts, null, 2))));
-        let sha = null;
-        try {
-            const getRes = await fetch(url, { headers: { 'Authorization': `token ${githubConfig.token}` } });
-            if(getRes.ok) {
-                const fileData = await getRes.json();
-                sha = fileData.sha;
-            }
-        } catch(e) {}
-        const payload = {
-            message: `更新博客 - ${new Date().toLocaleString('zh-CN')}`,
-            content: content,
-            branch: 'main'
-        };
-        if(sha) payload.sha = sha;
-        try {
-            const resp = await fetch(url, {
-                method: 'PUT',
-                headers: { 'Authorization': `token ${githubConfig.token}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            if(resp.ok) {
-                showToast('✓ 文章已同步到 GitHub');
-                return true;
-            } else {
-                const errData = await resp.json();
-                throw new Error(errData.message);
-            }
-        } catch(err) {
-            showToast(`保存失败: ${err.message}`, true);
-            return false;
-        }
-    }
-    
-    function saveArticlesToLocalBackup(articlesData) {
-        localStorage.setItem('blog_articles_backup', JSON.stringify(articlesData));
-    }
-    
-    function loadArticlesFromLocalBackup() {
-        const backup = localStorage.getItem('blog_articles_backup');
-        if(backup) {
-            try {
-                return JSON.parse(backup);
-            } catch(e) { return null; }
-        }
-        return null;
-    }
-    
-    function getDemoArticles() {
-        return [
-            { id: "1", title: "极简主义的诗意", excerpt: "回归内容本身，设计克制却充满力量", content: "# 极简主义的诗意\n\n在这个信息过载的时代，保持克制是一种美德。这篇博客系统旨在提供纯粹的写作与阅读体验。\n\n## 设计理念\n- 干净留白\n- 流畅动画\n- 专注阅读", date: "2025-02-18", slug: "minimal-poem" },
-            { id: "2", title: "使用 Markdown 书写", excerpt: "支持丰富排版，让想法自由流淌", content: "## 流畅书写\n你可以使用 **粗体**、*斜体* 以及列表：\n- 优雅\n- 专注\n- 高效\n\n### 代码示例\n```javascript\nconsole.log('Hello Blog');\n```", date: "2025-02-20", slug: "markdown-writing" }
-        ];
-    }
-    
-    async function refreshArticles() {
-        let data = await fetchPostsFromGitHub();
-        if (data === null) {
-            const backup = loadArticlesFromLocalBackup();
-            if (backup && backup.length > 0) {
-                articles = backup;
-                showToast('使用本地缓存的文章数据', false);
-            } else {
-                articles = getDemoArticles();
-                showToast('使用演示数据 (配置GitHub可永久保存)', false);
-            }
-        } else if (data.length === 0) {
-            const backup = loadArticlesFromLocalBackup();
-            articles = (backup && backup.length) ? backup : getDemoArticles();
-        } else {
-            articles = data;
-            saveArticlesToLocalBackup(articles);
-        }
-        renderBlogList();
-    }
-    
-    async function saveCurrentPost() {
-        if (!currentUser) {
-            showToast('请先登录', true);
-            return;
-        }
-        const title = document.getElementById('postTitle').value.trim();
-        const excerpt = document.getElementById('postExcerpt').value.trim();
-        const content = document.getElementById('postContent').value.trim();
-        if(!title || !content) {
-            document.getElementById('editorError').innerText = '标题和内容不能为空';
-            return;
-        }
-        document.getElementById('editorError').innerText = '';
-        const now = new Date().toISOString().slice(0,10);
-        
-        if(editId) {
-            const index = articles.findIndex(a => a.id == editId);
-            if(index !== -1) {
-                articles[index] = { ...articles[index], title, excerpt, content, date: now };
-            }
-        } else {
-            const newId = Date.now().toString();
-            articles.push({ id: newId, title, excerpt, content, date: now, slug: title.replace(/\s/g,'-') });
-        }
-        
-        saveArticlesToLocalBackup(articles);
-        const success = await savePostsToGitHub(articles);
-        if (!success && githubConfig.token) {
-            showToast('⚠️ 远程同步失败，但已保存到本地', true);
-        }
-        
-        await refreshArticles();
-        closeModal('editorModal');
-        showToast('文章已保存' + (success ? '并同步' : '（本地）'));
-        editId = null;
-    }
-    
-    async function deleteArticleById(id) {
-        articles = articles.filter(a => a.id != id);
-        saveArticlesToLocalBackup(articles);
-        await savePostsToGitHub(articles);
-        await refreshArticles();
-        showToast('文章已删除');
-    }
-    
-    function escapeHtml(str) { 
-        if(!str) return '';
-        return str.replace(/[&<>]/g, function(m){
-            if(m==='&') return '&amp;'; 
-            if(m==='<') return '&lt;'; 
-            if(m==='>') return '&gt;'; 
-            return m;
-        });
-    }
-    
-    function renderBlogList() {
-        const container = document.getElementById('blogListContainer');
-        if(!container) return;
-        if(articles.length === 0) {
-            container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:60px;">✨ 暂无文章，管理员请登录后发布第一篇 ~</div>`;
-            return;
-        }
-        container.innerHTML = articles.map(article => `
-            <div class="blog-card" data-id="${article.id}">
-                <div class="blog-title">${escapeHtml(article.title)}</div>
-                <div class="blog-meta"><span><i class="far fa-calendar-alt"></i> ${escapeHtml(article.date || '未知日期')}</span></div>
-                <div class="blog-excerpt">${escapeHtml(article.excerpt || (article.content || '').substring(0,100))}...</div>
-                <button class="small-btn read-more-btn" data-id="${article.id}" style="background:transparent; border:1px solid #ddd; color:#2d2a27;">阅读全文 →</button>
-            </div>
-        `).join('');
-        
-        document.querySelectorAll('.read-more-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const id = btn.getAttribute('data-id');
-                showArticleDetail(id);
-            });
-        });
-        document.querySelectorAll('.blog-card').forEach(card => {
-            card.addEventListener('click', (e) => {
-                if(e.target.classList.contains('read-more-btn')) return;
-                const id = card.getAttribute('data-id');
-                showArticleDetail(id);
-            });
-        });
-    }
-    
-    async function showArticleDetail(id) {
-        const article = articles.find(a => a.id == id);
-        if(!article) return;
-        document.getElementById('detailTitle').innerText = article.title;
-        const renderedContent = marked.parse(article.content || '');
-        document.getElementById('detailContent').innerHTML = `<div style="margin-bottom:16px;"><span class="blog-meta">${escapeHtml(article.date)}</span></div><div>${renderedContent}</div>`;
-        const adminDiv = document.getElementById('detailAdminActions');
-        if(currentUser) {
-            adminDiv.innerHTML = `<button id="editFromDetail" class="small-btn">✏️ 编辑</button><button id="deleteFromDetail" class="small-btn danger-btn">🗑️ 删除</button>`;
-            document.getElementById('editFromDetail')?.addEventListener('click', () => {
-                closeModal('detailModal');
-                openEditor(article.id);
-            });
-            document.getElementById('deleteFromDetail')?.addEventListener('click', async () => {
-                if(confirm('确定永久删除这篇文章吗？')) {
-                    await deleteArticleById(article.id);
-                    closeModal('detailModal');
-                }
-            });
-        } else {
-            adminDiv.innerHTML = '';
-        }
-        document.getElementById('detailModal').style.display = 'flex';
-    }
-    
-    function openEditor(id = null) {
-        if(!currentUser) { showToast('请先登录', true); return; }
-        editId = id;
-        const titleInput = document.getElementById('postTitle');
-        const excerptInput = document.getElementById('postExcerpt');
-        const contentInput = document.getElementById('postContent');
-        if(id) {
-            const post = articles.find(a => a.id == id);
-            if(post) {
-                titleInput.value = post.title;
-                excerptInput.value = post.excerpt || '';
-                contentInput.value = post.content;
-                document.getElementById('editorTitle').innerText = '编辑文章';
-            }
-        } else {
-            titleInput.value = '';
-            excerptInput.value = '';
-            contentInput.value = '';
-            document.getElementById('editorTitle').innerText = '写新文章';
-        }
-        document.getElementById('editorModal').style.display = 'flex';
+        setTimeout(() => toast.remove(), 2500);
     }
     
     function closeModal(modalId) {
-        document.getElementById(modalId).style.display = 'none';
-        if(modalId === 'editorModal') editId = null;
+        const modal = document.getElementById(modalId);
+        if (modal) modal.style.display = 'none';
     }
     
-    window.onload = async () => {
-        loadGitHubConfig();
-        const isLoggedIn = checkAndRestoreLoginState();
-        await refreshArticles();
+    // 保存文章到本地和 GitHub
+    async function savePosts() {
+        // 保存到本地
+        localStorage.setItem('blog_posts', JSON.stringify(posts));
         
-        document.getElementById('adminLoginBtn')?.addEventListener('click', () => {
+        // 如果配置了 GitHub，同步到远程
+        if (githubToken && githubOwner && githubRepo) {
+            try {
+                const content = btoa(encodeURIComponent(JSON.stringify(posts, null, 2)));
+                const url = `https://api.github.com/repos/${githubOwner}/${githubRepo}/contents/posts.json`;
+                
+                let sha = '';
+                const getRes = await fetch(url, {
+                    headers: { 'Authorization': `token ${githubToken}` }
+                });
+                if (getRes.ok) {
+                    const data = await getRes.json();
+                    sha = data.sha;
+                }
+                
+                const response = await fetch(url, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${githubToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: `更新博客 - ${new Date().toLocaleString('zh-CN')}`,
+                        content: content,
+                        sha: sha,
+                        branch: 'main'
+                    })
+                });
+                
+                if (response.ok) {
+                    showToast('已同步到 GitHub');
+                }
+            } catch(e) {
+                console.log('GitHub 同步失败:', e);
+            }
+        }
+    }
+    
+    // 加载文章
+    async function loadPosts() {
+        // 尝试从 GitHub 加载
+        if (githubToken && githubOwner && githubRepo) {
+            try {
+                const url = `https://api.github.com/repos/${githubOwner}/${githubRepo}/contents/posts.json`;
+                const response = await fetch(url, {
+                    headers: { 'Authorization': `token ${githubToken}` }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    const content = decodeURIComponent(escape(atob(data.content)));
+                    posts = JSON.parse(content);
+                    localStorage.setItem('blog_posts', JSON.stringify(posts));
+                    renderPosts();
+                    return;
+                }
+            } catch(e) {
+                console.log('从 GitHub 加载失败');
+            }
+        }
+        
+        // 从本地加载
+        const saved = localStorage.getItem('blog_posts');
+        if (saved) {
+            try {
+                posts = JSON.parse(saved);
+            } catch(e) {
+                posts = getDefaultPosts();
+            }
+        } else {
+            posts = getDefaultPosts();
+        }
+        renderPosts();
+    }
+    
+    function getDefaultPosts() {
+        return [
+            {
+                id: '1',
+                title: '欢迎使用极简博客',
+                summary: '这是一个干净、优雅的个人博客系统',
+                content: '## 功能介绍\n\n- 支持 Markdown 格式\n- 文章管理功能\n- GitHub 同步备份\n\n开始创作吧！',
+                date: new Date().toLocaleDateString('zh-CN'),
+                slug: 'welcome'
+            },
+            {
+                id: '2',
+                title: 'Markdown 示例',
+                summary: '学习如何使用 Markdown 书写文章',
+                content: '# 标题示例\n\n## 二级标题\n\n**粗体文字** *斜体文字*\n\n- 列表项 1\n- 列表项 2\n\n[链接示例](https://github.com)',
+                date: new Date().toLocaleDateString('zh-CN'),
+                slug: 'markdown-example'
+            }
+        ];
+    }
+    
+    function renderPosts() {
+        const container = document.getElementById('postsContainer');
+        if (!container) return;
+        
+        if (posts.length === 0) {
+            container.innerHTML = '<div style="text-align: center; padding: 60px; color: #999;">暂无文章，管理员请登录后发布</div>';
+            return;
+        }
+        
+        container.innerHTML = posts.map(post => `
+            <div class="blog-card" onclick="viewPost('${post.id}')">
+                <div class="blog-title">${escapeHtml(post.title)}</div>
+                <div class="blog-meta">📅 ${escapeHtml(post.date)}</div>
+                <div class="blog-excerpt">${escapeHtml(post.summary || post.content.substring(0, 100))}...</div>
+                <button class="btn" style="font-size: 13px; padding: 6px 16px;">阅读全文 →</button>
+            </div>
+        `).join('');
+    }
+    
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    function viewPost(id) {
+        const post = posts.find(p => p.id === id);
+        if (!post) return;
+        
+        document.getElementById('detailTitle').textContent = post.title;
+        document.getElementById('detailBody').innerHTML = simpleMarkdown(post.content);
+        
+        const actionsDiv = document.getElementById('detailActions');
+        if (isAdmin) {
+            actionsDiv.innerHTML = `
+                <button class="btn" onclick="editPost('${post.id}')">✏️ 编辑</button>
+                <button class="btn btn-danger" onclick="deletePost('${post.id}')">🗑️ 删除</button>
+            `;
+        } else {
+            actionsDiv.innerHTML = '';
+        }
+        
+        document.getElementById('detailModal').style.display = 'flex';
+    }
+    
+    function editPost(id) {
+        closeModal('detailModal');
+        const post = posts.find(p => p.id === id);
+        if (post) {
+            editPostId = id;
+            document.getElementById('editorTitle').textContent = '编辑文章';
+            document.getElementById('postTitle').value = post.title;
+            document.getElementById('postSummary').value = post.summary || '';
+            document.getElementById('postBody').value = post.content;
+            document.getElementById('editorModal').style.display = 'flex';
+        }
+    }
+    
+    async function deletePost(id) {
+        if (confirm('确定要删除这篇文章吗？')) {
+            posts = posts.filter(p => p.id !== id);
+            await savePosts();
+            renderPosts();
+            closeModal('detailModal');
+            showToast('文章已删除');
+        }
+    }
+    
+    async function saveCurrentPost() {
+        const title = document.getElementById('postTitle').value.trim();
+        const summary = document.getElementById('postSummary').value.trim();
+        const content = document.getElementById('postBody').value.trim();
+        
+        if (!title || !content) {
+            document.getElementById('editorError').textContent = '标题和内容不能为空';
+            return;
+        }
+        
+        document.getElementById('editorError').textContent = '';
+        
+        const now = new Date().toLocaleDateString('zh-CN');
+        
+        if (editPostId) {
+            const index = posts.findIndex(p => p.id === editPostId);
+            if (index !== -1) {
+                posts[index] = {
+                    ...posts[index],
+                    title: title,
+                    summary: summary,
+                    content: content,
+                    date: now
+                };
+            }
+            editPostId = null;
+        } else {
+            const newPost = {
+                id: Date.now().toString(),
+                title: title,
+                summary: summary,
+                content: content,
+                date: now,
+                slug: title.replace(/\s+/g, '-')
+            };
+            posts.unshift(newPost);
+        }
+        
+        await savePosts();
+        renderPosts();
+        closeModal('editorModal');
+        showToast('文章已保存');
+    }
+    
+    // 登录处理
+    function login(remember = false) {
+        const username = document.getElementById('loginUser').value;
+        const password = document.getElementById('loginPass').value;
+        
+        if (username === 'admin' && password === '123456') {
+            isAdmin = true;
+            updateUIForAdmin(true);
+            
+            const expiry = remember ? Date.now() + 30 * 24 * 60 * 60 * 1000 : Date.now() + 24 * 60 * 60 * 1000;
+            localStorage.setItem('admin_logged_in', 'true');
+            localStorage.setItem('admin_expiry', expiry.toString());
+            
+            closeModal('loginModal');
+            showToast(remember ? '登录成功，状态将保持30天' : '登录成功，24小时后过期');
+            
+            document.getElementById('loginUser').value = '';
+            document.getElementById('loginPass').value = '';
+            document.getElementById('loginErrorMsg').textContent = '';
+            
+            // 提示配置 GitHub
+            if (!githubToken) {
+                setTimeout(() => {
+                    if (confirm('是否配置 GitHub 备份？\n配置后文章会自动同步到仓库')) {
+                        configureGitHub();
+                    }
+                }, 500);
+            }
+        } else {
+            document.getElementById('loginErrorMsg').textContent = '用户名或密码错误';
+        }
+    }
+    
+    function logout() {
+        isAdmin = false;
+        localStorage.removeItem('admin_logged_in');
+        localStorage.removeItem('admin_expiry');
+        updateUIForAdmin(false);
+        renderPosts();
+        showToast('已退出登录');
+    }
+    
+    function configureGitHub() {
+        const token = prompt('请输入 GitHub Personal Access Token (需要 repo 权限):');
+        if (!token) return;
+        const owner = prompt('GitHub 用户名:');
+        if (!owner) return;
+        const repo = prompt('仓库名称:');
+        if (!repo) return;
+        
+        githubToken = token;
+        githubOwner = owner;
+        githubRepo = repo;
+        
+        localStorage.setItem('gh_token', token);
+        localStorage.setItem('gh_owner', owner);
+        localStorage.setItem('gh_repo', repo);
+        
+        showToast('GitHub 配置已保存');
+        loadPosts(); // 重新加载，尝试从 GitHub 同步
+    }
+    
+    // 事件绑定
+    document.addEventListener('DOMContentLoaded', () => {
+        loadConfig();
+        loadPosts();
+        
+        document.getElementById('showLoginBtn')?.addEventListener('click', () => {
             document.getElementById('loginModal').style.display = 'flex';
-            document.getElementById('loginUsername').value = '';
-            document.getElementById('loginPassword').value = '';
-            document.getElementById('loginError').innerText = '';
         });
-        document.getElementById('confirmLoginBtn')?.addEventListener('click', () => handleLogin(false));
-        document.getElementById('rememberLoginBtn')?.addEventListener('click', () => handleLogin(true));
+        
+        document.getElementById('loginBtn')?.addEventListener('click', () => login(false));
+        document.getElementById('rememberLoginBtn')?.addEventListener('click', () => login(true));
         document.getElementById('logoutBtn')?.addEventListener('click', logout);
-        document.getElementById('newPostBtn')?.addEventListener('click', () => openEditor(null));
+        document.getElementById('newPostBtn')?.addEventListener('click', () => {
+            editPostId = null;
+            document.getElementById('editorTitle').textContent = '写新文章';
+            document.getElementById('postTitle').value = '';
+            document.getElementById('postSummary').value = '';
+            document.getElementById('postBody').value = '';
+            document.getElementById('editorModal').style.display = 'flex';
+        });
         document.getElementById('savePostBtn')?.addEventListener('click', saveCurrentPost);
-        document.getElementById('homeLink')?.addEventListener('click', (e) => { e.preventDefault(); renderBlogList(); });
-        document.getElementById('logoHome')?.addEventListener('click', () => renderBlogList());
+        document.getElementById('homeLink')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            renderPosts();
+        });
+        document.getElementById('logoHome')?.addEventListener('click', () => renderPosts());
         
-        const adminTools = document.getElementById('adminTools');
-        if(adminTools && !document.getElementById('configGearBtn')) {
-            const gearBtn = document.createElement('button');
-            gearBtn.id = 'configGearBtn';
-            gearBtn.innerHTML = '<i class="fas fa-cog"></i> 配置GitHub';
-            gearBtn.className = 'admin-btn';
-            gearBtn.style.marginLeft = '8px';
-            gearBtn.onclick = () => promptGitHubConfig();
-            adminTools.appendChild(gearBtn);
+        // 添加 GitHub 配置按钮到管理栏
+        const adminSection = document.getElementById('adminSection');
+        if (adminSection && !document.getElementById('ghConfigBtn')) {
+            const ghBtn = document.createElement('button');
+            ghBtn.id = 'ghConfigBtn';
+            ghBtn.className = 'btn';
+            ghBtn.textContent = '⚙️ GitHub';
+            ghBtn.style.marginLeft = '5px';
+            ghBtn.onclick = configureGitHub;
+            adminSection.appendChild(ghBtn);
         }
         
-        window.onclick = (e) => { if(e.target.classList.contains('modal')) e.target.style.display = 'none'; };
-        
-        if(isLoggedIn) {
-            showToast('欢迎回来，登录状态已恢复', false);
-        }
-    };
+        // 点击模态框背景关闭
+        window.onclick = (e) => {
+            if (e.target.classList && e.target.classList.contains('modal')) {
+                e.target.style.display = 'none';
+            }
+        };
+    });
+    
+    // 全局函数
+    window.viewPost = viewPost;
+    window.editPost = editPost;
+    window.deletePost = deletePost;
+    window.closeModal = closeModal;
 </script>
 </body>
 </html>
