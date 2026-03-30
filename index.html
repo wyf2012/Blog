@@ -285,16 +285,36 @@
             border-color: rgba(0,0,0,0.05);
         }
 
-        /* Giscus 评论容器样式 */
-        .giscus-wrapper {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid rgba(0,0,0,0.08);
+        /* 主页底部留言板样式 */
+        .guestbook-section {
+            margin: 60px 0 80px;
+            padding: 32px;
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(20px);
+            border-radius: 32px;
+            border: 1px solid rgba(255,255,255,0.8);
+        }
+        .guestbook-title {
+            font-size: 1.6rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .guestbook-subtitle {
+            color: #6b7280;
+            margin-bottom: 28px;
+            font-size: 0.9rem;
+        }
+        .guestbook-container {
+            min-height: 300px;
         }
 
         @media (max-width: 720px) {
             .container { padding: 0 16px; }
             .nav-content { flex-wrap: wrap; justify-content: center; gap: 12px; }
+            .guestbook-section { padding: 20px; }
         }
     </style>
 </head>
@@ -321,6 +341,17 @@
 
 <main class="container">
     <div id="blogListContainer" class="blog-grid"></div>
+    
+    <!-- 主页底部留言板 -->
+    <div class="guestbook-section">
+        <div class="guestbook-title">
+            <i class="fas fa-comments"></i> 留言板
+        </div>
+        <div class="guestbook-subtitle">
+            欢迎留下您的想法和建议 · 使用 GitHub 账号登录后即可留言
+        </div>
+        <div id="guestbookContainer" class="guestbook-container"></div>
+    </div>
 </main>
 
 <!-- 登录模态框 -->
@@ -365,7 +396,7 @@
     </div>
 </div>
 
-<!-- 文章详情模态框 (内嵌B站播放器 + Giscus评论) -->
+<!-- 文章详情模态框 (不含评论区) -->
 <div id="detailModal" class="modal">
     <div class="modal-card" style="max-width: 980px;">
         <div class="modal-header">
@@ -374,8 +405,6 @@
         </div>
         <div id="detailContent" class="article-content"></div>
         <div id="detailAdminActions" style="margin-top: 20px; display: flex; gap: 12px; justify-content: flex-end;"></div>
-        <!-- Giscus 评论容器 - 配置已内置 -->
-        <div id="giscusContainer" class="giscus-wrapper"></div>
     </div>
 </div>
 
@@ -455,34 +484,6 @@
         });
     }
 
-    // 加载 Giscus 评论 (使用您提供的配置)
-    function loadGiscusComments() {
-        const container = document.getElementById('giscusContainer');
-        if(!container) return;
-        
-        // 清除已有内容
-        container.innerHTML = '';
-        
-        // 创建 Giscus 脚本 - 使用您提供的配置
-        const script = document.createElement('script');
-        script.src = 'https://giscus.app/client.js';
-        script.setAttribute('data-repo', 'wyf2012/Blog');
-        script.setAttribute('data-repo-id', 'R_kgDORzrk5w');
-        script.setAttribute('data-category', 'Announcements');
-        script.setAttribute('data-category-id', 'DIC_kwDORzrk584C5jXz');
-        script.setAttribute('data-mapping', 'pathname');
-        script.setAttribute('data-strict', '0');
-        script.setAttribute('data-reactions-enabled', '1');
-        script.setAttribute('data-emit-metadata', '0');
-        script.setAttribute('data-input-position', 'bottom');
-        script.setAttribute('data-theme', 'preferred_color_scheme');
-        script.setAttribute('data-lang', 'zh-CN');
-        script.setAttribute('crossorigin', 'anonymous');
-        script.async = true;
-        
-        container.appendChild(script);
-    }
-
     async function showArticleDetail(id) {
         let article = posts.find(a=>a.id==id);
         if(!article) return;
@@ -495,8 +496,6 @@
             document.getElementById('deleteDetailBtn')?.addEventListener('click',async ()=>{ if(confirm('永久删除？')){ posts=posts.filter(p=>p.id!=id); await savePostsToLocal(); renderBlogList(); closeModal('detailModal'); showToast('已删除'); } });
         } else adminDiv.innerHTML='';
         document.getElementById('detailModal').style.display='flex';
-        // 加载 Giscus 评论
-        loadGiscusComments();
     }
 
     // 编辑器相关
@@ -545,6 +544,34 @@
     function insertImageHelper() { let url=prompt('图片URL'); if(url){ let ta=document.getElementById('postContent'); let ins=`![图片](${url})`; let s=ta.selectionStart,e=ta.selectionEnd; ta.value=ta.value.substring(0,s)+ins+ta.value.substring(e); ta.focus(); } }
     function insertLinkHelper() { let txt=prompt('链接文字'); if(txt){ let url=prompt('URL'); if(url){ let ta=document.getElementById('postContent'); let ins=`[${txt}](${url})`; let s=ta.selectionStart,e=ta.selectionEnd; ta.value=ta.value.substring(0,s)+ins+ta.value.substring(e); ta.focus(); } } }
 
+    // 加载主页底部的 Giscus 留言板
+    function loadGuestbook() {
+        const container = document.getElementById('guestbookContainer');
+        if(!container) return;
+        
+        // 清除已有内容
+        container.innerHTML = '';
+        
+        // 创建 Giscus 脚本 - 使用您提供的配置
+        const script = document.createElement('script');
+        script.src = 'https://giscus.app/client.js';
+        script.setAttribute('data-repo', 'wyf2012/Blog');
+        script.setAttribute('data-repo-id', 'R_kgDORzrk5w');
+        script.setAttribute('data-category', 'Announcements');
+        script.setAttribute('data-category-id', 'DIC_kwDORzrk584C5jXz');
+        script.setAttribute('data-mapping', 'pathname');
+        script.setAttribute('data-strict', '0');
+        script.setAttribute('data-reactions-enabled', '1');
+        script.setAttribute('data-emit-metadata', '0');
+        script.setAttribute('data-input-position', 'bottom');
+        script.setAttribute('data-theme', 'preferred_color_scheme');
+        script.setAttribute('data-lang', 'zh-CN');
+        script.setAttribute('crossorigin', 'anonymous');
+        script.async = true;
+        
+        container.appendChild(script);
+    }
+
     // 登录持久化
     function persistLogin(remember=false) { localStorage.setItem('admin_logged', 'true'); localStorage.setItem('admin_expiry', remember ? Date.now()+30*24*3600000 : Date.now()+24*3600000); isAdmin=true; updateUI(true); }
     function checkLoginState() { let exp = localStorage.getItem('admin_expiry'); if(localStorage.getItem('admin_logged')==='true' && exp && Date.now()<parseInt(exp)){ isAdmin=true; updateUI(true); } else { isAdmin=false; updateUI(false); } }
@@ -561,6 +588,7 @@
     window.onload=()=>{
         loadPostsFromLocal();
         checkLoginState();
+        loadGuestbook(); // 加载主页底部留言板
 
         document.getElementById('adminLoginBtn')?.addEventListener('click',()=>document.getElementById('loginModal').style.display='flex');
         document.getElementById('confirmLoginBtn')?.addEventListener('click',()=>handleLogin(false));
