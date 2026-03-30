@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>极简博客 · 流畅毛玻璃</title>
+    <title>极简博客 · 毛玻璃风格</title>
     <!-- 引入字体与图标库 -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -37,7 +37,7 @@
             padding: 0 28px;
         }
 
-        /* 导航栏 (Win11 风格, 无Windows标) */
+        /* 导航栏 (Win11 风格) */
         .navbar {
             padding: 16px 0;
             position: sticky;
@@ -69,6 +69,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            cursor: pointer;
         }
 
         .nav-links {
@@ -283,6 +284,14 @@
             margin: 20px 0;
             border-color: rgba(0,0,0,0.05);
         }
+
+        /* Giscus 评论容器样式 */
+        .giscus-wrapper {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(0,0,0,0.08);
+        }
+
         @media (max-width: 720px) {
             .container { padding: 0 16px; }
             .nav-content { flex-wrap: wrap; justify-content: center; gap: 12px; }
@@ -305,7 +314,6 @@
                 <button class="btn" id="newPostBtn"><i class="fas fa-plus"></i> 写文章</button>
                 <button class="btn btn-outline" id="logoutBtn">退出</button>
                 <span class="status-badge"><i class="fas fa-user-check"></i> 已登录</span>
-                <button class="btn" id="configGithubBtn" style="margin-left: 6px;"><i class="fab fa-github"></i> 配置</button>
             </div>
         </div>
     </div>
@@ -333,7 +341,7 @@
     </div>
 </div>
 
-<!-- 文章编辑窗 (毛玻璃风格) -->
+<!-- 文章编辑窗 -->
 <div id="editorModal" class="modal">
     <div class="modal-card" style="max-width: 850px;">
         <div class="modal-header">
@@ -366,22 +374,8 @@
         </div>
         <div id="detailContent" class="article-content"></div>
         <div id="detailAdminActions" style="margin-top: 20px; display: flex; gap: 12px; justify-content: flex-end;"></div>
-        <!-- Giscus 评论容器 (毛玻璃风格) -->
-        <div id="giscusContainer" style="margin-top: 40px; padding-top: 20px; border-top: 1px solid rgba(0,0,0,0.08);"></div>
-    </div>
-</div>
-
-<!-- GitHub / Giscus 配置模态框 -->
-<div id="githubConfigModal" class="modal">
-    <div class="modal-card">
-        <div class="modal-header">⚙️ GitHub 配置 (用于Giscus评论)</div>
-        <input type="text" id="repoInput" placeholder="仓库: 用户名/仓库名">
-        <input type="text" id="repoIdInput" placeholder="Repo ID (从giscus.app获取)">
-        <input type="text" id="categoryIdInput" placeholder="Category ID">
-        <div style="font-size:12px; margin:10px 0">启用Discussions并安装Giscus App后，访问 giscus.app 生成配置。</div>
-        <button class="btn btn-primary" id="saveGithubConfigBtn">保存配置</button>
-        <button class="btn" id="clearGithubConfigBtn" style="margin-top:8px;">清除配置</button>
-        <button class="close-btn" onclick="closeModal('githubConfigModal')" style="float:right;">&times;</button>
+        <!-- Giscus 评论容器 - 配置已内置 -->
+        <div id="giscusContainer" class="giscus-wrapper"></div>
     </div>
 </div>
 
@@ -390,8 +384,6 @@
     let posts = [];
     let isAdmin = false;
     let editId = null;
-    // Giscus 配置
-    let giscusConfig = { repo: '', repoId: '', categoryId: '' };
 
     // 辅助函数
     function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
@@ -401,7 +393,7 @@
     }
     function closeModal(id) { document.getElementById(id).style.display='none'; }
 
-    // 增强Markdown: 支持 @bilibili:BV号 转为播放器iframe，并支持单独BV行
+    // 增强Markdown: 支持 @bilibili:BV号 转为播放器iframe
     function renderMarkdownWithVideo(text) {
         if(!text) return '';
         let html = text.replace(/@bilibili:([A-Za-z0-9]+)/gi, (match, bvid) => {
@@ -438,8 +430,8 @@
     }
     function getDefaultArticles() {
         return [
-            { id: "1", title: "毛玻璃 · 流畅新体验", excerpt: "Windows 11 风格设计，支持B站内嵌播放", content: "欢迎使用极简博客。支持 **Markdown** 语法和 B站视频。\n\n@bilibili:BV1GJ411x7h7\n\n图片示例:\n![](https://picsum.photos/600/300)", date: "2025-03-29" },
-            { id: "2", title: "在文章内播放B站视频", excerpt: "只需 @bilibili:BV号 即可", content: "试试看下面这个视频：\n\n@bilibili:BV1xx411c7mD\n\n你也可以直接写BV号单独一行。", date: "2025-03-29" }
+            { id: "1", title: "毛玻璃 · 流畅新体验", excerpt: "Windows 11 风格设计，支持B站内嵌播放", content: "欢迎使用极简博客。支持 **Markdown** 语法和 B站视频。\n\n@bilibili:BV1GJ411x7h7\n\n图片示例:\n![](https://picsum.photos/600/300)", date: new Date().toLocaleDateString('zh-CN') },
+            { id: "2", title: "在文章内播放B站视频", excerpt: "只需 @bilibili:BV号 即可", content: "试试看下面这个视频：\n\n@bilibili:BV1xx411c7mD\n\n你也可以直接写BV号单独一行。", date: new Date().toLocaleDateString('zh-CN') }
         ];
     }
 
@@ -451,7 +443,7 @@
             <div class="blog-card" data-id="${p.id}">
                 <div class="blog-title">${escapeHtml(p.title)}</div>
                 <div class="blog-meta"><i class="far fa-calendar-alt"></i> ${p.date || '未知'}</div>
-                <div class="blog-excerpt">${escapeHtml(p.excerpt || p.content.substring(0,80))}...</div>
+                <div class="blog-excerpt">${escapeHtml(p.excerpt || (p.content || '').substring(0,80))}...</div>
                 <button class="btn read-more" data-id="${p.id}" style="margin-top:8px;">阅读全文 →</button>
             </div>
         `).join('');
@@ -461,6 +453,34 @@
         document.querySelectorAll('.blog-card').forEach(card => {
             card.addEventListener('click', (e) => { if(!e.target.classList.contains('read-more')) showArticleDetail(card.dataset.id); });
         });
+    }
+
+    // 加载 Giscus 评论 (使用您提供的配置)
+    function loadGiscusComments() {
+        const container = document.getElementById('giscusContainer');
+        if(!container) return;
+        
+        // 清除已有内容
+        container.innerHTML = '';
+        
+        // 创建 Giscus 脚本 - 使用您提供的配置
+        const script = document.createElement('script');
+        script.src = 'https://giscus.app/client.js';
+        script.setAttribute('data-repo', 'wyf2012/Blog');
+        script.setAttribute('data-repo-id', 'R_kgDORzrk5w');
+        script.setAttribute('data-category', 'Announcements');
+        script.setAttribute('data-category-id', 'DIC_kwDORzrk584C5jXz');
+        script.setAttribute('data-mapping', 'pathname');
+        script.setAttribute('data-strict', '0');
+        script.setAttribute('data-reactions-enabled', '1');
+        script.setAttribute('data-emit-metadata', '0');
+        script.setAttribute('data-input-position', 'bottom');
+        script.setAttribute('data-theme', 'preferred_color_scheme');
+        script.setAttribute('data-lang', 'zh-CN');
+        script.setAttribute('crossorigin', 'anonymous');
+        script.async = true;
+        
+        container.appendChild(script);
     }
 
     async function showArticleDetail(id) {
@@ -476,34 +496,7 @@
         } else adminDiv.innerHTML='';
         document.getElementById('detailModal').style.display='flex';
         // 加载 Giscus 评论
-        loadGiscusCommentsForArticle();
-    }
-
-    // Giscus 评论集成
-    function loadGiscusCommentsForArticle() {
-        const container = document.getElementById('giscusContainer');
-        if(!container) return;
-        if(!giscusConfig.repo || !giscusConfig.repoId || !giscusConfig.categoryId) {
-            container.innerHTML = `<div style="background:rgba(0,0,0,0.03); border-radius:24px; padding:20px; text-align:center;">💬 管理员尚未配置Giscus评论，请先完成GitHub配置。</div>`;
-            return;
-        }
-        container.innerHTML = '';
-        const script = document.createElement('script');
-        script.src = 'https://giscus.app/client.js';
-        script.setAttribute('data-repo', giscusConfig.repo);
-        script.setAttribute('data-repo-id', giscusConfig.repoId);
-        script.setAttribute('data-category', 'Announcements');
-        script.setAttribute('data-category-id', giscusConfig.categoryId);
-        script.setAttribute('data-mapping', 'pathname');
-        script.setAttribute('data-strict', '0');
-        script.setAttribute('data-reactions-enabled', '1');
-        script.setAttribute('data-emit-metadata', '0');
-        script.setAttribute('data-input-position', 'top');
-        script.setAttribute('data-theme', 'light');
-        script.setAttribute('data-lang', 'zh-CN');
-        script.setAttribute('crossorigin', 'anonymous');
-        script.async = true;
-        container.appendChild(script);
+        loadGiscusComments();
     }
 
     // 编辑器相关
@@ -524,7 +517,7 @@
         let content = document.getElementById('postContent').value.trim();
         if(!title || !content){ document.getElementById('editorError').innerText='标题和内容不能为空'; return; }
         document.getElementById('editorError').innerText='';
-        let now = new Date().toISOString().slice(0,10);
+        let now = new Date().toLocaleDateString('zh-CN');
         if(editId) {
             let idx = posts.findIndex(p=>p.id==editId);
             if(idx!==-1) posts[idx] = {...posts[idx], title, excerpt, content, date: now};
@@ -555,23 +548,19 @@
     // 登录持久化
     function persistLogin(remember=false) { localStorage.setItem('admin_logged', 'true'); localStorage.setItem('admin_expiry', remember ? Date.now()+30*24*3600000 : Date.now()+24*3600000); isAdmin=true; updateUI(true); }
     function checkLoginState() { let exp = localStorage.getItem('admin_expiry'); if(localStorage.getItem('admin_logged')==='true' && exp && Date.now()<parseInt(exp)){ isAdmin=true; updateUI(true); } else { isAdmin=false; updateUI(false); } }
-    function updateUI(logged) { document.getElementById('authSection').style.display=logged?'none':'block'; document.getElementById('adminTools').style.display=logged?'flex':'none'; }
+    function updateUI(logged) { 
+        const authSection = document.getElementById('authSection');
+        const adminTools = document.getElementById('adminTools');
+        if(authSection) authSection.style.display = logged ? 'none' : 'block';
+        if(adminTools) adminTools.style.display = logged ? 'flex' : 'none';
+    }
     function logout() { localStorage.removeItem('admin_logged'); localStorage.removeItem('admin_expiry'); isAdmin=false; updateUI(false); renderBlogList(); showToast('已退出'); }
-    function handleLogin(remember=false) { let u=document.getElementById('loginUsername').value, p=document.getElementById('loginPassword').value; if(u==='admin' && p==='admin123'){ persistLogin(remember); closeModal('loginModal'); showToast(remember?'登录状态30天有效':'登录成功'); document.getElementById('loginError').innerText=''; } else { document.getElementById('loginError').innerText='用户名或密码错误'; } }
-
-    // Giscus 配置加载与保存
-    function loadGiscusSettings() { try{ let cfg=localStorage.getItem('giscus_cfg'); if(cfg){ let c=JSON.parse(cfg); giscusConfig={repo:c.repo||'', repoId:c.repoId||'', categoryId:c.categoryId||''}; } }catch(e){} }
-    function saveGiscusConfig(repo, repoId, categoryId) { giscusConfig={repo,repoId,categoryId}; localStorage.setItem('giscus_cfg',JSON.stringify(giscusConfig)); showToast('GitHub/Giscus配置已保存'); }
-    function clearGiscusConfig() { localStorage.removeItem('giscus_cfg'); giscusConfig={repo:'',repoId:'',categoryId:''}; showToast('配置已清除'); }
-
-    function openGithubConfig() { document.getElementById('repoInput').value=giscusConfig.repo||''; document.getElementById('repoIdInput').value=giscusConfig.repoId||''; document.getElementById('categoryIdInput').value=giscusConfig.categoryId||''; document.getElementById('githubConfigModal').style.display='flex'; }
-    function saveGithubFromModal() { let repo=document.getElementById('repoInput').value.trim(); let rid=document.getElementById('repoIdInput').value.trim(); let cid=document.getElementById('categoryIdInput').value.trim(); if(repo&&rid&&cid){ saveGiscusConfig(repo,rid,cid); closeModal('githubConfigModal'); showToast('配置已保存，刷新评论生效'); if(document.getElementById('detailModal').style.display==='flex') loadGiscusCommentsForArticle(); } else showToast('请填写完整',true); }
+    function handleLogin(remember=false) { let u=document.getElementById('loginUsername').value, p=document.getElementById('loginPassword').value; if(u==='admin' && p==='bixie4.5'){ persistLogin(remember); closeModal('loginModal'); showToast(remember?'登录状态30天有效':'登录成功'); document.getElementById('loginError').innerText=''; } else { document.getElementById('loginError').innerText='用户名或密码错误 (admin / admin123)'; } }
 
     // 初始化事件
     window.onload=()=>{
         loadPostsFromLocal();
         checkLoginState();
-        loadGiscusSettings();
 
         document.getElementById('adminLoginBtn')?.addEventListener('click',()=>document.getElementById('loginModal').style.display='flex');
         document.getElementById('confirmLoginBtn')?.addEventListener('click',()=>handleLogin(false));
@@ -580,16 +569,15 @@
         document.getElementById('newPostBtn')?.addEventListener('click',()=>openEditor(null));
         document.getElementById('savePostBtn')?.addEventListener('click',saveCurrentPost);
         document.getElementById('homeLink')?.addEventListener('click',(e)=>{e.preventDefault(); renderBlogList();});
-        // 可选的logo点击回到首页
         const logoDiv = document.querySelector('.logo');
         if(logoDiv) logoDiv.addEventListener('click',()=>renderBlogList());
-        document.getElementById('configGithubBtn')?.addEventListener('click',openGithubConfig);
-        document.getElementById('saveGithubConfigBtn')?.addEventListener('click',saveGithubFromModal);
-        document.getElementById('clearGithubConfigBtn')?.addEventListener('click',()=>{clearGiscusConfig(); closeModal('githubConfigModal');});
+        
         window.closeModal=closeModal;
-        window.insertBilibiliPlayer=insertBilibiliPlayer; window.insertImageHelper=insertImageHelper; window.insertLinkHelper=insertLinkHelper;
+        window.insertBilibiliPlayer=insertBilibiliPlayer;
+        window.insertImageHelper=insertImageHelper;
+        window.insertLinkHelper=insertLinkHelper;
     };
-    // 导出部分全局函数
+    // 导出全局函数
     window.showArticleDetail = showArticleDetail;
     window.openEditor = openEditor;
 </script>
