@@ -268,18 +268,29 @@
         }
         
         /* B站视频插入对话框 */
-        .video-dialog {
-            background: white;
-            border-radius: 20px;
-            padding: 20px;
+        .video-dialog-section {
             margin: 15px 0;
         }
         .video-preview {
             margin: 15px 0;
             padding: 15px;
-            background: #f5f5f5;
-            border-radius: 12px;
+            background: rgba(0,0,0,0.03);
+            border-radius: 16px;
             text-align: center;
+            min-height: 280px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .video-preview-placeholder {
+            color: #999;
+            font-size: 0.9rem;
+        }
+        .preview-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
         }
         
         .giscus-wrapper {
@@ -339,28 +350,33 @@
 
 <!-- B站视频插入对话框 -->
 <div id="bilibiliDialog" class="modal">
-    <div class="modal-card" style="max-width: 500px;">
+    <div class="modal-card" style="max-width: 600px;">
         <div class="modal-header">
             <span>📺 插入B站视频</span>
             <button class="close-btn" onclick="closeModal('bilibiliDialog')">&times;</button>
         </div>
-        <div>
+        <div class="video-dialog-section">
             <label>输入B站视频BV号或完整链接</label>
             <input type="text" id="bilibiliInput" placeholder="例如: BV1GJ411x7h7 或 https://www.bilibili.com/video/BV1GJ411x7h7">
-            <div class="video-preview" id="videoPreview" style="display: none;">
-                <div style="margin-bottom: 10px;">视频预览：</div>
-                <div class="bilibili-player-wrapper" style="margin: 0;">
-                    <div class="bilibili-player" style="padding-bottom: 56.25%;">
-                        <iframe id="previewIframe" frameborder="0" allowfullscreen></iframe>
-                    </div>
+            
+            <div class="preview-buttons">
+                <button class="btn" id="previewVideoBtn" style="flex:1;">🔍 预览视频</button>
+                <button class="btn" id="clearPreviewBtn" style="flex:1;">🗑️ 清除预览</button>
+            </div>
+            
+            <div class="video-preview" id="videoPreview">
+                <div class="video-preview-placeholder">
+                    <i class="fas fa-video" style="font-size: 48px; opacity: 0.3; margin-bottom: 10px; display: block;"></i>
+                    点击「预览视频」查看效果
                 </div>
             </div>
+            
             <div style="display: flex; gap: 12px; margin-top: 15px;">
-                <button class="btn btn-primary" id="insertVideoBtn" style="flex:1;">插入视频</button>
+                <button class="btn btn-primary" id="insertVideoBtn" style="flex:1;">✅ 插入到文章</button>
                 <button class="btn" onclick="closeModal('bilibiliDialog')">取消</button>
             </div>
             <div style="margin-top: 12px; font-size: 0.7rem; color: #666;">
-                💡 提示：支持输入BV号或完整的B站视频链接
+                💡 提示：支持输入BV号或完整的B站视频链接，点击预览查看效果
             </div>
         </div>
     </div>
@@ -408,6 +424,7 @@
     let isAdmin = false;
     let editId = null;
     let currentPostId = null;
+    let currentPreviewBvid = null;
 
     // 辅助函数
     function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
@@ -421,6 +438,7 @@
 
     // 从输入中提取BV号
     function extractBvid(input) {
+        if (!input) return null;
         // 匹配BV号模式
         const bvMatch = input.match(/BV[a-zA-Z0-9]{10}/);
         if (bvMatch) return bvMatch[0];
@@ -443,6 +461,70 @@
                 </iframe>
             </div>
         </div>`;
+    }
+
+    // 预览B站视频（绑定到按钮）
+    function previewBilibiliVideo() {
+        const input = document.getElementById('bilibiliInput').value;
+        const bvid = extractBvid(input);
+        const previewDiv = document.getElementById('videoPreview');
+        
+        if (bvid) {
+            currentPreviewBvid = bvid;
+            const playerHtml = generateBilibiliPlayer(bvid, { autoplay: 0 });
+            previewDiv.innerHTML = playerHtml;
+            showToast(`预览视频: ${bvid}`);
+        } else {
+            previewDiv.innerHTML = `
+                <div class="video-preview-placeholder">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 48px; opacity: 0.5; margin-bottom: 10px; display: block;"></i>
+                    ❌ 无法识别BV号<br>
+                    请输入正确的BV号或B站视频链接
+                </div>
+            `;
+            showToast('无法识别BV号，请检查输入', true);
+        }
+    }
+
+    // 清除预览
+    function clearPreview() {
+        const previewDiv = document.getElementById('videoPreview');
+        previewDiv.innerHTML = `
+            <div class="video-preview-placeholder">
+                <i class="fas fa-video" style="font-size: 48px; opacity: 0.3; margin-bottom: 10px; display: block;"></i>
+                点击「预览视频」查看效果
+            </div>
+        `;
+        currentPreviewBvid = null;
+        showToast('已清除预览');
+    }
+
+    // 插入视频到编辑器
+    function insertVideoToEditor() {
+        const input = document.getElementById('bilibiliInput').value;
+        const bvid = extractBvid(input);
+        
+        if (!bvid) {
+            showToast('请输入有效的BV号或B站视频链接', true);
+            return;
+        }
+        
+        const textarea = document.getElementById('postContent');
+        const insertText = `@bilibili:${bvid}`;
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        textarea.value = textarea.value.substring(0, start) + insertText + textarea.value.substring(end);
+        textarea.focus();
+        
+        closeModal('bilibiliDialog');
+        showToast(`视频已插入！BV号: ${bvid}`);
+    }
+
+    // 打开B站视频插入对话框
+    function openBilibiliDialog() {
+        document.getElementById('bilibiliInput').value = '';
+        clearPreview();
+        document.getElementById('bilibiliDialog').style.display = 'flex';
     }
 
     // 增强Markdown: 支持多种B站视频格式
@@ -493,50 +575,6 @@
         html = paras.map(p => p.trim()).filter(p=>p && !p.startsWith('<h')&&!p.startsWith('<ul')&&!p.startsWith('<pre')&&!p.startsWith('<div')).map(p=>`<p>${p}</p>`).join('');
         
         return html;
-    }
-
-    // 打开B站视频插入对话框
-    function openBilibiliDialog() {
-        document.getElementById('bilibiliInput').value = '';
-        document.getElementById('videoPreview').style.display = 'none';
-        document.getElementById('bilibiliDialog').style.display = 'flex';
-    }
-
-    // 预览B站视频
-    function previewBilibiliVideo() {
-        const input = document.getElementById('bilibiliInput').value;
-        const bvid = extractBvid(input);
-        const previewDiv = document.getElementById('videoPreview');
-        const previewIframe = document.getElementById('previewIframe');
-        
-        if (bvid) {
-            previewIframe.src = `https://player.bilibili.com/player.html?bvid=${bvid}&page=1&high_quality=1&danmaku=0&autoplay=0`;
-            previewDiv.style.display = 'block';
-        } else {
-            showToast('请输入有效的BV号或B站视频链接', true);
-            previewDiv.style.display = 'none';
-        }
-    }
-
-    // 插入视频到编辑器
-    function insertVideoToEditor() {
-        const input = document.getElementById('bilibiliInput').value;
-        const bvid = extractBvid(input);
-        
-        if (!bvid) {
-            showToast('请输入有效的BV号或B站视频链接', true);
-            return;
-        }
-        
-        const textarea = document.getElementById('postContent');
-        const insertText = `@bilibili:${bvid}`;
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        textarea.value = textarea.value.substring(0, start) + insertText + textarea.value.substring(end);
-        textarea.focus();
-        
-        closeModal('bilibiliDialog');
-        showToast('视频已插入！保存后即可在文章中播放');
     }
 
     // 文章存储
@@ -765,15 +803,28 @@
         const logoDiv = document.querySelector('.logo');
         if(logoDiv) logoDiv.addEventListener('click',()=>renderBlogList());
         
-        // B站视频相关事件
-        const bilibiliInput = document.getElementById('bilibiliInput');
-        if(bilibiliInput) bilibiliInput.addEventListener('input', previewBilibiliVideo);
+        // B站视频相关事件 - 明确绑定按钮
+        document.getElementById('previewVideoBtn')?.addEventListener('click', previewBilibiliVideo);
+        document.getElementById('clearPreviewBtn')?.addEventListener('click', clearPreview);
         document.getElementById('insertVideoBtn')?.addEventListener('click', insertVideoToEditor);
+        
+        // 支持回车键触发预览
+        const bilibiliInput = document.getElementById('bilibiliInput');
+        if(bilibiliInput) {
+            bilibiliInput.addEventListener('keypress', (e) => {
+                if(e.key === 'Enter') {
+                    e.preventDefault();
+                    previewBilibiliVideo();
+                }
+            });
+        }
         
         window.closeModal=closeModal;
         window.openBilibiliDialog=openBilibiliDialog;
         window.insertImageHelper=insertImageHelper;
         window.insertLinkHelper=insertLinkHelper;
+        window.previewBilibiliVideo = previewBilibiliVideo;
+        window.clearPreview = clearPreview;
     };
     
     window.showArticleDetail = showArticleDetail;
