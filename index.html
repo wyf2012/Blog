@@ -424,7 +424,6 @@
     let isAdmin = false;
     let editId = null;
     let currentPostId = null;
-    let currentPreviewBvid = null;
 
     // 辅助函数
     function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
@@ -434,7 +433,9 @@
         document.body.appendChild(t);
         setTimeout(()=>t.remove(),2500);
     }
-    function closeModal(id) { document.getElementById(id).style.display='none'; }
+    function closeModal(id) { 
+        document.getElementById(id).style.display='none'; 
+    }
 
     // 从输入中提取BV号
     function extractBvid(input) {
@@ -463,17 +464,16 @@
         </div>`;
     }
 
-    // 预览B站视频（绑定到按钮）
+    // 预览B站视频
     function previewBilibiliVideo() {
         const input = document.getElementById('bilibiliInput').value;
         const bvid = extractBvid(input);
         const previewDiv = document.getElementById('videoPreview');
         
         if (bvid) {
-            currentPreviewBvid = bvid;
             const playerHtml = generateBilibiliPlayer(bvid, { autoplay: 0 });
             previewDiv.innerHTML = playerHtml;
-            showToast(`预览视频: ${bvid}`);
+            showToast(`✓ 预览视频: ${bvid}`);
         } else {
             previewDiv.innerHTML = `
                 <div class="video-preview-placeholder">
@@ -486,7 +486,7 @@
         }
     }
 
-    // 清除预览
+    // 清除预览（只清空预览区域，不影响插入功能）
     function clearPreview() {
         const previewDiv = document.getElementById('videoPreview');
         previewDiv.innerHTML = `
@@ -495,11 +495,10 @@
                 点击「预览视频」查看效果
             </div>
         `;
-        currentPreviewBvid = null;
         showToast('已清除预览');
     }
 
-    // 插入视频到编辑器
+    // 插入视频到编辑器（修复：不调用clearPreview）
     function insertVideoToEditor() {
         const input = document.getElementById('bilibiliInput').value;
         const bvid = extractBvid(input);
@@ -516,14 +515,28 @@
         textarea.value = textarea.value.substring(0, start) + insertText + textarea.value.substring(end);
         textarea.focus();
         
+        // 关闭对话框
         closeModal('bilibiliDialog');
-        showToast(`视频已插入！BV号: ${bvid}`);
+        showToast(`✓ 视频已插入！BV号: ${bvid}`);
     }
 
     // 打开B站视频插入对话框
     function openBilibiliDialog() {
-        document.getElementById('bilibiliInput').value = '';
-        clearPreview();
+        // 清空输入框和预览
+        const inputField = document.getElementById('bilibiliInput');
+        if (inputField) inputField.value = '';
+        
+        // 重置预览区域
+        const previewDiv = document.getElementById('videoPreview');
+        if (previewDiv) {
+            previewDiv.innerHTML = `
+                <div class="video-preview-placeholder">
+                    <i class="fas fa-video" style="font-size: 48px; opacity: 0.3; margin-bottom: 10px; display: block;"></i>
+                    点击「预览视频」查看效果
+                </div>
+            `;
+        }
+        
         document.getElementById('bilibiliDialog').style.display = 'flex';
     }
 
@@ -823,8 +836,6 @@
         window.openBilibiliDialog=openBilibiliDialog;
         window.insertImageHelper=insertImageHelper;
         window.insertLinkHelper=insertLinkHelper;
-        window.previewBilibiliVideo = previewBilibiliVideo;
-        window.clearPreview = clearPreview;
     };
     
     window.showArticleDetail = showArticleDetail;
