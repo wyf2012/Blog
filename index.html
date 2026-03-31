@@ -257,7 +257,6 @@
             border: none;
         }
         
-        /* 视频插入工具栏 */
         .toolbar-mini {
             background: rgba(0,0,0,0.04);
             border-radius: 48px;
@@ -311,14 +310,13 @@
             border-top: 1px solid rgba(0,0,0,0.08);
         }
 
-        /* 调试信息样式 */
-        .debug-info {
-            background: rgba(0,0,0,0.05);
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 12px;
-            margin: 10px 0;
-            display: none;
+        /* 视频测试区域 */
+        .video-test-area {
+            background: rgba(0,0,0,0.03);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
         }
 
         @media (max-width: 720px) {
@@ -463,7 +461,6 @@
         document.getElementById(id).style.display='none'; 
     }
 
-    // 从输入中提取BV号
     function extractBvid(input) {
         if (!input) return null;
         const bvMatch = input.match(/BV[a-zA-Z0-9]{10}/);
@@ -486,7 +483,6 @@
         </div>`;
     }
 
-    // 预览B站视频
     function previewBilibiliVideo() {
         const input = document.getElementById('bilibiliInput').value;
         const bvid = extractBvid(input);
@@ -560,31 +556,36 @@
     function renderMarkdownWithVideo(text) {
         if(!text) return '<p>暂无内容</p>';
         
+        console.log('===== 开始渲染文章 =====');
         console.log('原始内容:', text);
         
         let html = text;
         
+        // 检查是否包含视频标记
+        const hasVideoTag = /@bilibili:|BV[0-9A-Za-z]{10}/.test(text);
+        console.log('是否包含视频标记:', hasVideoTag);
+        
         // 格式1: @bilibili:BV号
         html = html.replace(/@bilibili:([A-Za-z0-9]+)/gi, (match, bvid) => {
-            console.log('匹配到视频:', bvid);
+            console.log('✅ 匹配到视频 (@bilibili):', bvid);
             return generateBilibiliPlayer(bvid);
         });
         
         // 格式2: [bilibili:BV号]
         html = html.replace(/\[bilibili:([A-Za-z0-9]+)\]/gi, (match, bvid) => {
-            console.log('匹配到视频(bilibili标签):', bvid);
+            console.log('✅ 匹配到视频 ([bilibili]):', bvid);
             return generateBilibiliPlayer(bvid);
         });
         
         // 格式3: 独立的BV号行
         html = html.replace(/^(BV[0-9A-Za-z]{10})$/gm, (match, bv) => {
-            console.log('匹配到独立BV行:', bv);
+            console.log('✅ 匹配到视频 (独立BV行):', bv);
             return generateBilibiliPlayer(bv);
         });
         
         // 格式4: 完整的B站链接
         html = html.replace(/https?:\/\/(www\.)?bilibili\.com\/video\/(BV[a-zA-Z0-9]{10})/gi, (match, prefix, bvid) => {
-            console.log('匹配到B站链接:', bvid);
+            console.log('✅ 匹配到视频 (B站链接):', bvid);
             return generateBilibiliPlayer(bvid);
         });
         
@@ -609,7 +610,9 @@
         let paras = html.split(/\n\n/);
         html = paras.map(p => p.trim()).filter(p=>p && !p.startsWith('<h')&&!p.startsWith('<ul')&&!p.startsWith('<pre')&&!p.startsWith('<div')).map(p=>`<p>${p}</p>`).join('');
         
-        console.log('渲染后的HTML:', html.substring(0, 500));
+        console.log('渲染完成，HTML长度:', html.length);
+        console.log('===== 渲染结束 =====');
+        
         return html;
     }
 
@@ -621,7 +624,10 @@
         if(raw) { 
             try{ 
                 posts = JSON.parse(raw); 
-                console.log('加载文章成功:', posts.length, '篇');
+                console.log('加载文章成功，共', posts.length, '篇');
+                posts.forEach((p, i) => {
+                    console.log(`文章${i+1}: "${p.title}" - 包含视频标记:`, /@bilibili:|BV[0-9A-Za-z]{10}/.test(p.content));
+                });
             } catch(e){ 
                 console.error('解析失败:', e);
             }
@@ -631,19 +637,42 @@
     }
     
     function getDefaultArticles() {
+        console.log('创建默认文章（包含B站视频）');
         return [
             { 
                 id: "1", 
-                title: "B站视频播放示例", 
+                title: "🎬 B站视频播放示例", 
                 excerpt: "点击查看如何在文章中嵌入B站视频", 
-                content: "## 🎬 视频演示\n\n下面是一个B站视频示例：\n\n@bilibili:BV1GJ411x7h7\n\n你也可以直接粘贴链接：\nhttps://www.bilibili.com/video/BV1GJ411x7h7\n\n支持多种格式：\n- `@bilibili:BV号`\n- `[bilibili:BV号]`\n- 直接粘贴B站链接\n\n试试看吧！", 
+                content: `## 🎬 视频演示
+
+下面是一个B站视频示例：
+
+@bilibili:BV1GJ411x7h7
+
+你也可以使用其他格式：
+
+[bilibili:BV1GJ411x7h7]
+
+或者直接粘贴BV号：
+BV1GJ411x7h7
+
+或者粘贴完整链接：
+https://www.bilibili.com/video/BV1GJ411x7h7
+
+试试看吧！`, 
                 date: new Date().toLocaleDateString('zh-CN') 
             },
             { 
                 id: "2", 
-                title: "极简博客使用指南", 
-                excerpt: "毛玻璃风格，支持B站视频和评论功能", 
-                content: "## ✨ 功能特点\n\n### 1. B站视频嵌入\n使用 @bilibili:BV号 即可插入视频\n\n示例：\n@bilibili:BV1GJ411x7h7\n\n### 2. 毛玻璃设计\nWindows 11 风格的现代化界面\n\n### 3. Giscus评论\n使用GitHub账号参与讨论\n\n开始创作吧！", 
+                title: "📺 挪威的冬天 - 视频演示", 
+                excerpt: "包含B站视频的示例文章", 
+                content: `## 🌨️ 挪威的冬天
+
+下面是一段关于挪威冬天的精彩视频：
+
+@bilibili:BV1GJ411x7h7
+
+希望你喜欢！`, 
                 date: new Date().toLocaleDateString('zh-CN') 
             }
         ];
@@ -710,12 +739,21 @@
         
         document.getElementById('detailTitle').innerText = article.title;
         
+        console.log(`\n========== 打开文章: ${article.title} ==========`);
+        console.log('文章内容:', article.content);
+        
         // 渲染内容
         const renderedHtml = renderMarkdownWithVideo(article.content);
         document.getElementById('detailContent').innerHTML = renderedHtml;
         
-        console.log('文章标题:', article.title);
-        console.log('文章内容:', article.content);
+        // 检查是否成功渲染了视频
+        const hasVideoPlayer = renderedHtml.includes('bilibili-player-wrapper');
+        console.log('渲染结果是否包含视频播放器:', hasVideoPlayer);
+        
+        if (!hasVideoPlayer && article.content) {
+            console.warn('⚠️ 警告: 文章内容中没有检测到视频标记！');
+            console.log('请确保文章内容包含: @bilibili:BV号 或 BV号');
+        }
         
         const adminDiv = document.getElementById('detailAdminActions');
         if(isAdmin) {
@@ -876,6 +914,8 @@
         window.openBilibiliDialog=openBilibiliDialog;
         window.insertImageHelper=insertImageHelper;
         window.insertLinkHelper=insertLinkHelper;
+        
+        console.log('博客系统已启动，请打开文章查看视频');
     };
     
     window.showArticleDetail = showArticleDetail;
