@@ -144,7 +144,6 @@
             margin-bottom: 20px;
         }
 
-        /* 模态框层级管理 */
         .modal {
             display: none;
             position: fixed;
@@ -159,7 +158,6 @@
             justify-content: center;
         }
         
-        /* 插入视频对话框需要更高的层级，确保显示在最前面 */
         #bilibiliDialog {
             z-index: 1100;
         }
@@ -177,7 +175,6 @@
             box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
         }
         
-        /* 插入视频对话框的卡片稍微小一点 */
         #bilibiliDialog .modal-card {
             max-width: 600px;
         }
@@ -235,13 +232,15 @@
             margin: 20px 0;
         }
         
-        /* B站播放器容器样式 */
+        /* B站播放器容器样式 - 确保视频可见 */
         .bilibili-player-wrapper {
             margin: 30px 0;
             border-radius: 16px;
             overflow: hidden;
             background: #000;
             box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            position: relative;
+            width: 100%;
         }
         .bilibili-player {
             position: relative;
@@ -281,7 +280,6 @@
             background: rgba(255,255,255,0.9);
         }
         
-        /* B站视频插入对话框 */
         .video-dialog-section {
             margin: 15px 0;
         }
@@ -311,6 +309,16 @@
             margin-top: 40px;
             padding-top: 20px;
             border-top: 1px solid rgba(0,0,0,0.08);
+        }
+
+        /* 调试信息样式 */
+        .debug-info {
+            background: rgba(0,0,0,0.05);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            margin: 10px 0;
+            display: none;
         }
 
         @media (max-width: 720px) {
@@ -362,7 +370,7 @@
     </div>
 </div>
 
-<!-- B站视频插入对话框 - 更高的层级 -->
+<!-- B站视频插入对话框 -->
 <div id="bilibiliDialog" class="modal">
     <div class="modal-card">
         <div class="modal-header">
@@ -410,11 +418,14 @@
         </div>
         <input type="text" id="postTitle" placeholder="文章标题">
         <input type="text" id="postExcerpt" placeholder="摘要（可选）">
-        <textarea id="postContent" rows="12" placeholder="支持Markdown语法。点击上方按钮插入B站视频"></textarea>
+        <textarea id="postContent" rows="12" placeholder="支持Markdown语法。插入B站视频使用: @bilibili:BV号"></textarea>
         <div id="editorError" style="color:#c00;"></div>
         <div style="display:flex; gap:12px; margin-top:16px;">
             <button class="btn btn-primary" id="savePostBtn">发布</button>
             <button class="btn" onclick="closeModal('editorModal')">取消</button>
+        </div>
+        <div style="margin-top: 12px; font-size: 0.7rem; color: #666; background: rgba(0,0,0,0.03); padding: 8px; border-radius: 12px;">
+            📌 示例：@bilibili:BV1GJ411x7h7
         </div>
     </div>
 </div>
@@ -439,14 +450,15 @@
     let editId = null;
     let currentPostId = null;
 
-    // 辅助函数
     function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
+    
     function showToast(msg, isErr=false) {
         let t = document.createElement('div'); t.className='toast'; t.innerText=msg; 
         t.style.background=isErr?'#c62828':'rgba(0,0,0,0.8)'; 
         document.body.appendChild(t);
         setTimeout(()=>t.remove(),2500);
     }
+    
     function closeModal(id) { 
         document.getElementById(id).style.display='none'; 
     }
@@ -454,14 +466,10 @@
     // 从输入中提取BV号
     function extractBvid(input) {
         if (!input) return null;
-        // 匹配BV号模式
         const bvMatch = input.match(/BV[a-zA-Z0-9]{10}/);
         if (bvMatch) return bvMatch[0];
-        
-        // 匹配完整链接中的BV号
         const urlMatch = input.match(/\/video\/(BV[a-zA-Z0-9]{10})/);
         if (urlMatch) return urlMatch[1];
-        
         return null;
     }
 
@@ -500,7 +508,6 @@
         }
     }
 
-    // 清除预览
     function clearPreview() {
         const previewDiv = document.getElementById('videoPreview');
         previewDiv.innerHTML = `
@@ -512,7 +519,6 @@
         showToast('已清除预览');
     }
 
-    // 插入视频到编辑器
     function insertVideoToEditor() {
         const input = document.getElementById('bilibiliInput').value;
         const bvid = extractBvid(input);
@@ -529,18 +535,14 @@
         textarea.value = textarea.value.substring(0, start) + insertText + textarea.value.substring(end);
         textarea.focus();
         
-        // 关闭插入视频对话框
         closeModal('bilibiliDialog');
         showToast(`✓ 视频已插入！BV号: ${bvid}`);
     }
 
-    // 打开B站视频插入对话框
     function openBilibiliDialog() {
-        // 清空输入框和预览
         const inputField = document.getElementById('bilibiliInput');
         if (inputField) inputField.value = '';
         
-        // 重置预览区域
         const previewDiv = document.getElementById('videoPreview');
         if (previewDiv) {
             previewDiv.innerHTML = `
@@ -551,33 +553,38 @@
             `;
         }
         
-        // 显示插入视频对话框（由于z-index更高，会显示在编辑窗口上方）
         document.getElementById('bilibiliDialog').style.display = 'flex';
     }
 
     // 增强Markdown: 支持多种B站视频格式
     function renderMarkdownWithVideo(text) {
-        if(!text) return '';
+        if(!text) return '<p>暂无内容</p>';
+        
+        console.log('原始内容:', text);
         
         let html = text;
         
         // 格式1: @bilibili:BV号
         html = html.replace(/@bilibili:([A-Za-z0-9]+)/gi, (match, bvid) => {
+            console.log('匹配到视频:', bvid);
             return generateBilibiliPlayer(bvid);
         });
         
         // 格式2: [bilibili:BV号]
         html = html.replace(/\[bilibili:([A-Za-z0-9]+)\]/gi, (match, bvid) => {
+            console.log('匹配到视频(bilibili标签):', bvid);
             return generateBilibiliPlayer(bvid);
         });
         
         // 格式3: 独立的BV号行
         html = html.replace(/^(BV[0-9A-Za-z]{10})$/gm, (match, bv) => {
+            console.log('匹配到独立BV行:', bv);
             return generateBilibiliPlayer(bv);
         });
         
         // 格式4: 完整的B站链接
         html = html.replace(/https?:\/\/(www\.)?bilibili\.com\/video\/(BV[a-zA-Z0-9]{10})/gi, (match, prefix, bvid) => {
+            console.log('匹配到B站链接:', bvid);
             return generateBilibiliPlayer(bvid);
         });
         
@@ -602,14 +609,23 @@
         let paras = html.split(/\n\n/);
         html = paras.map(p => p.trim()).filter(p=>p && !p.startsWith('<h')&&!p.startsWith('<ul')&&!p.startsWith('<pre')&&!p.startsWith('<div')).map(p=>`<p>${p}</p>`).join('');
         
+        console.log('渲染后的HTML:', html.substring(0, 500));
         return html;
     }
 
     // 文章存储
     async function savePostsToLocal() { localStorage.setItem('winblog_posts', JSON.stringify(posts)); }
+    
     async function loadPostsFromLocal() {
         let raw = localStorage.getItem('winblog_posts');
-        if(raw) { try{ posts = JSON.parse(raw); }catch(e){} }
+        if(raw) { 
+            try{ 
+                posts = JSON.parse(raw); 
+                console.log('加载文章成功:', posts.length, '篇');
+            } catch(e){ 
+                console.error('解析失败:', e);
+            }
+        }
         if(!posts || !posts.length) posts = getDefaultArticles();
         renderBlogList();
     }
@@ -627,7 +643,7 @@
                 id: "2", 
                 title: "极简博客使用指南", 
                 excerpt: "毛玻璃风格，支持B站视频和评论功能", 
-                content: "## ✨ 功能特点\n\n### 1. B站视频嵌入\n使用 @bilibili:BV号 即可插入视频\n\n### 2. 毛玻璃设计\nWindows 11 风格的现代化界面\n\n### 3. Giscus评论\n使用GitHub账号参与讨论\n\n开始创作吧！", 
+                content: "## ✨ 功能特点\n\n### 1. B站视频嵌入\n使用 @bilibili:BV号 即可插入视频\n\n示例：\n@bilibili:BV1GJ411x7h7\n\n### 2. 毛玻璃设计\nWindows 11 风格的现代化界面\n\n### 3. Giscus评论\n使用GitHub账号参与讨论\n\n开始创作吧！", 
                 date: new Date().toLocaleDateString('zh-CN') 
             }
         ];
@@ -693,7 +709,13 @@
         currentPostId = id;
         
         document.getElementById('detailTitle').innerText = article.title;
-        document.getElementById('detailContent').innerHTML = renderMarkdownWithVideo(article.content);
+        
+        // 渲染内容
+        const renderedHtml = renderMarkdownWithVideo(article.content);
+        document.getElementById('detailContent').innerHTML = renderedHtml;
+        
+        console.log('文章标题:', article.title);
+        console.log('文章内容:', article.content);
         
         const adminDiv = document.getElementById('detailAdminActions');
         if(isAdmin) {
@@ -758,6 +780,7 @@
             ta.focus(); 
         } 
     }
+    
     function insertLinkHelper() { 
         let txt=prompt('链接文字'); 
         if(txt){ 
@@ -779,6 +802,7 @@
         isAdmin=true; 
         updateUI(true); 
     }
+    
     function checkLoginState() { 
         let exp = localStorage.getItem('admin_expiry'); 
         if(localStorage.getItem('admin_logged')==='true' && exp && Date.now()<parseInt(exp)){ 
@@ -789,12 +813,14 @@
             updateUI(false); 
         } 
     }
+    
     function updateUI(logged) { 
         const authSection = document.getElementById('authSection');
         const adminTools = document.getElementById('adminTools');
         if(authSection) authSection.style.display = logged ? 'none' : 'block';
         if(adminTools) adminTools.style.display = logged ? 'flex' : 'none';
     }
+    
     function logout() { 
         localStorage.removeItem('admin_logged'); 
         localStorage.removeItem('admin_expiry'); 
@@ -803,6 +829,7 @@
         renderBlogList(); 
         showToast('已退出'); 
     }
+    
     function handleLogin(remember=false) { 
         let u=document.getElementById('loginUsername').value, p=document.getElementById('loginPassword').value; 
         if(u==='admin' && p==='bixie4.5'){ 
@@ -831,12 +858,10 @@
         const logoDiv = document.querySelector('.logo');
         if(logoDiv) logoDiv.addEventListener('click',()=>renderBlogList());
         
-        // B站视频相关事件
         document.getElementById('previewVideoBtn')?.addEventListener('click', previewBilibiliVideo);
         document.getElementById('clearPreviewBtn')?.addEventListener('click', clearPreview);
         document.getElementById('insertVideoBtn')?.addEventListener('click', insertVideoToEditor);
         
-        // 支持回车键触发预览
         const bilibiliInput = document.getElementById('bilibiliInput');
         if(bilibiliInput) {
             bilibiliInput.addEventListener('keypress', (e) => {
