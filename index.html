@@ -93,7 +93,7 @@
 
 <main class="container"><div id="blogListContainer" class="blog-grid"></div></main>
 
-<!-- GitHub 配置模态框 -->
+<!-- GitHub 配置模态框（仅管理员可见） -->
 <div id="githubConfigModal" class="modal">
     <div class="modal-card">
         <div class="modal-header"><span>☁️ GitHub 云端配置</span><button class="close-btn" onclick="closeModal('githubConfigModal')">&times;</button></div>
@@ -208,12 +208,10 @@
         
         logo.addEventListener('click', () => {
             clickCount++;
-            console.log(`点击次数: ${clickCount}`);
             
             if(clickTimer) clearTimeout(clickTimer);
             
             if(clickCount === 5) {
-                // 触发管理员登录
                 clickCount = 0;
                 showAdminLoginDialog();
             }
@@ -271,20 +269,19 @@
         } else {
             indicator.className = 'sync-status warning';
             indicator.innerHTML = `<i class="fas fa-exclamation-triangle"></i> 未配置云端`;
-            indicator.title = '点击配置云端存储';
-            indicator.onclick = () => openGithubConfig();
+            indicator.title = '需要管理员配置云端存储';
         }
     }
     
-    // 从 GitHub 手动拉取数据
+    // ==================== 手动从 GitHub 拉取数据（访客可用）====================
     async function manualPullFromGithub() {
+        // 检查是否已配置 GitHub
         if(!githubConfig.token || !githubConfig.owner || !githubConfig.repo) {
-            showToast('请先配置 GitHub', true);
-            openGithubConfig();
+            showToast('⚠️ 云端尚未配置，请联系管理员配置 GitHub', true, 4000);
             return false;
         }
         
-        showToast('🔄 正在从云端拉取数据...');
+        showToast('🔄 正在从云端拉取最新文章...');
         let indicator = document.getElementById('syncIndicator');
         if(indicator) {
             indicator.className = 'sync-status syncing';
@@ -293,7 +290,9 @@
         
         try {
             let url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${STORAGE_FILE}`;
-            let res = await fetch(url, { headers: { 'Authorization': `token ${githubConfig.token}` } });
+            let res = await fetch(url, { 
+                headers: { 'Authorization': `token ${githubConfig.token}` }
+            });
             
             if(res.status === 404) {
                 showToast('云端暂无数据', true);
@@ -306,11 +305,16 @@
             let cloudPosts = JSON.parse(content);
             
             if(Array.isArray(cloudPosts)) {
+                // 更新文章数据
                 posts = cloudPosts;
+                // 同时更新本地缓存
                 localStorage.setItem('blog_posts_cache', JSON.stringify(posts));
+                // 刷新页面显示
                 renderBlogList();
-                showToast(`✅ 同步成功！共 ${posts.length} 篇文章`, false, 3000);
+                showToast(`✅ 同步成功！已更新 ${posts.length} 篇文章`, false, 3000);
                 return true;
+            } else {
+                throw new Error('数据格式错误');
             }
         } catch(e) {
             showToast(`❌ 拉取失败: ${e.message}`, true, 4000);
@@ -318,10 +322,65 @@
         } finally {
             updateSyncStatus();
         }
-        return false;
     }
     
-    // 测试 GitHub 连接
+    // ==================== 管理员专用的保存到 GitHub ====================
+    async function saveToGithub(showToastMsg = true) {
+        if(!isAdmin) {
+            if(showToastMsg) showToast('只有管理员可以保存文章到云端', true);
+            return false;
+        }
+        if(!githubConfig.token || !githubConfig.owner || !githubConfig.repo) return false;
+        
+        try {
+            let content = btoa(encodeURIComponent(JSON.stringify(posts, null, 2)));
+            let url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${STORAGE_FILE}`;
+            
+            let sha = '';
+            let branch = githubConfig.branch || 'main';
+            try {
+                let getRes = await fetch(url, { headers: { 'Authorization': `token ${githubConfig.token}` } });
+                if(getRes.ok) { let d = await getRes.json(); sha = d.sha; }
+            } catch(e) {}
+            
+            let res = await fetch(url, {
+                method: 'PUT',
+                headers: { 'Authorization': `token ${githubConfig.token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    message: `博客更新 - ${new Date().toLocaleString('zh-CN')} - ${posts.length}篇文章`, 
+                    content, 
+                    sha, 
+                    branch: branch
+                })
+            });
+            
+            if(res.ok) {
+                if(showToastMsg) showToast('✅ 已保存到 GitHub 云端！', false, 2500);
+                return true;
+            } else {
+                let err = await res.json();
+                if(showToastMsg) showToast(`❌ 保存失败: ${err.message}`, true, 5000);
+                return false;
+            }
+        } catch(e) { 
+            if(showToastMsg) showToast(`❌ 网络错误: ${e.message}`, true, 5000);
+            return false; 
+        }
+    }
+    
+    async function savePosts(showCloudToast = true) {
+        // 保存到本地缓存
+        localStorage.setItem('blog_posts_cache', JSON.stringify(posts));
+        
+        // 如果是管理员，同时保存到云端
+        let cloudSuccess = false;
+        if(isAdmin && githubConfig.token && githubConfig.owner && githubConfig.repo) {
+            cloudSuccess = await saveToGithub(showCloudToast);
+        }
+        return cloudSuccess;
+    }
+    
+    // 测试 GitHub 连接（管理员用）
     async function testGithubConnection() {
         let token = document.getElementById('githubToken').value.trim();
         let owner = document.getElementById('githubOwner').value.trim();
@@ -370,60 +429,11 @@
         }
     }
     
-    // 保存到 GitHub
-    async function saveToGithub(showToastMsg = true) {
-        if(!githubConfig.token || !githubConfig.owner || !githubConfig.repo) return false;
-        
-        try {
-            let content = btoa(encodeURIComponent(JSON.stringify(posts, null, 2)));
-            let url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${STORAGE_FILE}`;
-            
-            let sha = '';
-            let branch = githubConfig.branch || 'main';
-            try {
-                let getRes = await fetch(url, { headers: { 'Authorization': `token ${githubConfig.token}` } });
-                if(getRes.ok) { let d = await getRes.json(); sha = d.sha; }
-            } catch(e) {}
-            
-            let res = await fetch(url, {
-                method: 'PUT',
-                headers: { 'Authorization': `token ${githubConfig.token}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    message: `博客更新 - ${new Date().toLocaleString('zh-CN')} - ${posts.length}篇文章`, 
-                    content, 
-                    sha, 
-                    branch: branch
-                })
-            });
-            
-            if(res.ok) {
-                if(showToastMsg) showToast('✅ 已保存到 GitHub 云端！', false, 2500);
-                return true;
-            } else {
-                let err = await res.json();
-                if(showToastMsg) showToast(`❌ 保存失败: ${err.message}`, true, 5000);
-                return false;
-            }
-        } catch(e) { 
-            if(showToastMsg) showToast(`❌ 网络错误: ${e.message}`, true, 5000);
-            return false; 
-        }
-    }
-    
-    async function savePosts(showCloudToast = true) {
-        localStorage.setItem('blog_posts_cache', JSON.stringify(posts));
-        
-        let cloudSuccess = false;
-        if(githubConfig.token && githubConfig.owner && githubConfig.repo) {
-            cloudSuccess = await saveToGithub(showCloudToast);
-        }
-        return cloudSuccess;
-    }
-    
+    // 初始加载文章
     async function loadPosts() {
         let loaded = false;
         
-        // 尝试从 GitHub 加载
+        // 尝试从 GitHub 加载（如果已配置）
         if(githubConfig.token && githubConfig.owner && githubConfig.repo) {
             try {
                 let url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${STORAGE_FILE}`;
@@ -432,7 +442,7 @@
                     let data = await res.json();
                     let content = decodeURIComponent(escape(atob(data.content)));
                     let cloudPosts = JSON.parse(content);
-                    if(Array.isArray(cloudPosts)) {
+                    if(Array.isArray(cloudPosts) && cloudPosts.length > 0) {
                         posts = cloudPosts;
                         localStorage.setItem('blog_posts_cache', JSON.stringify(posts));
                         loaded = true;
@@ -441,20 +451,25 @@
             } catch(e) {}
         }
         
+        // 从本地缓存加载
         if(!loaded) {
             let cached = localStorage.getItem('blog_posts_cache');
             if(cached) {
-                try { posts = JSON.parse(cached); loaded = true; } catch(e){}
+                try { 
+                    posts = JSON.parse(cached); 
+                    loaded = true; 
+                } catch(e){}
             }
         }
         
+        // 默认文章
         if(!loaded || !posts || posts.length === 0) {
             posts = [
                 { id: "1", title: "🎬 B站视频播放示例", summary: "点击查看如何嵌入B站视频", 
                   content: "## 🎬 视频演示\n\n@bilibili:BV1GJ411x7h7\n\n试试看吧！", 
                   date: new Date().toLocaleDateString('zh-CN') },
                 { id: "2", title: "☁️ 云端配置指南", summary: "配置GitHub后数据永久保存", 
-                  content: "## ☁️ 云端配置\n\n1. 点击右上角「云端配置」\n2. 输入 GitHub Token 和仓库\n3. 保存后自动同步\n\n**清除浏览器数据也不会丢失！**", 
+                  content: "## ☁️ 云端配置\n\n1. 点击标题5次进入管理员模式\n2. 点击「云端配置」\n3. 输入 GitHub Token 和仓库\n4. 保存后文章自动同步\n\n**清除浏览器数据也不会丢失！**", 
                   date: new Date().toLocaleDateString('zh-CN') }
             ];
             localStorage.setItem('blog_posts_cache', JSON.stringify(posts));
@@ -510,6 +525,7 @@
     }
     
     function editPost(id) {
+        if(!isAdmin) { showToast('请先进入管理员模式', true); return; }
         closeModal('detailModal');
         let post = posts.find(p=>p.id==id);
         if(post) {
@@ -523,6 +539,7 @@
     }
     
     async function deletePost(id) {
+        if(!isAdmin) { showToast('请先进入管理员模式', true); return; }
         if(!confirm('⚠️ 确定删除这篇文章吗？')) return;
         let postTitle = posts.find(p=>p.id==id)?.title || '';
         posts = posts.filter(p=>p.id!=id);
@@ -534,6 +551,7 @@
     }
     
     async function saveCurrentPost() {
+        if(!isAdmin) { showToast('请先进入管理员模式', true); return; }
         let title = document.getElementById('postTitle').value.trim();
         let summary = document.getElementById('postSummary').value.trim();
         let content = document.getElementById('postBody').value.trim();
@@ -581,6 +599,7 @@
     }
     
     async function saveGithubFromForm() { 
+        if(!isAdmin) { showToast('请先进入管理员模式', true); return; }
         let token = document.getElementById('githubToken').value.trim();
         let owner = document.getElementById('githubOwner').value.trim();
         let repo = document.getElementById('githubRepo').value.trim();
@@ -606,10 +625,12 @@
         saveGithubConfig(token, owner, repo, branch);
         closeModal('githubConfigModal');
         showToast('配置已保存', false);
-        await loadPosts();
+        // 配置完成后自动拉取一次数据
+        await manualPullFromGithub();
     }
     
     function clearGithub() { 
+        if(!isAdmin) { showToast('请先进入管理员模式', true); return; }
         githubConfig = { token: '', owner: '', repo: '', branch: 'main' }; 
         localStorage.removeItem('github_blog_config'); 
         updateSyncStatus(); 
@@ -645,8 +666,9 @@
         initSecretAdmin();
         await loadPosts();
         
-        document.getElementById('homeLink')?.addEventListener('click',(e)=>{ e.preventDefault(); renderBlogList(); });
+        // 同步按钮对所有访客可用
         document.getElementById('syncFromGithubBtn')?.addEventListener('click', manualPullFromGithub);
+        document.getElementById('homeLink')?.addEventListener('click',(e)=>{ e.preventDefault(); renderBlogList(); });
         document.getElementById('newPostBtn')?.addEventListener('click',()=>{ 
             if(!isAdmin) { showToast('请先进入管理员模式', true); return; }
             editId=null; 
