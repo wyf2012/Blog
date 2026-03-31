@@ -41,6 +41,7 @@
         .sync-status { background: #d1fae5; color: #065f46; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
         .sync-status.syncing { background: #e0e7ff; color: #3730a3; animation: pulse 1s infinite; }
         .sync-status.error { background: #fee2e2; color: #dc2626; }
+        .sync-status.success { background: #d1fae5; color: #065f46; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
         .blog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 28px; margin: 40px 0 60px; }
         .blog-card { background: rgba(255,255,255,0.7); backdrop-filter: blur(16px); border-radius: 24px; padding: 24px; transition: all 0.25s; border: 1px solid rgba(255,255,255,0.9); cursor: pointer; }
@@ -68,6 +69,39 @@
         .giscus-wrapper { margin-top: 40px; padding-top: 20px; border-top: 1px solid rgba(0,0,0,0.08); }
         .config-info { background: #f0f9ff; padding: 12px; border-radius: 12px; margin: 15px 0; font-size: 0.8rem; }
         .admin-tools-bar { background: rgba(0,0,0,0.03); border-radius: 40px; padding: 8px 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            display: none;
+        }
+        .loading-spinner {
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(16px);
+            padding: 20px 40px;
+            border-radius: 60px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        .loading-spinner i {
+            font-size: 1.5rem;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
         @media (max-width: 720px) { .container { padding: 0 16px; } .nav-content { justify-content: center; } }
     </style>
 </head>
@@ -79,7 +113,7 @@
         <div class="nav-links">
             <a href="#" id="homeLink" class="nav-link">首页</a>
             <button class="btn" id="syncFromGithubBtn"><i class="fas fa-download"></i> 同步云端</button>
-            <span id="syncStatus" class="sync-status">📡 就绪</span>
+            <span id="syncStatus" class="sync-status">📡 自动同步中...</span>
             <div id="adminTools" style="display: none;">
                 <div class="admin-tools-bar">
                     <button class="btn" id="newPostBtn"><i class="fas fa-plus"></i> 写文章</button>
@@ -93,6 +127,14 @@
 </div>
 
 <main class="container"><div id="blogListContainer" class="blog-grid"></div></main>
+
+<!-- 加载遮罩层 -->
+<div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-spinner">
+        <i class="fas fa-spinner"></i>
+        <span>正在从云端获取最新文章...</span>
+    </div>
+</div>
 
 <!-- 云端配置模态框（仅管理员） -->
 <div id="githubConfigModal" class="modal">
@@ -164,6 +206,7 @@
     };
     let clickCount = 0;
     let clickTimer = null;
+    let isAutoSyncing = false;
     const STORAGE_FILE = 'blog_posts.json';
     const ADMIN_PASSWORD = 'bixie4.5';
     
@@ -172,8 +215,8 @@
         { id: "1", title: "🎬 B站视频播放示例", summary: "点击查看如何嵌入B站视频", 
           content: "## 🎬 视频演示\n\n下面是一个B站视频示例：\n\n@bilibili:BV1GJ411x7h7\n\n试试看吧！", 
           date: new Date().toLocaleDateString('zh-CN') },
-        { id: "2", title: "📖 使用说明", summary: "点击「同步云端」获取最新文章", 
-          content: "## 📖 使用说明\n\n### 访客\n- 直接浏览文章\n- 点击「同步云端」获取最新内容\n\n### 管理员\n- 点击标题5次进入管理员模式\n- 密码: bixie4.5\n- 可以写文章、编辑、删除\n\n### 云端同步\n- 默认使用 wyf2012/Blog 仓库\n- 公开仓库，无需登录即可同步\n- 如果同步失败，会自动使用本地缓存", 
+        { id: "2", title: "📖 使用说明", summary: "页面会自动从云端同步最新文章", 
+          content: "## 📖 使用说明\n\n### 自动同步\n- 每次刷新页面会自动从云端获取最新文章\n- 也可以手动点击「同步云端」按钮\n\n### 管理员\n- 点击标题5次进入管理员模式\n- 密码: bixie4.5\n- 可以写文章、编辑、删除\n\n### 云端配置\n- 默认使用 wyf2012/Blog 仓库\n- 公开仓库，无需登录即可同步", 
           date: new Date().toLocaleDateString('zh-CN') }
     ];
     
@@ -191,18 +234,33 @@
     
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
     
-    function updateSyncStatus(status, isError=false) {
+    function updateSyncStatus(status, message) {
         let indicator = document.getElementById('syncStatus');
         if(!indicator) return;
         if(status === 'syncing') {
             indicator.className = 'sync-status syncing';
-            indicator.innerHTML = `<i class="fas fa-spinner fa-pulse"></i> 同步中...`;
-        } else if(isError) {
+            indicator.innerHTML = `<i class="fas fa-spinner fa-pulse"></i> ${message || '同步中...'}`;
+        } else if(status === 'error') {
             indicator.className = 'sync-status error';
-            indicator.innerHTML = `<i class="fas fa-exclamation-triangle"></i> 同步失败`;
+            indicator.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${message || '同步失败'}`;
+        } else if(status === 'success') {
+            indicator.className = 'sync-status success';
+            indicator.innerHTML = `<i class="fas fa-check-circle"></i> ${message || '已同步'}`;
+            setTimeout(() => {
+                if(indicator.className === 'sync-status success') {
+                    indicator.innerHTML = `<i class="fas fa-check-circle"></i> 就绪`;
+                }
+            }, 3000);
         } else {
             indicator.className = 'sync-status';
-            indicator.innerHTML = `<i class="fas fa-check-circle"></i> 就绪`;
+            indicator.innerHTML = `<i class="fas fa-check-circle"></i> ${message || '就绪'}`;
+        }
+    }
+    
+    function showLoading(show) {
+        const overlay = document.getElementById('loadingOverlay');
+        if(overlay) {
+            overlay.style.display = show ? 'flex' : 'none';
         }
     }
     
@@ -263,7 +321,6 @@
         
         for (let i = 0; i <= retries; i++) {
             try {
-                // 添加超时控制
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 8000);
                 
@@ -275,7 +332,6 @@
                     return null;
                 }
                 if (res.status === 403) {
-                    // 频率限制，等待后重试
                     console.log(`频率限制，等待后重试... (${i+1}/${retries+1})`);
                     if (i < retries) {
                         await new Promise(r => setTimeout(r, delay * (i + 1)));
@@ -315,7 +371,6 @@
         const owner = githubConfig.owner || 'wyf2012';
         const repo = githubConfig.repo || 'Blog';
         
-        // 检查是否配置了 Token
         if(!githubConfig.token) {
             showToast('未配置 Token，文章仅保存到本地', true);
             return false;
@@ -407,10 +462,15 @@
         }
     }
     
-    // ==================== 文章同步（带错误处理）====================
-    async function syncFromCloud() {
-        updateSyncStatus('syncing');
-        showToast('🔄 正在从云端同步文章...');
+    // ==================== 文章同步（核心功能）====================
+    async function syncFromCloud(showLoadingIndicator = true, isAutoSync = false) {
+        if (isAutoSyncing) return;
+        isAutoSyncing = true;
+        
+        if (showLoadingIndicator) {
+            showLoading(true);
+        }
+        updateSyncStatus('syncing', isAutoSync ? '自动同步中...' : '同步中...');
         
         try {
             const cloudPosts = await fetchFromGithubWithRetry(2, 1500);
@@ -419,8 +479,10 @@
                 posts = cloudPosts;
                 localStorage.setItem('blog_posts_cache', JSON.stringify(posts));
                 renderBlogList();
-                updateSyncStatus('success');
-                showToast(`✅ 同步成功！已更新 ${posts.length} 篇文章`, false, 3000);
+                updateSyncStatus('success', isAutoSync ? '自动同步成功' : '同步成功');
+                if (showLoadingIndicator) {
+                    showToast(`✅ 自动同步成功！已更新 ${posts.length} 篇文章`, false, 2000);
+                }
                 return true;
             } else {
                 // 尝试从本地缓存加载
@@ -429,8 +491,10 @@
                     try { 
                         posts = JSON.parse(cached); 
                         renderBlogList();
-                        updateSyncStatus('error');
-                        showToast('⚠️ 云端无数据，已加载本地缓存', true);
+                        updateSyncStatus('error', '云端无数据，使用本地缓存');
+                        if (showLoadingIndicator) {
+                            showToast('⚠️ 云端无数据，已加载本地缓存', true);
+                        }
                         return true;
                     } catch(e) {}
                 }
@@ -439,8 +503,10 @@
                 posts = [...BACKUP_POSTS];
                 localStorage.setItem('blog_posts_cache', JSON.stringify(posts));
                 renderBlogList();
-                updateSyncStatus('error');
-                showToast('⚠️ 云端无数据，已加载默认文章', true);
+                updateSyncStatus('error', '云端无数据，使用默认文章');
+                if (showLoadingIndicator) {
+                    showToast('⚠️ 云端无数据，已加载默认文章', true);
+                }
                 return false;
             }
         } catch(e) {
@@ -452,8 +518,10 @@
                 try { 
                     posts = JSON.parse(cached); 
                     renderBlogList();
-                    updateSyncStatus('error');
-                    showToast(`❌ 同步失败: ${e.message}\n已加载本地缓存`, true, 4000);
+                    updateSyncStatus('error', '同步失败，使用本地缓存');
+                    if (showLoadingIndicator) {
+                        showToast(`❌ 同步失败: ${e.message}\n已加载本地缓存`, true, 4000);
+                    }
                     return true;
                 } catch(err) {}
             }
@@ -461,15 +529,22 @@
             // 使用备用数据
             posts = [...BACKUP_POSTS];
             renderBlogList();
-            updateSyncStatus('error');
-            showToast(`❌ 同步失败: ${e.message}\n已加载默认文章`, true, 5000);
+            updateSyncStatus('error', '同步失败，使用默认文章');
+            if (showLoadingIndicator) {
+                showToast(`❌ 同步失败: ${e.message}\n已加载默认文章`, true, 5000);
+            }
             return false;
+        } finally {
+            isAutoSyncing = false;
+            if (showLoadingIndicator) {
+                showLoading(false);
+            }
         }
     }
     
     // ==================== 文章加载 ====================
     async function loadPosts() {
-        // 优先从本地缓存加载（快速显示）
+        // 先快速显示本地缓存
         let cached = localStorage.getItem('blog_posts_cache');
         if(cached) {
             try { 
@@ -481,21 +556,8 @@
             renderBlogList();
         }
         
-        // 后台尝试从云端同步
-        try {
-            const cloudPosts = await fetchFromGithubWithRetry(1, 1000);
-            if (cloudPosts && Array.isArray(cloudPosts) && cloudPosts.length > 0) {
-                posts = cloudPosts;
-                localStorage.setItem('blog_posts_cache', JSON.stringify(posts));
-                renderBlogList();
-                showToast(`📚 已加载云端最新文章 (${posts.length}篇)`, false, 2000);
-            } else {
-                showToast(`📚 已加载本地文章 (${posts.length}篇)`, false, 2000);
-            }
-        } catch(e) {
-            console.log('后台同步失败，使用本地数据');
-            showToast(`📚 已加载本地文章 (${posts.length}篇)`, false, 2000);
-        }
+        // 自动从云端同步（不显示加载遮罩，静默同步）
+        await syncFromCloud(false, true);
     }
     
     async function savePosts() {
@@ -689,10 +751,15 @@
         loadConfig();
         checkLogin();
         initSecretAdmin();
+        
+        // 显示加载状态
+        updateSyncStatus('syncing', '正在自动同步...');
+        
+        // 加载文章（会自动触发自动同步）
         await loadPosts();
         
         // 绑定事件
-        document.getElementById('syncFromGithubBtn')?.addEventListener('click', syncFromCloud);
+        document.getElementById('syncFromGithubBtn')?.addEventListener('click', () => syncFromCloud(true, false));
         document.getElementById('homeLink')?.addEventListener('click',(e)=>{ e.preventDefault(); renderBlogList(); });
         document.getElementById('newPostBtn')?.addEventListener('click',()=>{ 
             if(!isAdmin) { showToast('请先进入管理员模式', true); return; }
