@@ -39,7 +39,6 @@
         .btn-github:hover { background: #2c3e50; }
         .status-badge { background: rgba(0,0,0,0.05); padding: 5px 12px; border-radius: 30px; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 6px; }
         .sync-status { background: #d1fae5; color: #065f46; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
-        .sync-status.warning { background: #fed7aa; color: #9b4d00; }
         .sync-status.syncing { background: #e0e7ff; color: #3730a3; animation: pulse 1s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
         .blog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 28px; margin: 40px 0 60px; }
@@ -49,7 +48,7 @@
         .blog-meta { font-size: 0.75rem; color: #4a5568; margin-bottom: 16px; }
         .blog-excerpt { color: #2d3a4b; line-height: 1.45; margin-bottom: 20px; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(12px); z-index: 1000; align-items: center; justify-content: center; }
-        #bilibiliDialog, #githubAuthModal { z-index: 1100; }
+        #bilibiliDialog, #githubConfigModal { z-index: 1100; }
         .modal-card { background: rgba(255,255,255,0.85); backdrop-filter: blur(32px); border-radius: 32px; width: 90%; max-width: 500px; max-height: 85vh; overflow-y: auto; padding: 28px; border: 1px solid rgba(255,255,255,0.8); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
         .modal-header { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 1.4rem; margin-bottom: 20px; }
         .close-btn { font-size: 28px; background: none; border: none; cursor: pointer; opacity: 0.7; }
@@ -68,8 +67,6 @@
         .giscus-wrapper { margin-top: 40px; padding-top: 20px; border-top: 1px solid rgba(0,0,0,0.08); }
         .config-info { background: #f0f9ff; padding: 12px; border-radius: 12px; margin: 15px 0; font-size: 0.8rem; }
         .admin-tools-bar { background: rgba(0,0,0,0.03); border-radius: 40px; padding: 8px 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-        .github-user-info { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.03); padding: 4px 12px; border-radius: 40px; }
-        .github-avatar { width: 24px; height: 24px; border-radius: 50%; }
         @media (max-width: 720px) { .container { padding: 0 16px; } .nav-content { justify-content: center; } }
     </style>
 </head>
@@ -81,18 +78,13 @@
         <div class="nav-links">
             <a href="#" id="homeLink" class="nav-link">首页</a>
             <button class="btn" id="syncFromGithubBtn"><i class="fas fa-download"></i> 同步云端</button>
-            <span id="syncIndicator" class="sync-status warning"><i class="fas fa-exclamation-triangle"></i> 未授权</span>
             <div id="adminTools" style="display: none;">
                 <div class="admin-tools-bar">
                     <button class="btn" id="newPostBtn"><i class="fas fa-plus"></i> 写文章</button>
+                    <button class="btn" id="configBtn"><i class="fab fa-github"></i> 云端配置</button>
                     <button class="btn" id="logoutBtn">退出管理</button>
                     <span class="status-badge"><i class="fas fa-user-check"></i> 管理员</span>
                 </div>
-            </div>
-            <div id="githubUserInfo" style="display: none;" class="github-user-info">
-                <img id="githubAvatar" class="github-avatar" src="" alt="">
-                <span id="githubUserName"></span>
-                <button class="btn" id="githubLogoutBtn" style="padding: 4px 12px; font-size: 0.7rem;">退出</button>
             </div>
         </div>
     </div>
@@ -100,26 +92,28 @@
 
 <main class="container"><div id="blogListContainer" class="blog-grid"></div></main>
 
-<!-- GitHub OAuth 授权模态框 -->
-<div id="githubAuthModal" class="modal">
+<!-- 云端配置模态框（仅管理员） -->
+<div id="githubConfigModal" class="modal">
     <div class="modal-card">
-        <div class="modal-header"><span>🔐 GitHub 授权</span><button class="close-btn" onclick="closeModal('githubAuthModal')">&times;</button></div>
+        <div class="modal-header"><span>☁️ 云端配置</span><button class="close-btn" onclick="closeModal('githubConfigModal')">&times;</button></div>
         <div class="config-info">
-            <i class="fab fa-github"></i> <strong>使用 GitHub 账号授权</strong><br>
-            授权后，博客可以读取和保存文章到您的 GitHub 仓库。<br>
-            <strong>不会存储您的密码，只获取公开信息权限。</strong>
+            <i class="fas fa-info-circle"></i> <strong>配置说明：</strong><br>
+            配置后访客可以同步文章，管理员可以保存文章到云端
         </div>
         <label>GitHub 用户名</label>
-        <input type="text" id="githubOwnerInput" placeholder="username" value="wyf2012">
+        <input type="text" id="githubOwner" placeholder="username" value="wyf2012">
         <label>仓库名称</label>
-        <input type="text" id="githubRepoInput" placeholder="myblog" value="Blog">
-        <div id="authResult" style="margin: 10px 0; font-size: 13px;"></div>
-        <button class="btn btn-github" id="startGithubAuthBtn" style="width:100%;">
-            <i class="fab fa-github"></i> 使用 GitHub 账号授权
-        </button>
-        <div style="margin-top: 15px; font-size: 12px; color: #666; text-align: center;">
-            💡 首次使用需要点击授权<br>
-            授权后 Token 将安全存储
+        <input type="text" id="githubRepo" placeholder="myblog" value="Blog">
+        <label>GitHub Token（仅管理员保存文章时需要）</label>
+        <input type="password" id="githubToken" placeholder="可选，不填则只读">
+        <div id="configResult" style="margin: 10px 0; font-size: 13px;"></div>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn" id="testConnectionBtn" style="flex:1;">🔍 测试连接</button>
+            <button class="btn btn-primary" id="saveConfigBtn" style="flex:1;">💾 保存配置</button>
+        </div>
+        <button class="btn" id="clearConfigBtn" style="width:100%; margin-top:10px;">🗑️ 清除配置</button>
+        <div style="margin-top: 15px; font-size: 12px; color: #666;">
+            💡 普通访客无需配置，直接点击「同步云端」即可获取文章
         </div>
     </div>
 </div>
@@ -163,15 +157,16 @@
     let posts = [];
     let isAdmin = false;
     let editId = null;
-    let githubConfig = { token: '', owner: '', repo: '', branch: 'main' };
-    let githubUser = null;
+    let githubConfig = { 
+        owner: 'wyf2012', 
+        repo: 'Blog', 
+        token: '',
+        branch: 'main' 
+    };
     let clickCount = 0;
     let clickTimer = null;
     const STORAGE_FILE = 'blog_posts.json';
     const ADMIN_PASSWORD = 'bixie4.5';
-    
-    // GitHub OAuth 配置
-    const GITHUB_CLIENT_ID = 'Ov23liKqPZkKcP6gXrJ4'; // 需要替换为您的 OAuth App Client ID
     
     // ==================== 工具函数 ====================
     function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
@@ -208,245 +203,79 @@
         return html;
     }
     
-    // ==================== GitHub OAuth 授权（安全存储 Token）====================
-    function initGithubAuth() {
-        // 检查 URL 参数是否有 code（OAuth 回调）
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
-        if (code) {
-            // 清除 URL 参数
-            window.history.replaceState({}, document.title, window.location.pathname);
-            exchangeCodeForToken(code);
-        }
-        
-        // 检查本地存储的 GitHub 配置
-        const savedConfig = localStorage.getItem('github_blog_config');
-        if (savedConfig) {
-            try {
-                const cfg = JSON.parse(savedConfig);
-                githubConfig = {
+    // ==================== 配置管理 ====================
+    function loadConfig() {
+        try { 
+            let saved = localStorage.getItem('blog_github_config'); 
+            if(saved){ 
+                let cfg = JSON.parse(saved);
+                githubConfig = { 
+                    owner: cfg.owner || 'wyf2012', 
+                    repo: cfg.repo || 'Blog', 
                     token: cfg.token || '',
-                    owner: cfg.owner || 'wyf2012',
-                    repo: cfg.repo || 'Blog',
                     branch: cfg.branch || 'main'
                 };
-                if (githubConfig.token) {
-                    updateSyncStatus();
-                    loadGithubUserInfo();
-                }
-            } catch(e) {}
-        }
+            } 
+        } catch(e){}
     }
     
-    // 交换 code 获取 token（需要后端服务，这里使用 Device Flow 替代方案）
-    // 由于纯前端无法安全交换 OAuth code，我们改用 Personal Token 的简化方案
-    // 但为了更好的体验，我们让用户输入 Token 并安全存储
-    function exchangeCodeForToken(code) {
-        // 注意：生产环境需要一个后端服务来交换 token
-        // 这里提供提示
-        showToast('请使用下方按钮直接授权', true);
+    function saveConfig(owner, repo, token) {
+        githubConfig = { owner, repo, token, branch: 'main' };
+        localStorage.setItem('blog_github_config', JSON.stringify(githubConfig));
+        showToast('配置已保存', false, 2000);
     }
     
-    // 使用 Personal Token 授权（简化但安全的方案）
-    function startGithubAuth() {
-        const owner = document.getElementById('githubOwnerInput').value.trim();
-        const repo = document.getElementById('githubRepoInput').value.trim();
-        
-        if (!owner || !repo) {
-            showToast('请填写用户名和仓库名', true);
-            return;
-        }
-        
-        // 弹出 Token 输入框
-        const token = prompt('🔐 请输入 GitHub Personal Access Token\n\n获取方式：\n1. 访问 github.com/settings/tokens\n2. 点击 Generate new token\n3. 勾选 repo 权限\n4. 复制生成的 token');
-        
-        if (!token) return;
-        
-        // 验证 Token
-        verifyAndSaveToken(token, owner, repo);
+    function clearConfig() {
+        githubConfig = { owner: 'wyf2012', repo: 'Blog', token: '', branch: 'main' };
+        localStorage.removeItem('blog_github_config');
+        showToast('已清除配置，将使用默认仓库');
     }
     
-    async function verifyAndSaveToken(token, owner, repo) {
-        const resultDiv = document.getElementById('authResult');
-        resultDiv.innerHTML = '🔄 验证中...';
-        resultDiv.style.color = '#3730a3';
+    // ==================== 公开读取（无需 Token）====================
+    async function fetchFromGithubPublic() {
+        const owner = githubConfig.owner || 'wyf2012';
+        const repo = githubConfig.repo || 'Blog';
+        const url = `https://api.github.com/repos/${owner}/${repo}/contents/${STORAGE_FILE}`;
         
         try {
-            // 验证 Token
-            const userRes = await fetch('https://api.github.com/user', {
-                headers: { 'Authorization': `token ${token}` }
-            });
-            if (userRes.status === 401) {
-                resultDiv.innerHTML = '❌ Token 无效，请重新生成并勾选 repo 权限';
-                resultDiv.style.color = '#dc2626';
-                return;
+            // 公开仓库不需要 Token
+            const res = await fetch(url);
+            
+            if (res.status === 404) {
+                console.log('云端文件不存在');
+                return null;
             }
-            if (!userRes.ok) throw new Error('验证失败');
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
             
-            const userData = await userRes.json();
-            
-            // 验证仓库
-            const repoRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
-                headers: { 'Authorization': `token ${token}` }
-            });
-            if (repoRes.status === 404) {
-                resultDiv.innerHTML = `❌ 仓库 ${owner}/${repo} 不存在`;
-                resultDiv.style.color = '#dc2626';
-                return;
-            }
-            if (!repoRes.ok) throw new Error('仓库访问失败');
-            
-            const repoData = await repoRes.json();
-            const branch = repoData.default_branch || 'main';
-            
-            // 保存配置
-            githubConfig = { token, owner, repo, branch };
-            localStorage.setItem('github_blog_config', JSON.stringify(githubConfig));
-            
-            // 保存用户信息
-            githubUser = { login: userData.login, avatar_url: userData.avatar_url };
-            localStorage.setItem('github_user_info', JSON.stringify(githubUser));
-            
-            updateSyncStatus();
-            updateGithubUserUI();
-            
-            resultDiv.innerHTML = `✅ 授权成功！欢迎 ${userData.login}`;
-            resultDiv.style.color = '#10b981';
-            
-            setTimeout(() => {
-                closeModal('githubAuthModal');
-                showToast('授权成功，正在同步文章...');
-                loadPosts();
-            }, 1000);
-            
+            const data = await res.json();
+            const content = decodeURIComponent(escape(atob(data.content)));
+            return JSON.parse(content);
         } catch(e) {
-            resultDiv.innerHTML = `❌ 验证失败: ${e.message}`;
-            resultDiv.style.color = '#dc2626';
+            console.error('读取失败:', e);
+            return null;
         }
     }
     
-    async function loadGithubUserInfo() {
-        if (!githubConfig.token) return;
-        try {
-            const userRes = await fetch('https://api.github.com/user', {
-                headers: { 'Authorization': `token ${githubConfig.token}` }
-            });
-            if (userRes.ok) {
-                const userData = await userRes.json();
-                githubUser = { login: userData.login, avatar_url: userData.avatar_url };
-                localStorage.setItem('github_user_info', JSON.stringify(githubUser));
-                updateGithubUserUI();
-            }
-        } catch(e) {}
-    }
-    
-    function updateGithubUserUI() {
-        const userInfoDiv = document.getElementById('githubUserInfo');
-        const avatarImg = document.getElementById('githubAvatar');
-        const userNameSpan = document.getElementById('githubUserName');
-        
-        if (githubUser && githubUser.login) {
-            userInfoDiv.style.display = 'flex';
-            avatarImg.src = githubUser.avatar_url || 'https://github.com/favicon.ico';
-            userNameSpan.textContent = githubUser.login;
-        } else {
-            userInfoDiv.style.display = 'none';
-        }
-    }
-    
-    function logoutGithub() {
-        githubConfig = { token: '', owner: '', repo: '', branch: 'main' };
-        githubUser = null;
-        localStorage.removeItem('github_blog_config');
-        localStorage.removeItem('github_user_info');
-        updateSyncStatus();
-        updateGithubUserUI();
-        showToast('已退出 GitHub 授权');
-        loadPosts();
-    }
-    
-    function updateSyncStatus() {
-        let indicator = document.getElementById('syncIndicator');
-        if(!indicator) return;
-        if(githubConfig.token && githubConfig.owner && githubConfig.repo) {
-            indicator.className = 'sync-status';
-            indicator.innerHTML = `<i class="fab fa-github"></i> ${githubConfig.owner}/${githubConfig.repo}`;
-            indicator.title = '已授权云端';
-        } else {
-            indicator.className = 'sync-status warning';
-            indicator.innerHTML = `<i class="fas fa-exclamation-triangle"></i> 未授权`;
-            indicator.title = '点击授权 GitHub';
-            indicator.onclick = () => openGithubAuth();
-        }
-    }
-    
-    function openGithubAuth() {
-        document.getElementById('githubOwnerInput').value = githubConfig.owner || 'wyf2012';
-        document.getElementById('githubRepoInput').value = githubConfig.repo || 'Blog';
-        document.getElementById('authResult').innerHTML = '';
-        document.getElementById('githubAuthModal').style.display = 'flex';
-    }
-    
-    // ==================== 云端数据操作 ====================
-    async function manualPullFromGithub() {
-        if(!githubConfig.token || !githubConfig.owner || !githubConfig.repo) {
-            showToast('请先授权 GitHub', true);
-            openGithubAuth();
-            return false;
-        }
-        
-        showToast('🔄 正在从云端拉取最新文章...');
-        let indicator = document.getElementById('syncIndicator');
-        if(indicator) {
-            indicator.className = 'sync-status syncing';
-            indicator.innerHTML = `<i class="fas fa-spinner fa-pulse"></i> 拉取中...`;
-        }
-        
-        try {
-            let url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${STORAGE_FILE}`;
-            let res = await fetch(url, { 
-                headers: { 'Authorization': `token ${githubConfig.token}` }
-            });
-            
-            if(res.status === 404) {
-                showToast('云端暂无数据', true);
-                return false;
-            }
-            if(!res.ok) throw new Error(`HTTP ${res.status}`);
-            
-            let data = await res.json();
-            let content = decodeURIComponent(escape(atob(data.content)));
-            let cloudPosts = JSON.parse(content);
-            
-            if(Array.isArray(cloudPosts)) {
-                posts = cloudPosts;
-                localStorage.setItem('blog_posts_cache', JSON.stringify(posts));
-                renderBlogList();
-                showToast(`✅ 同步成功！已更新 ${posts.length} 篇文章`, false, 3000);
-                return true;
-            }
-        } catch(e) {
-            showToast(`❌ 拉取失败: ${e.message}`, true, 4000);
-            return false;
-        } finally {
-            updateSyncStatus();
-        }
-        return false;
-    }
-    
-    async function saveToGithub(showToastMsg = true) {
+    // ==================== 写入（需要 Token，仅管理员）====================
+    async function saveToGithub() {
         if(!isAdmin) {
-            if(showToastMsg) showToast('只有管理员可以保存文章到云端', true);
+            showToast('只有管理员可以保存文章', true);
             return false;
         }
-        if(!githubConfig.token || !githubConfig.owner || !githubConfig.repo) return false;
+        if(!githubConfig.token) {
+            showToast('请先在配置中填写 Token', true);
+            return false;
+        }
+        
+        const owner = githubConfig.owner || 'wyf2012';
+        const repo = githubConfig.repo || 'Blog';
         
         try {
             let content = btoa(encodeURIComponent(JSON.stringify(posts, null, 2)));
-            let url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${STORAGE_FILE}`;
+            let url = `https://api.github.com/repos/${owner}/${repo}/contents/${STORAGE_FILE}`;
             
+            // 获取 sha
             let sha = '';
-            let branch = githubConfig.branch || 'main';
             try {
                 let getRes = await fetch(url, { headers: { 'Authorization': `token ${githubConfig.token}` } });
                 if(getRes.ok) { let d = await getRes.json(); sha = d.sha; }
@@ -454,88 +283,192 @@
             
             let res = await fetch(url, {
                 method: 'PUT',
-                headers: { 'Authorization': `token ${githubConfig.token}`, 'Content-Type': 'application/json' },
+                headers: { 
+                    'Authorization': `token ${githubConfig.token}`, 
+                    'Content-Type': 'application/json' 
+                },
                 body: JSON.stringify({ 
                     message: `博客更新 - ${new Date().toLocaleString('zh-CN')} - ${posts.length}篇文章`, 
                     content, 
                     sha, 
-                    branch: branch
+                    branch: 'main'
                 })
             });
             
             if(res.ok) {
-                if(showToastMsg) showToast('✅ 已保存到 GitHub 云端！', false, 2500);
+                showToast('✅ 已保存到 GitHub 云端！', false, 2500);
                 return true;
             } else {
                 let err = await res.json();
-                if(showToastMsg) showToast(`❌ 保存失败: ${err.message}`, true, 5000);
+                showToast(`❌ 保存失败: ${err.message}`, true, 5000);
                 return false;
             }
         } catch(e) { 
-            if(showToastMsg) showToast(`❌ 网络错误: ${e.message}`, true, 5000);
+            showToast(`❌ 网络错误: ${e.message}`, true, 5000);
             return false; 
         }
     }
     
-    async function savePosts(showCloudToast = true) {
-        localStorage.setItem('blog_posts_cache', JSON.stringify(posts));
+    // 测试连接（公开仓库测试）
+    async function testConnection() {
+        const owner = document.getElementById('githubOwner').value.trim();
+        const repo = document.getElementById('githubRepo').value.trim();
+        const token = document.getElementById('githubToken').value.trim();
+        const resultDiv = document.getElementById('configResult');
         
-        let cloudSuccess = false;
-        if(isAdmin && githubConfig.token && githubConfig.owner && githubConfig.repo) {
-            cloudSuccess = await saveToGithub(showCloudToast);
+        if(!owner || !repo) {
+            resultDiv.innerHTML = '❌ 请填写用户名和仓库名';
+            resultDiv.style.color = '#dc2626';
+            return false;
         }
-        return cloudSuccess;
+        
+        resultDiv.innerHTML = '🔄 测试中...';
+        resultDiv.style.color = '#3730a3';
+        
+        try {
+            // 先测试公开访问
+            const publicUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${STORAGE_FILE}`;
+            const publicRes = await fetch(publicUrl);
+            
+            if (publicRes.status === 404) {
+                resultDiv.innerHTML = `✅ 仓库可访问，文件将自动创建`;
+                resultDiv.style.color = '#10b981';
+            } else if (publicRes.ok) {
+                resultDiv.innerHTML = `✅ 公开读取成功！`;
+                resultDiv.style.color = '#10b981';
+            } else if (publicRes.status === 403) {
+                resultDiv.innerHTML = `⚠️ 仓库可能为私有，无法公开读取`;
+                resultDiv.style.color = '#f59e0b';
+            } else {
+                resultDiv.innerHTML = `⚠️ 仓库存在但访问异常: ${publicRes.status}`;
+                resultDiv.style.color = '#f59e0b';
+            }
+            
+            // 如果提供了 Token，测试写入权限
+            if (token) {
+                const authRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
+                    headers: { 'Authorization': `token ${token}` }
+                });
+                if (authRes.status === 401) {
+                    resultDiv.innerHTML += '\n❌ Token 无效';
+                    resultDiv.style.color = '#dc2626';
+                } else if (authRes.ok) {
+                    resultDiv.innerHTML += '\n✅ Token 有效，可写入';
+                    resultDiv.style.color = '#10b981';
+                }
+            }
+            
+            return true;
+        } catch(e) {
+            resultDiv.innerHTML = `❌ 网络错误: ${e.message}`;
+            resultDiv.style.color = '#dc2626';
+            return false;
+        }
     }
     
+    // 保存配置
+    function saveConfigFromForm() {
+        const owner = document.getElementById('githubOwner').value.trim();
+        const repo = document.getElementById('githubRepo').value.trim();
+        const token = document.getElementById('githubToken').value.trim();
+        
+        if(!owner || !repo) {
+            showToast('请填写用户名和仓库名', true);
+            return;
+        }
+        
+        saveConfig(owner, repo, token);
+        closeModal('githubConfigModal');
+        showToast('配置已保存');
+    }
+    
+    // ==================== 文章同步（访客可用）====================
+    async function syncFromCloud() {
+        showToast('🔄 正在从云端同步文章...');
+        
+        try {
+            const cloudPosts = await fetchFromGithubPublic();
+            
+            if (cloudPosts && Array.isArray(cloudPosts) && cloudPosts.length > 0) {
+                posts = cloudPosts;
+                localStorage.setItem('blog_posts_cache', JSON.stringify(posts));
+                renderBlogList();
+                showToast(`✅ 同步成功！已更新 ${posts.length} 篇文章`, false, 3000);
+                return true;
+            } else if (cloudPosts && Array.isArray(cloudPosts) && cloudPosts.length === 0) {
+                showToast('云端暂无文章', false);
+                return false;
+            } else {
+                showToast('云端读取失败，将使用本地缓存', true);
+                return false;
+            }
+        } catch(e) {
+            showToast(`❌ 同步失败: ${e.message}`, true);
+            return false;
+        }
+    }
+    
+    // ==================== 文章加载 ====================
     async function loadPosts() {
         let loaded = false;
         
-        if(githubConfig.token && githubConfig.owner && githubConfig.repo) {
-            try {
-                let url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${STORAGE_FILE}`;
-                let res = await fetch(url, { headers: { 'Authorization': `token ${githubConfig.token}` } });
-                if(res.ok) {
-                    let data = await res.json();
-                    let content = decodeURIComponent(escape(atob(data.content)));
-                    let cloudPosts = JSON.parse(content);
-                    if(Array.isArray(cloudPosts) && cloudPosts.length > 0) {
-                        posts = cloudPosts;
-                        localStorage.setItem('blog_posts_cache', JSON.stringify(posts));
-                        loaded = true;
-                    }
-                }
-            } catch(e) {}
+        // 尝试从云端加载（公开读取）
+        try {
+            const cloudPosts = await fetchFromGithubPublic();
+            if (cloudPosts && Array.isArray(cloudPosts) && cloudPosts.length > 0) {
+                posts = cloudPosts;
+                localStorage.setItem('blog_posts_cache', JSON.stringify(posts));
+                loaded = true;
+                console.log('从云端加载成功');
+            }
+        } catch(e) {
+            console.log('云端读取失败:', e);
         }
         
+        // 从本地缓存加载
         if(!loaded) {
             let cached = localStorage.getItem('blog_posts_cache');
             if(cached) {
-                try { posts = JSON.parse(cached); loaded = true; } catch(e){}
+                try { 
+                    posts = JSON.parse(cached); 
+                    loaded = true; 
+                    console.log('从本地缓存加载');
+                } catch(e){}
             }
         }
         
+        // 默认文章
         if(!loaded || !posts || posts.length === 0) {
             posts = [
                 { id: "1", title: "🎬 B站视频播放示例", summary: "点击查看如何嵌入B站视频", 
                   content: "## 🎬 视频演示\n\n@bilibili:BV1GJ411x7h7\n\n试试看吧！", 
                   date: new Date().toLocaleDateString('zh-CN') },
-                { id: "2", title: "🔐 GitHub 授权指南", summary: "点击顶部「未授权」按钮完成授权", 
-                  content: "## 🔐 GitHub 授权\n\n1. 点击顶部「未授权」按钮\n2. 输入您的 GitHub 用户名和仓库名\n3. 输入 Personal Access Token\n4. 授权后文章自动同步\n\n**Token 只会保存在您的浏览器中，安全可靠！**", 
+                { id: "2", title: "📖 使用说明", summary: "点击顶部「同步云端」获取最新文章", 
+                  content: "## 📖 使用说明\n\n### 访客\n- 直接浏览文章\n- 点击「同步云端」获取最新内容\n\n### 管理员\n- 点击标题5次进入管理员模式\n- 密码: bixie4.5\n- 可以写文章、编辑、删除\n- 配置 GitHub Token 后可以保存到云端", 
                   date: new Date().toLocaleDateString('zh-CN') }
             ];
             localStorage.setItem('blog_posts_cache', JSON.stringify(posts));
         }
         
         renderBlogList();
-        let cloudStatus = githubConfig.token ? '已授权' : '未授权';
-        showToast(`📚 加载完成，共 ${posts.length} 篇文章 (${cloudStatus})`, false, 2000);
+        showToast(`📚 加载完成，共 ${posts.length} 篇文章`, false, 2000);
+    }
+    
+    async function savePosts() {
+        localStorage.setItem('blog_posts_cache', JSON.stringify(posts));
+        
+        if(isAdmin && githubConfig.token) {
+            await saveToGithub();
+        } else if(isAdmin && !githubConfig.token) {
+            showToast('未配置 Token，文章仅保存到本地', true);
+        }
     }
     
     // ==================== UI 渲染 ====================
     function renderBlogList() {
         let container = document.getElementById('blogListContainer');
         if(!container) return;
-        if(posts.length===0) { container.innerHTML='<div style="text-align:center;padding:60px;">✨ 暂无文章</div>'; return; }
+        if(posts.length===0) { container.innerHTML='<div style="text-align:center;padding:60px;">✨ 暂无文章，点击同步获取最新内容</div>'; return; }
         container.innerHTML = posts.map(p => `
             <div class="blog-card" data-id="${p.id}">
                 <div class="blog-title">${escapeHtml(p.title)}</div>
@@ -557,6 +490,7 @@
         else adminDiv.innerHTML = '';
         document.getElementById('detailModal').style.display = 'flex';
         
+        // Giscus 评论
         let container = document.getElementById('giscusContainer');
         if(container) {
             container.innerHTML = '';
@@ -594,11 +528,10 @@
         if(!confirm('⚠️ 确定删除这篇文章吗？')) return;
         let postTitle = posts.find(p=>p.id==id)?.title || '';
         posts = posts.filter(p=>p.id!=id);
-        let success = await savePosts(true);
+        await savePosts();
         renderBlogList();
         closeModal('detailModal');
-        if(success) showToast(`✅ 文章「${postTitle}」已删除`);
-        else showToast(`⚠️ 文章已删除，但云端同步失败`, true);
+        showToast(`✅ 文章「${postTitle}」已删除`);
     }
     
     async function saveCurrentPost() {
@@ -619,13 +552,11 @@
             posts.unshift({ id: Date.now().toString(), title, summary, content, date: now });
         }
         
-        let success = await savePosts(true);
+        await savePosts();
         renderBlogList();
         closeModal('editorModal');
-        if(success) {
-            if(isNew) showToast(`✅ 新文章「${title}」已发布`);
-            else showToast(`✅ 文章「${title}」已更新`);
-        }
+        if(isNew) showToast(`✅ 新文章「${title}」已发布`);
+        else showToast(`✅ 文章「${title}」已更新`);
     }
     
     // ==================== UI 交互 ====================
@@ -639,6 +570,15 @@
     function insertVideo() { let input=document.getElementById('bilibiliInput').value; let bvid=extractBvid(input); if(!bvid){ showToast('无效的BV号',true); return; } let ta=document.getElementById('postBody'); let ins=`@bilibili:${bvid}`; let start=ta.selectionStart; ta.value=ta.value.substring(0,start)+ins+ta.value.substring(ta.selectionEnd); ta.focus(); closeModal('bilibiliDialog'); showToast('已插入视频'); }
     function insertImage() { if(!isAdmin) { showToast('请先进入管理员模式', true); return; } let url=prompt('图片URL:'); if(url){ let ta=document.getElementById('postBody'); let ins=`![图片](${url})`; let start=ta.selectionStart; ta.value=ta.value.substring(0,start)+ins+ta.value.substring(ta.selectionEnd); ta.focus(); } }
     function insertLink() { if(!isAdmin) { showToast('请先进入管理员模式', true); return; } let text=prompt('链接文字:'); if(text){ let url=prompt('链接URL:'); if(url){ let ta=document.getElementById('postBody'); let ins=`[${text}](${url})`; let start=ta.selectionStart; ta.value=ta.value.substring(0,start)+ins+ta.value.substring(ta.selectionEnd); ta.focus(); } } }
+    
+    function openConfigModal() {
+        if(!isAdmin) { showToast('请先进入管理员模式', true); return; }
+        document.getElementById('githubOwner').value = githubConfig.owner || 'wyf2012';
+        document.getElementById('githubRepo').value = githubConfig.repo || 'Blog';
+        document.getElementById('githubToken').value = githubConfig.token || '';
+        document.getElementById('configResult').innerHTML = '';
+        document.getElementById('githubConfigModal').style.display = 'flex';
+    }
     
     // ==================== 管理员入口 ====================
     function initSecretAdmin() {
@@ -685,21 +625,13 @@
     
     // ==================== 初始化 ====================
     window.onload = async () => {
-        initGithubAuth();
+        loadConfig();
         checkLogin();
         initSecretAdmin();
         await loadPosts();
         
-        // 加载 GitHub 用户信息
-        const savedUser = localStorage.getItem('github_user_info');
-        if (savedUser) {
-            try {
-                githubUser = JSON.parse(savedUser);
-                updateGithubUserUI();
-            } catch(e) {}
-        }
-        
-        document.getElementById('syncFromGithubBtn')?.addEventListener('click', manualPullFromGithub);
+        // 绑定事件
+        document.getElementById('syncFromGithubBtn')?.addEventListener('click', syncFromCloud);
         document.getElementById('homeLink')?.addEventListener('click',(e)=>{ e.preventDefault(); renderBlogList(); });
         document.getElementById('newPostBtn')?.addEventListener('click',()=>{ 
             if(!isAdmin) { showToast('请先进入管理员模式', true); return; }
@@ -711,18 +643,17 @@
             document.getElementById('editorModal').style.display='flex'; 
         });
         document.getElementById('savePostBtn')?.addEventListener('click',saveCurrentPost);
-        document.getElementById('logoutBtn')?.addEventListener('click',logout);
-        document.getElementById('githubLogoutBtn')?.addEventListener('click',logoutGithub);
-        document.getElementById('startGithubAuthBtn')?.addEventListener('click', startGithubAuth);
+        document.getElementById('configBtn')?.addEventListener('click', openConfigModal);
+        document.getElementById('logoutBtn')?.addEventListener('click', logout);
+        document.getElementById('saveConfigBtn')?.addEventListener('click', saveConfigFromForm);
+        document.getElementById('clearConfigBtn')?.addEventListener('click', () => {
+            clearConfig();
+            closeModal('githubConfigModal');
+        });
+        document.getElementById('testConnectionBtn')?.addEventListener('click', testConnection);
         document.getElementById('previewVideoBtn')?.addEventListener('click',previewVideo);
         document.getElementById('clearPreviewBtn')?.addEventListener('click',()=>{ document.getElementById('videoPreview').innerHTML='<i class="fas fa-video" style="font-size:48px;opacity:0.3;"></i><p>点击预览查看视频</p>'; });
         document.getElementById('insertVideoBtn')?.addEventListener('click',insertVideo);
-        
-        // 点击未授权提示打开授权面板
-        const syncIndicator = document.getElementById('syncIndicator');
-        if(syncIndicator && !githubConfig.token) {
-            syncIndicator.onclick = () => openGithubAuth();
-        }
         
         window.closeModal=closeModal;
         window.openBilibiliDialog=openBilibiliDialog;
