@@ -13,10 +13,6 @@
             background: radial-gradient(circle at 20% 30%, #e9ecef, #d4d9e2);
             min-height: 100vh;
             color: #1f1f1f;
-            transition: background-image 0.3s ease;
-            background-size: cover;
-            background-attachment: fixed;
-            background-position: center;
         }
         .glass-panel { background: rgba(255,255,255,0.55); backdrop-filter: blur(20px); border-radius: 24px; border: 1px solid rgba(255,255,255,0.6); }
         .container { max-width: 1280px; margin: 0 auto; padding: 0 28px; }
@@ -333,6 +329,43 @@
         return { sha: data.sha, content: data.content };
     }
     
+    // 从 GitHub 加载文章（自动识别两种格式）
+    async function loadFromGitHub() {
+        if (!githubConfig.owner || !githubConfig.repo) return false;
+        
+        try {
+            const file = await getFileSha();
+            if (file && file.content) {
+                const decoded = base64Decode(file.content);
+                const json = JSON.parse(decoded);
+                
+                // 关键修复：兼容两种数据格式
+                let articles = null;
+                if (Array.isArray(json)) {
+                    // 格式1：直接是数组
+                    articles = json;
+                    console.log('检测到数组格式，文章数:', articles.length);
+                } else if (json.articles && Array.isArray(json.articles)) {
+                    // 格式2：包含 articles 字段
+                    articles = json.articles;
+                    console.log('检测到 articles 对象格式，文章数:', articles.length);
+                } else {
+                    console.log('无法识别的数据格式');
+                    return false;
+                }
+                
+                if (articles && articles.length > 0) {
+                    posts = articles;
+                    localStorage.setItem('blog_posts_cache', JSON.stringify(posts));
+                    return true;
+                }
+            }
+        } catch (err) {
+            console.error('GitHub加载失败:', err);
+        }
+        return false;
+    }
+    
     async function saveToGitHub() {
         if (!editMode) {
             showToast('只有管理员可以保存到云端', true);
@@ -345,6 +378,7 @@
         
         try {
             showLoading(true);
+            // 保存为 articles 对象格式（更清晰）
             const dataToSave = { articles: posts };
             const jsonStr = JSON.stringify(dataToSave, null, 2);
             const content = btoa(unescape(encodeURIComponent(jsonStr)));
@@ -391,25 +425,6 @@
         }
     }
     
-    async function loadFromGitHub() {
-        if (!githubConfig.owner || !githubConfig.repo) return false;
-        
-        try {
-            const file = await getFileSha();
-            if (file && file.content) {
-                const json = JSON.parse(base64Decode(file.content));
-                if (json.articles && Array.isArray(json.articles)) {
-                    posts = json.articles;
-                    localStorage.setItem('blog_posts_cache', JSON.stringify(posts));
-                    return true;
-                }
-            }
-        } catch (err) {
-            console.error('GitHub加载失败:', err);
-        }
-        return false;
-    }
-    
     async function syncFromCloud(showLoadingIndicator = true) {
         if (showLoadingIndicator) showLoading(true);
         updateSyncStatus('syncing', '同步中...');
@@ -450,10 +465,8 @@
     }
     
     async function savePosts() {
-        // 保存到本地缓存
         localStorage.setItem('blog_posts_cache', JSON.stringify(posts));
         
-        // 如果已配置 GitHub 且是管理员模式，保存到云端
         if (editMode && githubConfig.token && githubConfig.owner && githubConfig.repo) {
             return await saveToGitHub();
         } else if (editMode && (!githubConfig.token || !githubConfig.owner || !githubConfig.repo)) {
@@ -670,20 +683,14 @@
         resultDiv.style.color = '#3730a3';
         
         try {
-            // 测试 Token
-            const userRes = await fetch('https://api.github.com/user', {
+            const repoRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
                 headers: { 'Authorization': `token ${token}` }
             });
-            if (userRes.status === 401) {
+            if (repoRes.status === 401) {
                 resultDiv.innerHTML = '❌ Token 无效，请检查权限（需要 repo 权限）';
                 resultDiv.style.color = '#dc2626';
                 return;
             }
-            
-            // 测试仓库
-            const repoRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
-                headers: { 'Authorization': `token ${token}` }
-            });
             if (repoRes.status === 404) {
                 resultDiv.innerHTML = `❌ 仓库 ${owner}/${repo} 不存在`;
                 resultDiv.style.color = '#dc2626';
