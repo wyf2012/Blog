@@ -147,6 +147,15 @@
             transform: translateY(-1px);
         }
 
+        .nav-btn.warning {
+            background: #ffc107;
+            color: #000;
+        }
+
+        .nav-btn.warning:hover {
+            background: #e0a800;
+        }
+
         /* Main Content */
         main {
             padding-top: 100px;
@@ -285,6 +294,58 @@
         .edit-profile-btn:hover {
             background: white;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Setup Banner */
+        .setup-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 24px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            animation: fadeInUp 0.6s var(--transition-spring) both;
+        }
+
+        .setup-banner-content {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .setup-banner-icon {
+            font-size: 2rem;
+            opacity: 0.9;
+        }
+
+        .setup-banner-text h3 {
+            font-size: 1.1rem;
+            margin-bottom: 4px;
+        }
+
+        .setup-banner-text p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .setup-banner-btn {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            white-space: nowrap;
+        }
+
+        .setup-banner-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
         /* Blog Grid */
@@ -559,6 +620,17 @@
             transform: none !important;
         }
 
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+
         /* Article Content */
         .article-content {
             line-height: 1.8;
@@ -597,10 +669,7 @@
             padding: 2px 6px;
             border-radius: 4px;
             font-family: 'Consolas', monospace;
-            font-size: 0.9emem;
-        }
-
-        .article;
+            font-size: 0.9em;
         }
 
         .article-content pre {
@@ -681,6 +750,10 @@
             border-left: 4px solid #28a745;
         }
 
+        .toast.warning {
+            border-left: 4px solid #ffc107;
+        }
+
         /* Empty State */
         .empty-state {
             text-align: center;
@@ -752,6 +825,11 @@
         .config-status.error {
             background: rgba(220, 53, 69, 0.1);
             color: #dc3545;
+        }
+
+        .config-status.warning {
+            background: rgba(255, 193, 7, 0.1);
+            color: #856404;
         }
 
         /* Loading Spinner */
@@ -836,6 +914,11 @@
                 transform: none;
                 justify-content: center;
             }
+
+            .setup-banner {
+                flex-direction: column;
+                text-align: center;
+            }
         }
 
         /* Sync Indicator */
@@ -878,6 +961,123 @@
             background: #dc3545;
             animation: none;
         }
+
+        .sync-status.local {
+            background: #6c757d;
+            animation: none;
+        }
+
+        /* Mode Switcher */
+        .mode-switcher {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            padding: 4px;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 12px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: var(--transition-fast);
+            color: var(--text-secondary);
+        }
+
+        .mode-btn.active {
+            background: white;
+            color: var(--accent-color);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .mode-btn:hover:not(.active) {
+            color: var(--text-primary);
+        }
+
+        /* Info Box */
+        .info-box {
+            background: rgba(0, 120, 212, 0.08);
+            border-left: 4px solid var(--accent-color);
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .info-box i {
+            color: var(--accent-color);
+            margin-right: 8px;
+        }
+
+        /* Export/Import Area */
+        .json-area {
+            width: 100%;
+            min-height: 150px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            padding: 16px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.02);
+            resize: vertical;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 10px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: var(--transition-fast);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .action-btn:hover {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        .action-btn.secondary {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .action-btn.secondary:hover {
+            background: rgba(0, 0, 0, 0.1);
+            color: var(--text-primary);
+            border-color: rgba(0, 0, 0, 0.2);
+        }
+
+        .action-btn.success {
+            background: #28a745;
+            color: white;
+            border-color: #28a745;
+        }
+
+        .action-btn.success:hover {
+            background: #218838;
+        }
     </style>
 </head>
 <body>
@@ -900,8 +1100,8 @@
                     <button class="nav-btn primary" onclick="app.openEditor()">
                         <i class="fas fa-plus"></i> <span>写文章</span>
                     </button>
-                    <button class="nav-btn" onclick="app.showGitHubConfig()">
-                        <i class="fab fa-github"></i> <span>GitHub配置</span>
+                    <button class="nav-btn" onclick="app.showDataManager()">
+                        <i class="fas fa-cloud-upload-alt"></i> <span>同步设置</span>
                     </button>
                     <button class="nav-btn" onclick="app.logout()">
                         <i class="fas fa-sign-out-alt"></i> <span>退出</span>
@@ -915,6 +1115,22 @@
     </nav>
 
     <main class="container">
+        <!-- Setup Banner -->
+        <div class="setup-banner" id="setupBanner" style="display: none;">
+            <div class="setup-banner-content">
+                <div class="setup-banner-icon">
+                    <i class="fab fa-github"></i>
+                </div>
+                <div class="setup-banner-text">
+                    <h3>需要配置 GitHub 同步</h3>
+                    <p>文章默认保存到 GitHub 仓库，请先配置访问令牌</p>
+                </div>
+            </div>
+            <button class="setup-banner-btn" onclick="app.showSetupWizard()">
+                立即配置
+            </button>
+        </div>
+
         <!-- Profile Section -->
         <section class="profile-section" id="profileSection">
             <div class="profile-card acrylic">
@@ -937,8 +1153,8 @@
                         <div class="stat-label">文章</div>
                     </div>
                     <div class="stat">
-                        <div class="stat-value">∞</div>
-                        <div class="stat-label">创意</div>
+                        <div class="stat-value" id="syncStatusIcon">☁️</div>
+                        <div class="stat-label" id="syncStatusText">未同步</div>
                     </div>
                     <div class="stat">
                         <div class="stat-value">❤️</div>
@@ -982,54 +1198,201 @@
         </div>
     </div>
 
-    <!-- GitHub Config Modal -->
-    <div class="modal-overlay" id="githubModal" onclick="app.closeModalOnOverlay(event, 'githubModal')">
-        <div class="modal">
+    <!-- Setup Wizard Modal -->
+    <div class="modal-overlay" id="setupModal" onclick="app.closeModalOnOverlay(event, 'setupModal')">
+        <div class="modal" style="max-width: 600px;">
             <div class="modal-header">
-                <span class="modal-title"><i class="fab fa-github"></i> GitHub 配置</span>
-                <button class="close-btn" onclick="app.closeModal('githubModal')">
+                <span class="modal-title"><i class="fas fa-magic"></i> 初始化 GitHub 同步</span>
+                <button class="close-btn" onclick="app.closeModal('setupModal')">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             
-            <div class="github-config">
-                <h4><i class="fas fa-info-circle"></i> 配置说明</h4>
-                <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6;">
-                    1. 在 GitHub 创建 Personal Access Token (classic)<br>
-                    2. 勾选 <code>repo</code> 权限以允许读写仓库<br>
-                    3. 文章将保存到仓库的 <code>data/posts.json</code> 文件中
-                </p>
-                <a href="https://github.com/settings/tokens/new" target="_blank" style="color: var(--accent-color); font-size: 0.85rem; display: inline-flex; align-items: center; gap: 4px; margin-top: 8px;">
-                    <i class="fas fa-external-link-alt"></i> 创建 Token
-                </a>
+            <div class="info-box">
+                <i class="fas fa-info-circle"></i>
+                博客默认将文章保存到 GitHub 仓库。请按照以下步骤配置：
+            </div>
+
+            <div style="margin-bottom: 24px;">
+                <div style="display: flex; gap: 16px; margin-bottom: 20px;">
+                    <div style="width: 32px; height: 32px; background: var(--accent-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; flex-shrink: 0;">1</div>
+                    <div>
+                        <h4 style="margin-bottom: 8px;">创建 Personal Access Token</h4>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 8px;">访问 GitHub Settings，创建 Classic Token，勾选 repo 权限</p>
+                        <a href="https://github.com/settings/tokens/new" target="_blank" style="color: var(--accent-color); font-size: 0.85rem; display: inline-flex; align-items: center; gap: 4px;">
+                            <i class="fas fa-external-link-alt"></i> 前往创建 Token
+                        </a>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 16px; margin-bottom: 20px;">
+                    <div style="width: 32px; height: 32px; background: var(--accent-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; flex-shrink: 0;">2</div>
+                    <div>
+                        <h4 style="margin-bottom: 8px;">填写仓库信息</h4>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">输入你的 GitHub 用户名、仓库名（如 username.github.io）和 Token</p>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 16px;">
+                    <div style="width: 32px; height: 32px; background: var(--accent-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; flex-shrink: 0;">3</div>
+                    <div>
+                        <h4 style="margin-bottom: 8px;">测试并保存</h4>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">点击"测试连接"验证配置，然后保存即可开始写作</p>
+                    </div>
+                </div>
             </div>
 
             <div class="form-group">
-                <label class="form-label">仓库所有者 (用户名)</label>
-                <input type="text" class="form-input" id="githubOwner" placeholder="例如: yourusername">
+                <label class="form-label">GitHub 用户名</label>
+                <input type="text" class="form-input" id="setupOwner" placeholder="例如: yourusername">
             </div>
             <div class="form-group">
                 <label class="form-label">仓库名称</label>
-                <input type="text" class="form-input" id="githubRepo" placeholder="例如: yourusername.github.io">
+                <input type="text" class="form-input" id="setupRepo" placeholder="例如: yourusername.github.io">
             </div>
             <div class="form-group">
                 <label class="form-label">分支名称</label>
-                <input type="text" class="form-input" id="githubBranch" value="main" placeholder="main">
+                <input type="text" class="form-input" id="setupBranch" value="main" placeholder="main">
             </div>
             <div class="form-group">
                 <label class="form-label">Personal Access Token</label>
-                <input type="password" class="form-input" id="githubToken" placeholder="ghp_xxxxxxxxxxxx">
+                <input type="password" class="form-input" id="setupToken" placeholder="ghp_xxxxxxxxxxxx">
             </div>
             
-            <div id="githubConfigStatus" class="config-status" style="display: none;"></div>
+            <div id="setupStatus" class="config-status" style="display: none; margin-bottom: 16px;"></div>
             
             <div class="btn-group">
-                <button class="btn btn-primary" onclick="app.testGitHubConnection()">
+                <button class="btn btn-primary" onclick="app.testSetupConnection()">
                     <i class="fas fa-plug"></i> 测试连接
                 </button>
-                <button class="btn btn-secondary" onclick="app.saveGitHubConfig()">
+                <button class="btn btn-success" onclick="app.saveSetupConfig()">
                     <i class="fas fa-save"></i> 保存配置
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Manager Modal -->
+    <div class="modal-overlay" id="dataModal" onclick="app.closeModalOnOverlay(event, 'dataModal')">
+        <div class="modal" style="max-width: 700px;">
+            <div class="modal-header">
+                <span class="modal-title"><i class="fas fa-cloud"></i> 数据同步管理</span>
+                <button class="close-btn" onclick="app.closeModal('dataModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="mode-switcher">
+                <button class="mode-btn active" onclick="app.switchMode('github')" id="modeGitHub">
+                    <i class="fab fa-github"></i> GitHub 同步
+                </button>
+                <button class="mode-btn" onclick="app.switchMode('local')" id="modeLocal">
+                    <i class="fas fa-hdd"></i> 本地存储
+                </button>
+                <button class="mode-btn" onclick="app.switchMode('manual')" id="modeManual">
+                    <i class="fas fa-file-export"></i> 手动导出
+                </button>
+            </div>
+
+            <!-- GitHub Mode (Default) -->
+            <div id="githubModePanel">
+                <div class="info-box">
+                    <i class="fas fa-info-circle"></i>
+                    文章会自动同步到 GitHub 仓库的 <code>data/posts.json</code> 文件中。这是推荐的存储方式，数据安全可靠。
+                </div>
+                
+                <div class="github-config">
+                    <h4><i class="fas fa-cog"></i> GitHub 配置</h4>
+                    <div class="form-group">
+                        <label class="form-label">仓库所有者 (用户名)</label>
+                        <input type="text" class="form-input" id="githubOwner" placeholder="例如: yourusername">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">仓库名称</label>
+                        <input type="text" class="form-input" id="githubRepo" placeholder="例如: yourusername.github.io">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">分支名称</label>
+                        <input type="text" class="form-input" id="githubBranch" value="main" placeholder="main">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Personal Access Token (Classic)</label>
+                        <input type="password" class="form-input" id="githubToken" placeholder="ghp_xxxxxxxxxxxx">
+                        <small style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 4px; display: block;">
+                            需要在 GitHub Settings > Developer settings > Personal access tokens 中创建，勾选 repo 权限
+                        </small>
+                    </div>
+                    
+                    <div id="githubConfigStatus" class="config-status" style="display: none;"></div>
+                    
+                    <div class="action-buttons" style="margin-top: 16px;">
+                        <button class="action-btn" onclick="app.testGitHubConnection()">
+                            <i class="fas fa-plug"></i> 测试连接
+                        </button>
+                        <button class="action-btn success" onclick="app.saveGitHubConfig()">
+                            <i class="fas fa-save"></i> 保存配置
+                        </button>
+                        <button class="action-btn secondary" onclick="app.loadFromGitHub()">
+                            <i class="fas fa-download"></i> 从 GitHub 拉取
+                        </button>
+                        <button class="action-btn secondary" onclick="app.pushToGitHub()">
+                            <i class="fas fa-upload"></i> 推送到 GitHub
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Local Mode -->
+            <div id="localModePanel" style="display: none;">
+                <div class="info-box" style="border-left-color: #ffc107;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>警告：</strong> 本地存储模式仅将数据保存在浏览器中。清空浏览器数据会导致文章丢失，建议仅用于临时测试。
+                </div>
+                <div class="form-group">
+                    <label class="form-label">本地文章数量</label>
+                    <div style="font-size: 2rem; font-weight: 700; color: var(--accent-color);" id="localPostCount">0 篇</div>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="app.exportToFile()">
+                        <i class="fas fa-download"></i> 导出备份
+                    </button>
+                    <button class="btn btn-secondary" onclick="app.importFromFile()">
+                        <i class="fas fa-upload"></i> 导入备份
+                    </button>
+                </div>
+            </div>
+
+            <!-- Manual Mode -->
+            <div id="manualModePanel" style="display: none;">
+                <div class="info-box">
+                    <i class="fas fa-info-circle"></i>
+                    如果自动同步遇到问题，可以手动复制 JSON 数据，在 GitHub 仓库中创建或编辑 <code>data/posts.json</code> 文件。
+                </div>
+                <div class="form-group">
+                    <label class="form-label">文章数据 (JSON 格式)</label>
+                    <textarea class="json-area" id="jsonExportArea" readonly></textarea>
+                </div>
+                <div class="action-buttons">
+                    <button class="action-btn" onclick="app.copyJSON()">
+                        <i class="fas fa-copy"></i> 复制全部
+                    </button>
+                    <button class="action-btn secondary" onclick="app.downloadJSON()">
+                        <i class="fas fa-file-download"></i> 下载文件
+                    </button>
+                </div>
+                
+                <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid rgba(0,0,0,0.1);">
+                    <label class="form-label">导入 JSON 数据</label>
+                    <textarea class="json-area" id="jsonImportArea" placeholder="将 JSON 数据粘贴到这里..."></textarea>
+                    <div class="action-buttons">
+                        <button class="action-btn" onclick="app.importFromJSON()">
+                            <i class="fas fa-file-import"></i> 导入数据
+                        </button>
+                        <button class="action-btn secondary" onclick="document.getElementById('jsonImportArea').value=''">
+                            <i class="fas fa-trash"></i> 清空
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1056,7 +1419,7 @@
                 <textarea class="form-textarea" id="editBio" placeholder="写点关于自己的介绍..."></textarea>
             </div>
             <div class="btn-group">
-                <button class="btn btn-primary" onclick="app.saveProfile()">保存</button>
+                <button class="btn btn-primary" onclick="app.saveProfileFromEditor()">保存</button>
                 <button class="btn btn-secondary" onclick="app.closeModal('profileModal')">取消</button>
             </div>
         </div>
@@ -1163,9 +1526,12 @@
 
     <!-- Sync Indicator -->
     <div class="sync-indicator hidden" id="syncIndicator">
-        <div class="sync-status" id="syncStatus"></div>
-        <span id="syncText">已同步到 GitHub</span>
+        <div class="sync-status" id="syncStatusDot"></div>
+        <span id="syncText">正在同步...</span>
     </div>
+
+    <!-- Hidden file input for import -->
+    <input type="file" id="fileInput" accept=".json" style="display: none;" onchange="app.handleFileImport(event)">
 
     <!-- Giscus Script - Loaded dynamically -->
     <script>
@@ -1197,20 +1563,149 @@
             githubConfig: null,
             giscusLoaded: false,
             isSaving: false,
+            storageMode: 'github', // 'github' or 'local'
 
             // Default profile
             profile: {
                 name: '极简博主',
                 avatar: '✨',
-                bio: '欢迎来到我的博客！这里记录着我的思考与创作。\n\n使用 **Markdown** 语法书写，支持插入 B站视频 和图片。'
+                bio: '欢迎来到我的博客！这里记录着我的思考与创作。\n\n使用 **Markdown** 语法书写，支持插入 B站视频 和图片。\n\n文章默认同步到 GitHub 仓库。'
             },
 
             init() {
                 this.loadProfile();
                 this.loadGitHubConfig();
+                this.checkStorageMode();
                 this.loadPosts();
                 this.checkAuth();
                 this.render();
+                this.updateSyncStatus();
+            },
+
+            // Check and set storage mode
+            checkStorageMode() {
+                const savedMode = localStorage.getItem('blog_storage_mode');
+                if (savedMode) {
+                    this.storageMode = savedMode;
+                } else {
+                    // Default to github, save the preference
+                    this.storageMode = 'github';
+                    localStorage.setItem('blog_storage_mode', 'github');
+                }
+            },
+
+            setStorageMode(mode) {
+                this.storageMode = mode;
+                localStorage.setItem('blog_storage_mode', mode);
+                this.updateSyncStatus();
+            },
+
+            updateSyncStatus() {
+                const icon = document.getElementById('syncStatusIcon');
+                const text = document.getElementById('syncStatusText');
+                
+                if (this.storageMode === 'github') {
+                    if (this.githubConfig) {
+                        icon.textContent = '☁️';
+                        text.textContent = 'GitHub';
+                    } else {
+                        icon.textContent = '⚠️';
+                        text.textContent = '未配置';
+                    }
+                } else {
+                    icon.textContent = '💾';
+                    text.textContent = '本地';
+                }
+            },
+
+            // Setup Wizard
+            showSetupWizard() {
+                this.showModal('setupModal');
+            },
+
+            async testSetupConnection() {
+                const owner = document.getElementById('setupOwner').value.trim();
+                const repo = document.getElementById('setupRepo').value.trim();
+                const token = document.getElementById('setupToken').value.trim();
+                const statusDiv = document.getElementById('setupStatus');
+
+                if (!owner || !repo || !token) {
+                    statusDiv.className = 'config-status error';
+                    statusDiv.innerHTML = '<i class="fas fa-times-circle"></i> 请填写完整信息';
+                    statusDiv.style.display = 'inline-flex';
+                    return;
+                }
+
+                statusDiv.className = 'config-status';
+                statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 连接中...';
+                statusDiv.style.display = 'inline-flex';
+
+                try {
+                    const response = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
+                        headers: {
+                            'Authorization': `token ${token}`,
+                            'Accept': 'application/vnd.github.v3+json'
+                        }
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        statusDiv.className = 'config-status connected';
+                        statusDiv.innerHTML = `<i class="fas fa-check-circle"></i> 连接成功: ${data.full_name}`;
+                    } else {
+                        const error = await response.json();
+                        statusDiv.className = 'config-status error';
+                        statusDiv.innerHTML = `<i class="fas fa-times-circle"></i> 连接失败: ${error.message}`;
+                    }
+                } catch (error) {
+                    statusDiv.className = 'config-status error';
+                    statusDiv.innerHTML = '<i class="fas fa-times-circle"></i> 网络错误';
+                }
+            },
+
+            saveSetupConfig() {
+                const owner = document.getElementById('setupOwner').value.trim();
+                const repo = document.getElementById('setupRepo').value.trim();
+                const branch = document.getElementById('setupBranch').value.trim() || 'main';
+                const token = document.getElementById('setupToken').value.trim();
+
+                if (!owner || !repo || !token) {
+                    this.showToast('请填写完整的 GitHub 配置信息', 'error');
+                    return;
+                }
+
+                this.githubConfig = { owner, repo, branch, token };
+                localStorage.setItem('github_config', JSON.stringify(this.githubConfig));
+                this.setStorageMode('github');
+                
+                // Also update the data manager inputs
+                document.getElementById('githubOwner').value = owner;
+                document.getElementById('githubRepo').value = repo;
+                document.getElementById('githubBranch').value = branch;
+                document.getElementById('githubToken').value = token;
+                
+                this.closeModal('setupModal');
+                this.showToast('GitHub 配置已保存，开始同步');
+                
+                // Try to push current posts to GitHub
+                this.pushToGitHub().then(() => {
+                    this.hideSetupBanner();
+                }).catch(() => {
+                    // Even if push fails, config is saved
+                    this.hideSetupBanner();
+                });
+            },
+
+            hideSetupBanner() {
+                const banner = document.getElementById('setupBanner');
+                if (banner) banner.style.display = 'none';
+            },
+
+            showSetupBannerIfNeeded() {
+                const banner = document.getElementById('setupBanner');
+                if (banner && this.storageMode === 'github' && !this.githubConfig) {
+                    banner.style.display = 'flex';
+                }
             },
 
             // Giscus Integration
@@ -1244,6 +1739,47 @@
                 this.giscusLoaded = true;
             },
 
+            // Mode Switching
+            switchMode(mode) {
+                this.currentMode = mode;
+                
+                document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+                document.getElementById('mode' + mode.charAt(0).toUpperCase() + mode.slice(1)).classList.add('active');
+                
+                document.getElementById('localModePanel').style.display = mode === 'local' ? 'block' : 'none';
+                document.getElementById('githubModePanel').style.display = mode === 'github' ? 'block' : 'none';
+                document.getElementById('manualModePanel').style.display = mode === 'manual' ? 'block' : 'none';
+                
+                if (mode === 'manual') {
+                    this.updateJSONExport();
+                } else if (mode === 'local') {
+                    document.getElementById('localPostCount').textContent = this.posts.length + ' 篇';
+                }
+                
+                // Update storage mode preference
+                if (mode === 'github' || mode === 'local') {
+                    this.setStorageMode(mode);
+                }
+            },
+
+            // Data Manager
+            showDataManager() {
+                if (!this.isAdmin) {
+                    this.showToast('请先登录', 'error');
+                    return;
+                }
+                
+                if (this.githubConfig) {
+                    document.getElementById('githubOwner').value = this.githubConfig.owner || '';
+                    document.getElementById('githubRepo').value = this.githubConfig.repo || '';
+                    document.getElementById('githubBranch').value = this.githubConfig.branch || 'main';
+                    document.getElementById('githubToken').value = this.githubConfig.token || '';
+                }
+                
+                this.switchMode(this.storageMode);
+                this.showModal('dataModal');
+            },
+
             // GitHub API Integration
             loadGitHubConfig() {
                 const config = localStorage.getItem('github_config');
@@ -1269,19 +1805,9 @@
 
                 this.githubConfig = { owner, repo, branch, token };
                 localStorage.setItem('github_config', JSON.stringify(this.githubConfig));
+                this.setStorageMode('github');
                 this.showToast('GitHub 配置已保存');
-                this.closeModal('githubModal');
-            },
-
-            showGitHubConfig() {
-                if (this.githubConfig) {
-                    document.getElementById('githubOwner').value = this.githubConfig.owner || '';
-                    document.getElementById('githubRepo').value = this.githubConfig.repo || '';
-                    document.getElementById('githubBranch').value = this.githubConfig.branch || 'main';
-                    document.getElementById('githubToken').value = this.githubConfig.token || '';
-                }
-                document.getElementById('githubConfigStatus').style.display = 'none';
-                this.showModal('githubModal');
+                this.hideSetupBanner();
             },
 
             async testGitHubConnection() {
@@ -1297,6 +1823,10 @@
                     return;
                 }
 
+                statusDiv.className = 'config-status';
+                statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 连接中...';
+                statusDiv.style.display = 'inline-flex';
+
                 try {
                     const response = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
                         headers: {
@@ -1309,95 +1839,80 @@
                         const data = await response.json();
                         statusDiv.className = 'config-status connected';
                         statusDiv.innerHTML = `<i class="fas fa-check-circle"></i> 连接成功: ${data.full_name}`;
-                        statusDiv.style.display = 'inline-flex';
                     } else {
                         const error = await response.json();
                         statusDiv.className = 'config-status error';
                         statusDiv.innerHTML = `<i class="fas fa-times-circle"></i> 连接失败: ${error.message}`;
-                        statusDiv.style.display = 'inline-flex';
                     }
                 } catch (error) {
                     statusDiv.className = 'config-status error';
                     statusDiv.innerHTML = '<i class="fas fa-times-circle"></i> 网络错误';
-                    statusDiv.style.display = 'inline-flex';
                 }
             },
 
-            // Load posts from GitHub or localStorage
-            async loadPosts() {
-                if (this.githubConfig) {
-                    try {
-                        await this.loadPostsFromGitHub();
-                        this.showSyncStatus('已从 GitHub 加载', 'success');
-                    } catch (error) {
-                        console.error('Failed to load from GitHub:', error);
-                        this.loadPostsFromLocal();
-                        this.showToast('从 GitHub 加载失败，使用本地数据', 'error');
-                    }
-                } else {
-                    this.loadPostsFromLocal();
-                }
-            },
-
-            async loadPostsFromGitHub() {
-                const { owner, repo, branch, token } = this.githubConfig;
-                const path = 'data/posts.json';
-                
-                const response = await fetch(
-                    `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`,
-                    {
-                        headers: {
-                            'Authorization': `token ${token}`,
-                            'Accept': 'application/vnd.github.v3+json'
-                        }
-                    }
-                );
-
-                if (response.status === 404) {
-                    this.posts = [];
+            // Load posts from GitHub
+            async loadFromGitHub() {
+                if (!this.githubConfig) {
+                    this.showToast('请先配置 GitHub', 'error');
                     return;
                 }
 
-                if (!response.ok) {
-                    throw new Error(`GitHub API error: ${response.status}`);
-                }
+                this.showSyncStatus('正在从 GitHub 加载...', 'syncing');
 
-                const data = await response.json();
-                const content = atob(data.content);
-                this.posts = JSON.parse(content);
-                this.postsSha = data.sha;
-            },
-
-            loadPostsFromLocal() {
-                const saved = localStorage.getItem('blog_posts');
-                if (saved) {
-                    try {
-                        this.posts = JSON.parse(saved);
-                    } catch (e) {
-                        this.posts = [];
-                    }
-                } else {
-                    this.posts = [
+                try {
+                    const { owner, repo, branch, token } = this.githubConfig;
+                    const path = 'data/posts.json';
+                    
+                    const response = await fetch(
+                        `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`,
                         {
-                            id: '1',
-                            title: '欢迎使用极简博客',
-                            content: '这是一个基于 Windows 11 Fluent Design 设计的极简博客系统。\n\n## 特性\n\n- ✨ **毛玻璃效果** - 使用 Acrylic 材质设计\n- 🎬 **B站视频** - 使用 `@bilibili:BV号` 插入视频\n- 🖼️ **图片支持** - 通过 URL 插入图片\n- 💬 **评论系统** - 基于 Giscus 的 GitHub Discussions\n- 🔄 **GitHub 同步** - 文章自动保存到仓库 JSON 文件\n\n@bilibili:BV1GJ411x7h7\n\n开始创作吧！',
-                            date: new Date().toLocaleDateString('zh-CN'),
-                            excerpt: '基于 Windows 11 Fluent Design 的极简博客系统，支持 Markdown、B站视频、GitHub JSON 存储和评论功能。'
+                            headers: {
+                                'Authorization': `token ${token}`,
+                                'Accept': 'application/vnd.github.v3+json'
+                            }
                         }
-                    ];
+                    );
+
+                    if (response.status === 404) {
+                        this.showToast('GitHub 上暂无数据文件，将创建新文件', 'warning');
+                        this.showSyncStatus('准备创建新文件', 'local');
+                        return;
+                    }
+
+                    if (!response.ok) {
+                        throw new Error(`GitHub API error: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    const content = atob(data.content);
+                    this.posts = JSON.parse(content);
+                    this.postsSha = data.sha;
+                    
                     this.savePostsToLocal();
+                    this.renderPosts();
+                    this.updatePostCount();
+                    
+                    this.showToast('已从 GitHub 加载数据');
+                    this.showSyncStatus('已同步', 'success');
+                } catch (error) {
+                    console.error('Failed to load from GitHub:', error);
+                    this.showToast('从 GitHub 加载失败: ' + error.message, 'error');
+                    this.showSyncStatus('同步失败', 'error');
                 }
             },
 
-            async savePostsToGitHub() {
-                if (!this.githubConfig) return false;
+            // Push posts to GitHub
+            async pushToGitHub() {
+                if (!this.githubConfig) {
+                    this.showToast('请先配置 GitHub', 'error');
+                    return false;
+                }
 
                 const { owner, repo, branch, token } = this.githubConfig;
                 const path = 'data/posts.json';
-                const content = btoa(JSON.stringify(this.posts, null, 2));
+                const content = btoa(unescape(encodeURIComponent(JSON.stringify(this.posts, null, 2))));
                 
-                this.showSyncStatus('正在同步到 GitHub...', 'syncing');
+                this.showSyncStatus('正在推送到 GitHub...', 'syncing');
 
                 try {
                     let sha = this.postsSha;
@@ -1450,535 +1965,152 @@
                     const result = await response.json();
                     this.postsSha = result.content.sha;
                     this.showSyncStatus('已同步到 GitHub', 'success');
+                    this.showToast('数据已同步到 GitHub');
                     return true;
                 } catch (error) {
                     this.showSyncStatus('同步失败', 'error');
-                    this.showToast('同步到 GitHub 失败: ' + error.message, 'error');
+                    this.showToast('推送到 GitHub 失败: ' + error.message, 'error');
                     return false;
                 }
             },
 
-            savePostsToLocal() {
-                localStorage.setItem('blog_posts', JSON.stringify(this.posts));
+            // Local file operations
+            exportToFile() {
+                const data = {
+                    posts: this.posts,
+                    profile: this.profile,
+                    exportDate: new Date().toISOString()
+                };
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `blog-backup-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                this.showToast('备份文件已下载');
             },
 
-            async savePosts() {
-                this.savePostsToLocal();
-                if (this.githubConfig) {
-                    await this.savePostsToGitHub();
-                }
-                this.updatePostCount();
+            importFromFile() 
+            importFromFile() {
+                document.getElementById('fileInput').click();
             },
 
-            showSyncStatus(text, status) {
-                const indicator = document.getElementById('syncIndicator');
-                const statusDot = document.getElementById('syncStatus');
-                const textSpan = document.getElementById('syncText');
-                
-                textSpan.textContent = text;
-                statusDot.className = 'sync-status';
-                
-                if (status === 'syncing') {
-                    statusDot.classList.add('syncing');
-                } else if (status === 'error') {
-                    statusDot.classList.add('error');
-                }
-                
-                indicator.classList.remove('hidden');
-                
-                if (status !== 'syncing') {
-                    setTimeout(() => {
-                        indicator.classList.add('hidden');
-                    }, 3000);
-                }
-            },
+            handleFileImport(event) {
+                const file = event.target.files[0];
+                if (!file) return;
 
-            // Profile Management
-            loadProfile() {
-                const saved = localStorage.getItem('blog_profile');
-                if (saved) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
                     try {
-                        this.profile = JSON.parse(saved);
-                    } catch (e) {}
-                }
+                        const data = JSON.parse(e.target.result);
+                        if (data.posts && Array.isArray(data.posts)) {
+                            this.posts = data.posts;
+                            if (data.profile) {
+                                this.profile = data.profile;
+                                this.saveProfile();
+                            }
+                            this.savePostsToLocal();
+                            this.render();
+                            this.showToast('数据导入成功');
+                            
+                            // If in GitHub mode, try to sync
+                            if (this.storageMode === 'github' && this.githubConfig) {
+                                this.pushToGitHub();
+                            }
+                        } else {
+                            throw new Error('无效的数据格式');
+                        }
+                    } catch (error) {
+                        this.showToast('导入失败: ' + error.message, 'error');
+                    }
+                };
+                reader.readAsText(file);
+                event.target.value = '';
             },
 
-            saveProfile() {
-                localStorage.setItem('blog_profile', JSON.stringify(this.profile));
-                this.renderProfile();
-                this.showToast('个人介绍已更新');
+            // Manual JSON operations
+            updateJSONExport() {
+                const data = {
+                    posts: this.posts,
+                    profile: this.profile,
+                    exportDate: new Date().toISOString()
+                };
+                document.getElementById('jsonExportArea').value = JSON.stringify(data, null, 2);
             },
 
-            renderProfile() {
-                document.getElementById('profileName').textContent = this.profile.name;
-                document.getElementById('profileAvatar').textContent = this.profile.avatar;
-                
-                let bioHtml = this.parseMarkdown(this.profile.bio);
-                document.getElementById('profileBio').innerHTML = bioHtml;
-                
-                const editBtn = document.getElementById('editProfileBtn');
-                if (editBtn) editBtn.style.display = this.isAdmin ? 'flex' : 'none';
+            copyJSON() {
+                const textarea = document.getElementById('jsonExportArea');
+                textarea.select();
+                document.execCommand('copy');
+                this.showToast('JSON 已复制到剪贴板');
             },
 
-            editProfile() {
-                if (!this.isAdmin) return;
-                document.getElementById('editName').value = this.profile.name;
-                document.getElementById('editAvatar').value = this.profile.avatar;
-                document.getElementById('editBio').value = this.profile.bio;
-                this.showModal('profileModal');
+            downloadJSON() {
+                const data = document.getElementById('jsonExportArea').value;
+                const blob = new Blob([data], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'posts.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
             },
 
-            saveProfileFromEditor() {
-                const name = document.getElementById('editName').value.trim();
-                const avatar = document.getElementById('editAvatar').value.trim() || '✨';
-                const bio = document.getElementById('editBio').value.trim();
-
-                if (!name) {
-                    this.showToast('昵称不能为空', 'error');
-                    return;
-                }
-
-                this.profile = { name, avatar, bio: bio || '暂无介绍' };
-                this.saveProfile();
-                this.closeModal('profileModal');
-            },
-
-            // Rendering
-            render() {
-                this.renderProfile();
-                this.renderPosts();
-                this.updatePostCount();
-                this.updateUI();
-            },
-
-            renderPosts() {
-                const grid = document.getElementById('blogGrid');
-                if (this.posts.length === 0) {
-                    grid.innerHTML = `
-                        <div class="empty-state" style="grid-column: 1/-1;">
-                            <i class="fas fa-inbox"></i>
-                            <h3>暂无文章</h3>
-                            <p>${this.isAdmin ? '点击"写文章"发布第一篇文章' : '管理员登录后可以发布文章'}</p>
-                        </div>
-                    `;
-                    return;
-                }
-
-                grid.innerHTML = this.posts.map(post => `
-                    <article class="blog-card acrylic" onclick="app.showDetail('${post.id}')">
-                        <h3>${this.escapeHtml(post.title)}</h3>
-                        <div class="blog-meta">
-                            <i class="far fa-calendar"></i> ${post.date}
-                        </div>
-                        <div class="blog-excerpt">${this.escapeHtml(post.excerpt || post.content.substring(0, 100))}...</div>
-                        <div class="read-more">
-                            阅读全文 <i class="fas fa-arrow-right"></i>
-                        </div>
-                    </article>
-                `).join('');
-            },
-
-            updatePostCount() {
-                document.getElementById('postCount').textContent = this.posts.length;
-            },
-
-            // Markdown Parser
-            parseMarkdown(text) {
-                if (!text) return '';
-                
-                text = text.replace(/@bilibili:(BV[a-zA-Z0-9]+)/gi, (match, bvid) => {
-                    return this.generateBilibiliPlayer(bvid);
-                });
-
-                text = text.replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" loading="lazy">');
-                text = text.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
-                text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
-                text = text.replace(/^### (.*$)/gm, '<h3>$1</h3>');
-                text = text.replace(/^## (.*$)/gm, '<h2>$1</h2>');
-                text = text.replace(/^# (.*$)/gm, '<h1>$1</h1>');
-                text = text.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
-                text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
-                text = text.replace(/^- (.*$)/gm, '<li>$1</li>');
-                text = text.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
-                
-                const paragraphs = text.split(/\n\n/).filter(p => p.trim());
-                text = paragraphs.map(p => {
-                    if (p.startsWith('<') && !p.startsWith('<li')) return p;
-                    return `<p>${p}</p>`;
-                }).join('');
-                
-                return text;
-            },
-
-            generateBilibiliPlayer(bvid) {
-                return `
-                    <div class="bilibili-wrapper">
-                        <div class="bilibili-player">
-                            <iframe src="https://player.bilibili.com/player.html?bvid=${bvid}&page=1&high_quality=1&danmaku=1&autoplay=0" 
-                                    allowfullscreen 
-                                    loading="lazy">
-                            </iframe>
-                        </div>
-                    </div>
-                `;
-            },
-
-            // Article Detail with Giscus
-            showDetail(id) {
-                const post = this.posts.find(p => p.id === id);
-                if (!post) return;
-
-                this.currentPostId = id;
-                document.getElementById('detailTitle').textContent = post.title;
-                document.getElementById('detailContent').innerHTML = this.parseMarkdown(post.content);
-
-                const actions = document.getElementById('detailActions');
-                if (this.isAdmin) {
-                    actions.innerHTML = `
-                        <button class="btn btn-secondary" onclick="app.editPost('${id}')">
-                            <i class="fas fa-edit"></i> 编辑
-                        </button>
-                        <button class="btn btn-secondary" style="background: #dc3545; color: white;" onclick="app.deletePost('${id}')">
-                            <i class="fas fa-trash"></i> 删除
-                        </button>
-                    `;
-                } else {
-                    actions.innerHTML = '';
-                }
-
-                this.loadGiscus();
-                this.showModal('detailModal');
-            },
-
-            // Editor Functions - FIXED
-            openEditor(id = null) {
-                if (!this.isAdmin) {
-                    this.showToast('请先登录', 'error');
-                    return;
-                }
-
-                this.editingPostId = id;
-                const titleInput = document.getElementById('postTitle');
-                const contentInput = document.getElementById('postContent');
-                const modalTitle = document.getElementById('editorTitle');
-                const saveBtn = document.getElementById('savePostBtn');
-
-                // Reset button state
-                saveBtn.disabled = false;
-                saveBtn.innerHTML = '发布文章';
-
-                if (id) {
-                    const post = this.posts.find(p => p.id === id);
-                    titleInput.value = post.title;
-                    contentInput.value = post.content;
-                    modalTitle.innerHTML = '<i class="fas fa-edit"></i> 编辑文章';
-                } else {
-                    titleInput.value = '';
-                    contentInput.value = '';
-                    modalTitle.innerHTML = '<i class="fas fa-pen"></i> 撰写文章';
-                }
-
-                document.getElementById('editorError').style.display = 'none';
-                this.showModal('editorModal');
-            },
-
-            editPost(id) {
-                this.closeModal('detailModal');
-                setTimeout(() => this.openEditor(id), 300);
-            },
-
-            // FIXED: savePost with proper error handling and button reset
-            async savePost() {
-                // Prevent double submission
-                if (this.isSaving) {
-                    console.log('Save already in progress, ignoring');
-                    return;
-                }
-
-                const title = document.getElementById('postTitle').value.trim();
-                const content = document.getElementById('postContent').value.trim();
-                const errorDiv = document.getElementById('editorError');
-                const saveBtn = document.getElementById('savePostBtn');
-
-                if (!title || !content) {
-                    errorDiv.textContent = '标题和内容不能为空';
-                    errorDiv.style.display = 'block';
-                    return;
-                }
-
-                errorDiv.style.display = 'none';
-                
-                // Set saving flag and update UI
-                this.isSaving = true;
-                saveBtn.disabled = true;
-                saveBtn.innerHTML = '<span class="spinner"></span> 保存中...';
-
+            importFromJSON() {
                 try {
-                    const now = new Date().toLocaleDateString('zh-CN');
-                    
-                    if (this.editingPostId) {
-                        const index = this.posts.findIndex(p => p.id === this.editingPostId);
-                        if (index !== -1) {
-                            this.posts[index] = {
-                                ...this.posts[index],
-                                title,
-                                content,
-                                excerpt: content.substring(0, 100).replace(/[#*`]/g, ''),
-                                date: now
-                            };
+                    const data = JSON.parse(document.getElementById('jsonImportArea').value);
+                    if (data.posts && Array.isArray(data.posts)) {
+                        this.posts = data.posts;
+                        if (data.profile) {
+                            this.profile = data.profile;
+                            this.saveProfile();
+                        }
+                        this.savePostsToLocal();
+                        this.render();
+                        this.showToast('数据导入成功');
+                        document.getElementById('jsonImportArea').value = '';
+                        
+                        // If in GitHub mode, try to sync
+                        if (this.storageMode === 'github' && this.githubConfig) {
+                            this.pushToGitHub();
                         }
                     } else {
-                        const newPost = {
-                            id: Date.now().toString(),
-                            title,
-                            content,
-                            excerpt: content.substring(0, 100).replace(/[#*`]/g, ''),
-                            date: now
-                        };
-                        this.posts.unshift(newPost);
+                        throw new Error('无效的数据格式');
                     }
-
-                    // Save to storage (with timeout protection)
-                    await Promise.race([
-                        this.savePosts(),
-                        new Promise((_, reject) => 
-                            setTimeout(() => reject(new Error('保存超时')), 30000)
-                        )
-                    ]);
-
-                    this.renderPosts();
-                    this.closeModal('editorModal');
-                    this.showToast(this.editingPostId ? '文章已更新' : '文章已发布');
-                    this.editingPostId = null;
-                    
                 } catch (error) {
-                    errorDiv.textContent = '保存失败: ' + error.message;
-                    errorDiv.style.display = 'block';
-                    this.showToast('保存失败: ' + error.message, 'error');
-                } finally {
-                    // ALWAYS reset button state
-                    this.isSaving = false;
-                    saveBtn.disabled = false;
-                    saveBtn.innerHTML = '发布文章';
+                    this.showToast('导入失败: ' + error.message, 'error');
                 }
             },
 
-            async deletePost(id) {
-                if (!confirm('确定要删除这篇文章吗？此操作不可恢复。')) return;
+            // Load posts - GitHub first, fallback to local
+            async loadPosts() {
+                // Always load from localStorage first as cache
+                this.loadPostsFromLocal();
                 
-                this.posts = this.posts.filter(p => p.id !== id);
-                await this.savePosts();
-                this.renderPosts();
-                this.closeModal('detailModal');
-                this.showToast('文章已删除');
-            },
-
-            // Bilibili Integration
-            openBilibiliDialog() {
-                document.getElementById('bilibiliInput').value = '';
-                this.clearBilibiliPreview();
-                this.showModal('bilibiliModal');
-            },
-
-            extractBvid(input) {
-                if (!input) return null;
-                const bvMatch = input.match(/BV[a-zA-Z0-9]{10}/);
-                if (bvMatch) return bvMatch[0];
-                return null;
-            },
-
-            previewBilibili() {
-                const input = document.getElementById('bilibiliInput').value;
-                const bvid = this.extractBvid(input);
-                const preview = document.getElementById('videoPreview');
-
-                if (bvid) {
-                    this.bilibiliCache = bvid;
-                    preview.className = 'video-preview-box has-video';
-                    preview.innerHTML = this.generateBilibiliPlayer(bvid);
-                    this.showToast(`预览: ${bvid}`);
-                } else {
-                    preview.className = 'video-preview-box';
-                    preview.innerHTML = `
-                        <i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 12px; opacity: 0.5;"></i>
-                        <div>无法识别BV号，请输入正确的B站视频链接</div>
-                    `;
-                    this.showToast('BV号格式错误', 'error');
-                }
-            },
-
-            clearBilibiliPreview() {
-                this.bilibiliCache = null;
-                const preview = document.getElementById('videoPreview');
-                preview.className = 'video-preview-box';
-                preview.innerHTML = `
-                    <i class="fas fa-video" style="font-size: 3rem; margin-bottom: 12px; opacity: 0.3;"></i>
-                    <div>输入BV号后点击预览查看效果</div>
-                `;
-            },
-
-            insertBilibili() {
-                const input = document.getElementById('bilibiliInput').value;
-                const bvid = this.extractBvid(input);
-
-                if (!bvid) {
-                    this.showToast('请输入有效的BV号', 'error');
-                    return;
-                }
-
-                const textarea = document.getElementById('postContent');
-                const insertText = `\n@bilibili:${bvid}\n`;
-                
-                const start = textarea.selectionStart;
-                const end = textarea.selectionEnd;
-                textarea.value = textarea.value.substring(0, start) + insertText + textarea.value.substring(end);
-                
-                this.closeModal('bilibiliModal');
-                this.showToast('视频已插入');
-            },
-
-            // Editor Helpers
-            insertImage() {
-                const url = prompt('请输入图片URL:');
-                if (url) {
-                    this.insertToEditor(`![图片](${url})`);
-                }
-            },
-
-            insertLink() {
-                const text = prompt('链接文字:');
-                if (text) {
-                    const url = prompt('链接URL:');
-                    if (url) {
-                        this.insertToEditor(`[${text}](${url})`);
-                    }
-                }
-            },
-
-            insertCode() {
-                this.insertToEditor('\n```\n代码内容\n```\n');
-            },
-
-            insertToEditor(text) {
-                const textarea = document.getElementById('postContent');
-                const start = textarea.selectionStart;
-                const end = textarea.selectionEnd;
-                textarea.value = textarea.value.substring(0, start) + text + textarea.value.substring(end);
-                textarea.focus();
-            },
-
-            // Auth
-            checkAuth() {
-                const auth = localStorage.getItem('blog_auth');
-                if (auth) {
+                // If GitHub mode is configured, try to load from there
+                if (this.storageMode === 'github' && this.githubConfig) {
                     try {
-                        const data = JSON.parse(auth);
-                        if (data.expires > Date.now()) {
-                            this.isAdmin = true;
-                        }
-                    } catch (e) {}
-                }
-            },
-
-            showLogin() {
-                document.getElementById('loginPassword').value = '';
-                document.getElementById('loginError').style.display = 'none';
-                this.showModal('loginModal');
-                setTimeout(() => document.getElementById('loginPassword').focus(), 100);
-            },
-
-            login() {
-                const password = document.getElementById('loginPassword').value;
-                if (password === 'bixie4.5') {
-                    this.isAdmin = true;
-                    localStorage.setItem('blog_auth', JSON.stringify({ expires: Date.now() + 24 * 60 * 60 * 1000 }));
-                    this.updateUI();
-                    this.renderProfile();
-                    this.closeModal('loginModal');
-                    this.showToast('登录成功');
-                } else {
-                    document.getElementById('loginError').style.display = 'block';
-                }
-            },
-
-            logout() {
-                this.isAdmin = false;
-                localStorage.removeItem('blog_auth');
-                this.updateUI();
-                this.renderProfile();
-                this.showToast('已退出登录');
-            },
-
-            updateUI() {
-                document.getElementById('guestActions').style.display = this.isAdmin ? 'none' : 'block';
-                document.getElementById('adminActions').style.display = this.isAdmin ? 'flex' : 'none';
-            },
-
-            // Utilities
-            showModal(id) {
-                const modal = document.getElementById(id);
-                modal.classList.add('active');
-                document.body.style.overflow = 'hidden';
-            },
-
-            closeModal(id) {
-                const modal = document.getElementById(id);
-                modal.classList.remove('active');
-                document.body.style.overflow = '';
-            },
-
-            closeModalOnOverlay(event, id) {
-                if (event.target === event.currentTarget) {
-                    this.closeModal(id);
-                }
-            },
-
-            showToast(message, type = 'success') {
-                const toast = document.getElementById('toast');
-                toast.textContent = message;
-                toast.className = `toast ${type} show`;
-                
-                setTimeout(() => {
-                    toast.classList.remove('show');
-                }, 3000);
-            },
-
-            escapeHtml(text) {
-                const div = document.createElement('div');
-                div.textContent = text;
-                return div.innerHTML;
-            },
-
-            goHome() {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-        };
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            app.init();
-        });
-
-        // Keyboard shortcuts
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                document.querySelectorAll('.modal-overlay.active').forEach(modal => {
-                    modal.classList.remove('active');
-                });
-                document.body.style.overflow = '';
-                
-                // Reset saving state if modal closed with Escape
-                if (app.isSaving) {
-                    app.isSaving = false;
-                    const saveBtn = document.getElementById('savePostBtn');
-                    if (saveBtn) {
-                        saveBtn.disabled = false;
-                        saveBtn.innerHTML = '发布文章';
+                        await this.loadFromGitHub();
+                    } catch (error) {
+                        console.log('Failed to load from GitHub, using local data');
+                        this.showToast('无法连接 GitHub，使用本地缓存数据', 'warning');
                     }
+                } else if (this.storageMode === 'github' && !this.githubConfig) {
+                    // Show setup banner if GitHub mode but no config
+                    this.showSetupBannerIfNeeded();
                 }
-            }
-        });
-    </script>
-</body>
-</html>
+            },
+
+            loadPostsFromLocal() {
+                const saved = localStorage.getItem('blog_posts');
+                if (saved) {
+                    try {
+                        this.posts = JSON.parse(saved);
+                    } catch (e) {
+                        this.posts = [];
+      
