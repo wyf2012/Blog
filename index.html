@@ -633,11 +633,15 @@
             border: none;
         }
 
-        /* Giscus Comments */
+        /* Giscus Comments - Enhanced Styling */
         .giscus-container {
             margin-top: 48px;
             padding-top: 32px;
             border-top: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .giscus {
+            width: 100%;
         }
 
         /* Toast Notification */
@@ -1130,7 +1134,7 @@
         </div>
     </div>
 
-    <!-- Article Detail Modal -->
+    <!-- Article Detail Modal with Giscus -->
     <div class="modal-overlay" id="detailModal" onclick="app.closeModalOnOverlay(event, 'detailModal')">
         <div class="modal" style="max-width: 900px;">
             <div class="modal-header">
@@ -1142,8 +1146,10 @@
             <div class="article-content" id="detailContent"></div>
             <div id="detailActions" style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;"></div>
             
-            <!-- Giscus Comments -->
-            <div class="giscus-container" id="giscusContainer"></div>
+            <!-- Giscus Comments Container -->
+            <div class="giscus-container">
+                <div class="giscus" id="giscus-comments"></div>
+            </div>
         </div>
     </div>
 
@@ -1156,7 +1162,26 @@
         <span id="syncText">已同步到 GitHub</span>
     </div>
 
+    <!-- Giscus Script - Loaded dynamically -->
     <script>
+        // Giscus configuration from user
+        const GISCUS_CONFIG = {
+            src: 'https://giscus.app/client.js',
+            'data-repo': 'wyf2012/Blog',
+            'data-repo-id': 'R_kgDORzrk5w',
+            'data-category': 'Announcements',
+            'data-category-id': 'DIC_kwDORzrk584C5jXz',
+            'data-mapping': 'pathname',
+            'data-strict': '0',
+            'data-reactions-enabled': '1',
+            'data-emit-metadata': '0',
+            'data-input-position': 'bottom',
+            'data-theme': 'preferred_color_scheme',
+            'data-lang': 'zh-CN',
+            crossorigin: 'anonymous',
+            async: true
+        };
+
         // Application Logic
         const app = {
             posts: [],
@@ -1165,10 +1190,11 @@
             editingPostId: null,
             bilibiliCache: null,
             githubConfig: null,
+            giscusLoaded: false,
 
             // Default profile
             profile: {
-                name: '极简博客',
+                name: '极简博主',
                 avatar: '✨',
                 bio: '欢迎来到我的博客！这里记录着我的思考与创作。\n\n使用 **Markdown** 语法书写，支持插入 B站视频 和图片。'
             },
@@ -1179,6 +1205,42 @@
                 this.loadPosts();
                 this.checkAuth();
                 this.render();
+            },
+
+            // Giscus Integration
+            loadGiscus() {
+                // Remove existing giscus script if any
+                const existingScript = document.getElementById('giscus-script');
+                if (existingScript) {
+                    existingScript.remove();
+                }
+
+                // Clear existing giscus container
+                const container = document.getElementById('giscus-comments');
+                if (container) {
+                    container.innerHTML = '';
+                }
+
+                // Create new script element with user configuration
+                const script = document.createElement('script');
+                script.id = 'giscus-script';
+                script.src = GISCUS_CONFIG.src;
+                
+                // Set all data attributes
+                Object.keys(GISCUS_CONFIG).forEach(key => {
+                    if (key !== 'src' && key !== 'async') {
+                        script.setAttribute(key, GISCUS_CONFIG[key]);
+                    }
+                });
+                
+                script.async = GISCUS_CONFIG.async;
+
+                // Insert script after the container
+                if (container) {
+                    container.appendChild(script);
+                }
+
+                this.giscusLoaded = true;
             },
 
             // GitHub API Integration
@@ -1291,7 +1353,6 @@
                 );
 
                 if (response.status === 404) {
-                    // File doesn't exist yet, initialize with empty array
                     this.posts = [];
                     return;
                 }
@@ -1303,7 +1364,7 @@
                 const data = await response.json();
                 const content = atob(data.content);
                 this.posts = JSON.parse(content);
-                this.postsSha = data.sha; // Store SHA for future updates
+                this.postsSha = data.sha;
             },
 
             loadPostsFromLocal() {
@@ -1315,7 +1376,6 @@
                         this.posts = [];
                     }
                 } else {
-                    // Default sample post
                     this.posts = [
                         {
                             id: '1',
@@ -1329,7 +1389,6 @@
                 }
             },
 
-            // Save posts to GitHub API
             async savePostsToGitHub() {
                 if (!this.githubConfig) return false;
 
@@ -1340,7 +1399,6 @@
                 this.showSyncStatus('正在同步到 GitHub...', 'syncing');
 
                 try {
-                    // Check if file exists to get SHA
                     let sha = this.postsSha;
                     if (!sha) {
                         try {
@@ -1357,9 +1415,7 @@
                                 const data = await checkResponse.json();
                                 sha = data.sha;
                             }
-                        } catch (e) {
-                            // File might not exist
-                        }
+                        } catch (e) {}
                     }
 
                     const body = {
@@ -1407,14 +1463,10 @@
             },
 
             async savePosts() {
-                // Always save to localStorage as backup
                 this.savePostsToLocal();
-                
-                // Try to save to GitHub if configured
                 if (this.githubConfig) {
                     await this.savePostsToGitHub();
                 }
-                
                 this.updatePostCount();
             },
 
@@ -1534,35 +1586,22 @@
             parseMarkdown(text) {
                 if (!text) return '';
                 
-                // Bilibili video
                 text = text.replace(/@bilibili:(BV[a-zA-Z0-9]+)/gi, (match, bvid) => {
                     return this.generateBilibiliPlayer(bvid);
                 });
 
-                // Images
                 text = text.replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" loading="lazy">');
-                
-                // Links
                 text = text.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
-                
-                // Bold & Italic
                 text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
                 text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
-                
-                // Headers
                 text = text.replace(/^### (.*$)/gm, '<h3>$1</h3>');
                 text = text.replace(/^## (.*$)/gm, '<h2>$1</h2>');
                 text = text.replace(/^# (.*$)/gm, '<h1>$1</h1>');
-                
-                // Code blocks
                 text = text.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
                 text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
-                
-                // Lists
                 text = text.replace(/^- (.*$)/gm, '<li>$1</li>');
                 text = text.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
                 
-                // Paragraphs
                 const paragraphs = text.split(/\n\n/).filter(p => p.trim());
                 text = paragraphs.map(p => {
                     if (p.startsWith('<') && !p.startsWith('<li')) return p;
@@ -1585,7 +1624,7 @@
                 `;
             },
 
-            // Article Detail
+            // Article Detail with Giscus
             showDetail(id) {
                 const post = this.posts.find(p => p.id === id);
                 if (!post) return;
@@ -1608,32 +1647,10 @@
                     actions.innerHTML = '';
                 }
 
-                this.loadGiscus(post);
-                this.showModal('detailModal');
-            },
+                // Load Giscus comments
+                this.loadGiscus();
 
-            loadGiscus(post) {
-                const container = document.getElementById('giscusContainer');
-                container.innerHTML = '';
-                
-                const script = document.createElement('script');
-                script.src = 'https://giscus.app/client.js';
-                script.setAttribute('data-repo', 'yourusername/yourusername.github.io');
-                script.setAttribute('data-repo-id', 'R_kgDOxxxxxx');
-                script.setAttribute('data-category', 'Announcements');
-                script.setAttribute('data-category-id', 'DIC_kwDOxxxxxx');
-                script.setAttribute('data-mapping', 'specific');
-                script.setAttribute('data-term', `post-${post.id}`);
-                script.setAttribute('data-strict', '0');
-                script.setAttribute('data-reactions-enabled', '1');
-                script.setAttribute('data-emit-metadata', '0');
-                script.setAttribute('data-input-position', 'bottom');
-                script.setAttribute('data-theme', 'preferred_color_scheme');
-                script.setAttribute('data-lang', 'zh-CN');
-                script.setAttribute('crossorigin', 'anonymous');
-                script.async = true;
-                
-                container.appendChild(script);
+                this.showModal('detailModal');
             },
 
             // Editor Functions
