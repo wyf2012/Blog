@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>极简博客</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <title>极简博客 | Minimal Blog</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -13,370 +13,612 @@
             box-sizing: border-box;
         }
 
-        body {
-            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, 'Microsoft YaHei', sans-serif;
-            background: radial-gradient(circle at 20% 30%, #e9ecef, #d4d9e2);
-            min-height: 100vh;
-            color: #1f1f1f;
+        :root {
+            --acrylic-bg: rgba(255, 255, 255, 0.65);
+            --acrylic-border: rgba(255, 255, 255, 0.5);
+            --acrylic-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            --accent-color: #0078d4;
+            --accent-hover: #106ebe;
+            --text-primary: #1f1f1f;
+            --text-secondary: #5f5f5f;
+            --mica-bg: #f3f3f3;
+            --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-spring: 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.55);
-            backdrop-filter: blur(20px);
-            border-radius: 24px;
-            border: 1px solid rgba(255,255,255,0.6);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.05);
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --acrylic-bg: rgba(40, 40, 40, 0.75);
+                --acrylic-border: rgba(255, 255, 255, 0.1);
+                --acrylic-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+                --text-primary: #ffffff;
+                --text-secondary: #cccccc;
+                --mica-bg: #202020;
+            }
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: radial-gradient(ellipse at 10% 20%, #e0e7ff 0%, transparent 50%),
+                        radial-gradient(ellipse at 90% 80%, #fce7f3 0%, transparent 50%),
+                        var(--mica-bg);
+            min-height: 100vh;
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: radial-gradient(ellipse at 10% 20%, #1e3a8a 0%, transparent 50%),
+                            radial-gradient(ellipse at 90% 80%, #831843 0%, transparent 50%),
+                            var(--mica-bg);
+            }
+        }
+
+        /* Acrylic Material Design */
+        .acrylic {
+            background: var(--acrylic-bg);
+            backdrop-filter: blur(20px) saturate(125%);
+            -webkit-backdrop-filter: blur(20px) saturate(125%);
+            border: 1px solid var(--acrylic-border);
+            box-shadow: var(--acrylic-shadow);
         }
 
         .container {
-            max-width: 1280px;
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 0 28px;
+            padding: 0 24px;
         }
 
+        /* Navigation - Floating Style */
         .navbar {
-            padding: 16px 0;
-            position: sticky;
+            position: fixed;
             top: 20px;
-            z-index: 100;
-            margin-bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 48px);
+            max-width: 1150px;
+            z-index: 1000;
+            border-radius: 16px;
+            padding: 12px 24px;
+            transition: var(--transition-smooth);
+            animation: slideDown 0.6s var(--transition-spring);
         }
+
+        @keyframes slideDown {
+            from { transform: translateX(-50%) translateY(-100%); opacity: 0; }
+            to { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+
         .nav-content {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(24px);
-            border-radius: 48px;
-            padding: 8px 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border: 1px solid rgba(255,255,255,0.8);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.02);
         }
 
         .logo {
             font-size: 1.5rem;
-            font-weight: 600;
-            background: linear-gradient(135deg, #1e3a8a, #2c3e66);
-            background-clip: text;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-color), #00b4d8);
             -webkit-background-clip: text;
-            color: transparent;
+            -webkit-text-fill-color: transparent;
             cursor: pointer;
+            transition: var(--transition-fast);
+            user-select: none;
+        }
+
+        .logo:hover {
+            transform: scale(1.05);
         }
 
         .nav-links {
             display: flex;
-            gap: 16px;
+            gap: 8px;
             align-items: center;
         }
-        .nav-link {
-            text-decoration: none;
-            font-weight: 500;
-            color: #2c2c2c;
-            padding: 6px 14px;
-            border-radius: 32px;
-            transition: 0.2s;
-        }
-        .nav-link:hover {
-            background: rgba(0,0,0,0.05);
-        }
-        .btn {
-            background: rgba(255,255,255,0.85);
-            border: 0.5px solid rgba(0,0,0,0.08);
-            padding: 8px 20px;
-            border-radius: 32px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: 0.2s;
-            font-family: inherit;
-            font-size: 0.85rem;
-        }
-        .btn-primary {
-            background: #1e3a8a;
-            color: white;
+
+        .nav-btn {
+            background: transparent;
             border: none;
-        }
-        .btn-primary:hover {
-            background: #2c4a9e;
-        }
-        .status-badge {
-            background: rgba(0,0,0,0.05);
-            padding: 5px 12px;
-            border-radius: 30px;
-            font-size: 0.75rem;
-            display: inline-flex;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: var(--transition-fast);
+            display: flex;
             align-items: center;
             gap: 6px;
         }
 
-        /* 自我介绍区域 */
+        .nav-btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .nav-btn.primary {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .nav-btn.primary:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        /* Main Content */
+        main {
+            padding-top: 100px;
+            padding-bottom: 60px;
+        }
+
+        /* Profile Section - Hero Card */
         .profile-section {
-            margin: 30px 0 40px;
-            position: relative;
+            margin-bottom: 48px;
+            animation: fadeInUp 0.8s var(--transition-spring) 0.1s both;
         }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .profile-card {
-            background: rgba(255, 255, 255, 0.75);
-            backdrop-filter: blur(20px);
-            border-radius: 32px;
-            padding: 28px 32px;
-            border: 1px solid rgba(255,255,255,0.9);
-            transition: all 0.3s ease;
+            border-radius: 24px;
+            padding: 40px;
             position: relative;
+            overflow: hidden;
+            transition: var(--transition-smooth);
         }
+
         .profile-card:hover {
-            background: rgba(255, 255, 255, 0.85);
-            box-shadow: 0 12px 28px rgba(0,0,0,0.08);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
         }
+
         .profile-header {
             display: flex;
             align-items: center;
-            gap: 20px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
+            gap: 24px;
+            margin-bottom: 24px;
         }
-        .profile-avatar {
-            width: 80px;
-            height: 80px;
+
+        .avatar {
+            width: 100px;
+            height: 100px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            background: linear-gradient(135deg, var(--accent-color), #00b4d8);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2.5rem;
+            font-size: 3rem;
             color: white;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 24px rgba(0, 120, 212, 0.3);
+            transition: var(--transition-spring);
+            flex-shrink: 0;
         }
-        .profile-info {
-            flex: 1;
+
+        .avatar:hover {
+            transform: rotate(10deg) scale(1.1);
         }
-        .profile-name {
-            font-size: 1.8rem;
-            font-weight: 600;
+
+        .profile-info h1 {
+            font-size: 2rem;
+            font-weight: 700;
             margin-bottom: 8px;
-            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
+            color: var(--text-primary);
         }
+
         .profile-bio {
-            color: #4a5568;
-            line-height: 1.5;
-            margin-top: 8px;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            line-height: 1.6;
+            max-width: 600px;
         }
-        .profile-bio p {
-            margin: 8px 0;
+
+        .profile-bio a {
+            color: var(--accent-color);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: var(--transition-fast);
         }
+
+        .profile-bio a:hover {
+            border-bottom-color: var(--accent-color);
+        }
+
         .profile-stats {
             display: flex;
-            gap: 24px;
-            margin-top: 16px;
-            padding-top: 16px;
-            border-top: 1px solid rgba(0,0,0,0.08);
+            gap: 32px;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid rgba(0, 0, 0, 0.08);
         }
-        .stat-item {
+
+        .stat {
             text-align: center;
+            transition: var(--transition-fast);
         }
-        .stat-number {
-            font-size: 1.3rem;
+
+        .stat:hover {
+            transform: translateY(-2px);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
             font-weight: 700;
-            color: #1e3a8a;
+            color: var(--accent-color);
         }
+
         .stat-label {
-            font-size: 0.7rem;
-            color: #6c757d;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
         }
+
         .edit-profile-btn {
             position: absolute;
             top: 20px;
             right: 20px;
-            background: rgba(255,255,255,0.9);
-            border: 1px solid rgba(0,0,0,0.1);
-            padding: 6px 14px;
-            border-radius: 30px;
-            font-size: 0.75rem;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
             cursor: pointer;
-            transition: 0.2s;
-            display: none;
-        }
-        .edit-profile-btn:hover {
-            background: white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        .profile-card:hover .edit-profile-btn {
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: var(--transition-fast);
             display: flex;
             align-items: center;
             gap: 6px;
         }
-        
-        /* 编辑自我介绍模态框 */
-        .profile-editor {
-            margin-top: 15px;
+
+        .profile-card:hover .edit-profile-btn {
+            opacity: 1;
+            transform: translateY(0);
         }
-        .profile-editor textarea {
-            min-height: 200px;
-            font-size: 0.9rem;
-            line-height: 1.6;
+
+        .edit-profile-btn:hover {
+            background: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
-        .avatar-preview {
+
+        /* Blog Grid */
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 24px;
             display: flex;
             align-items: center;
-            gap: 15px;
-            margin: 15px 0;
-            padding: 15px;
-            background: rgba(0,0,0,0.03);
-            border-radius: 20px;
-        }
-        .current-avatar {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.8rem;
-            color: white;
+            gap: 12px;
+            animation: fadeInUp 0.6s var(--transition-spring) 0.2s both;
         }
 
         .blog-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-            gap: 28px;
-            margin: 40px 0 60px;
-        }
-        .blog-card {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(16px);
-            border-radius: 24px;
-            padding: 24px;
-            transition: all 0.25s;
-            border: 1px solid rgba(255,255,255,0.9);
-            cursor: pointer;
-        }
-        .blog-card:hover {
-            transform: translateY(-4px);
-            background: rgba(255,255,255,0.85);
-            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.15);
-        }
-        .blog-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 12px;
-        }
-        .blog-meta {
-            font-size: 0.75rem;
-            color: #4a5568;
-            margin-bottom: 16px;
-        }
-        .blog-excerpt {
-            color: #2d3a4b;
-            line-height: 1.45;
-            margin-bottom: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 24px;
+            animation: fadeInUp 0.6s var(--transition-spring) 0.3s both;
         }
 
-        .modal {
-            display: none;
+        .blog-card {
+            border-radius: 20px;
+            padding: 28px;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .blog-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 100%);
+            opacity: 0;
+            transition: var(--transition-smooth);
+        }
+
+        .blog-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.15);
+        }
+
+        .blog-card:hover::before {
+            opacity: 1;
+        }
+
+        .blog-card h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .blog-meta {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .blog-excerpt {
+            color: var(--text-secondary);
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .read-more {
+            margin-top: 16px;
+            color: var(--accent-color);
+            font-weight: 500;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: var(--transition-fast);
+        }
+
+        .blog-card:hover .read-more {
+            gap: 8px;
+        }
+
+        /* Modal Design */
+        .modal-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.4);
-            backdrop-filter: blur(12px);
-            z-index: 1000;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            display: none;
             align-items: center;
             justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
-        
-        #bilibiliDialog {
-            z-index: 1100;
+
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
         }
-        
-        .modal-card {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(32px);
-            border-radius: 32px;
+
+        .modal {
+            background: var(--acrylic-bg);
+            backdrop-filter: blur(40px) saturate(150%);
+            border-radius: 24px;
+            border: 1px solid var(--acrylic-border);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
             width: 90%;
-            max-width: 980px;
+            max-width: 800px;
             max-height: 85vh;
             overflow-y: auto;
-            padding: 28px;
-            border: 1px solid rgba(255,255,255,0.8);
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s var(--transition-spring);
+            padding: 32px;
         }
-        
-        #bilibiliDialog .modal-card,
-        #profileModal .modal-card {
-            max-width: 650px;
+
+        .modal-overlay.active .modal {
+            transform: scale(1) translateY(0);
         }
-        
+
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-weight: 600;
-            font-size: 1.4rem;
-            margin-bottom: 20px;
-        }
-        .close-btn {
-            font-size: 28px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            opacity: 0.7;
-        }
-        input, textarea {
-            width: 100%;
-            padding: 12px 18px;
-            margin: 10px 0 16px;
-            border: 1px solid rgba(0,0,0,0.1);
-            border-radius: 28px;
-            background: rgba(255,255,255,0.7);
-            font-family: inherit;
-            font-size: 0.9rem;
-        }
-        input:focus, textarea:focus {
-            outline: none;
-            border-color: #1e3a8a;
-            background: white;
-        }
-        .toast {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            background: rgba(0,0,0,0.75);
-            backdrop-filter: blur(16px);
-            color: white;
-            padding: 10px 24px;
-            border-radius: 60px;
-            font-size: 0.85rem;
-            z-index: 1200;
+            margin-bottom: 24px;
         }
 
-        /* 文章内容样式 */
-        .article-content {
-            line-height: 1.65;
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
         }
+
+        .close-btn {
+            background: rgba(0, 0, 0, 0.05);
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            transition: var(--transition-fast);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-btn:hover {
+            background: rgba(0, 0, 0, 0.1);
+            color: var(--text-primary);
+            transform: rotate(90deg);
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-input, .form-textarea {
+            width: 100%;
+            padding: 14px 18px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.5);
+            font-family: inherit;
+            font-size: 1rem;
+            color: var(--text-primary);
+            transition: var(--transition-fast);
+        }
+
+        .form-input:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            background: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.1);
+        }
+
+        .form-textarea {
+            min-height: 200px;
+            resize: vertical;
+            line-height: 1.6;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .tool-btn {
+            background: rgba(0, 0, 0, 0.05);
+            border: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-primary);
+        }
+
+        .tool-btn:hover {
+            background: rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 12px;
+            border: none;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            flex: 1;
+        }
+
+        .btn-primary {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 120, 212, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(0, 0, 0, 0.05);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        /* Article Content */
+        .article-content {
+            line-height: 1.8;
+            font-size: 1.1rem;
+        }
+
+        .article-content h1, .article-content h2, .article-content h3 {
+            margin: 32px 0 16px;
+            font-weight: 600;
+        }
+
+        .article-content p {
+            margin-bottom: 16px;
+        }
+
         .article-content img {
             max-width: 100%;
-            border-radius: 20px;
-            margin: 20px 0;
+            border-radius: 16px;
+            margin: 24px 0;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
         }
-        
-        .bilibili-player-wrapper {
-            margin: 30px 0;
+
+        .article-content a {
+            color: var(--accent-color);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: var(--transition-fast);
+        }
+
+        .article-content a:hover {
+            border-bottom-color: var(--accent-color);
+        }
+
+        .article-content code {
+            background: rgba(0, 0, 0, 0.05);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', monospace;
+            font-size: 0.9em;
+        }
+
+        .article-content pre {
+            background: rgba(0, 0, 0, 0.05);
+            padding: 16px;
+            border-radius: 12px;
+            overflow-x: auto;
+            margin: 16px 0;
+        }
+
+        /* Bilibili Player */
+        .bilibili-wrapper {
+            margin: 24px 0;
             border-radius: 16px;
             overflow: hidden;
             background: #000;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
             position: relative;
-            width: 100%;
         }
+
         .bilibili-player {
             position: relative;
             width: 100%;
             padding-bottom: 56.25%;
-            background: #000;
         }
+
         .bilibili-player iframe {
             position: absolute;
             top: 0;
@@ -385,728 +627,929 @@
             height: 100%;
             border: none;
         }
-        
-        .toolbar-mini {
-            background: rgba(0,0,0,0.04);
-            border-radius: 48px;
-            padding: 8px 12px;
-            margin-bottom: 20px;
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
+
+        /* Giscus Comments */
+        .giscus-container {
+            margin-top: 48px;
+            padding-top: 32px;
+            border-top: 1px solid rgba(0, 0, 0, 0.08);
         }
-        .tool-btn {
-            background: rgba(255,255,255,0.7);
-            border: none;
-            padding: 6px 14px;
-            border-radius: 40px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .tool-btn:hover {
-            background: rgba(255,255,255,0.9);
-        }
-        
-        .video-dialog-section {
-            margin: 15px 0;
-        }
-        .video-preview {
-            margin: 15px 0;
-            padding: 15px;
-            background: rgba(0,0,0,0.03);
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--acrylic-bg);
+            backdrop-filter: blur(20px);
+            color: var(--text-primary);
+            padding: 16px 24px;
             border-radius: 16px;
+            border: 1px solid var(--acrylic-border);
+            box-shadow: var(--acrylic-shadow);
+            z-index: 3000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s var(--transition-spring);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.error {
+            border-left: 4px solid #dc3545;
+        }
+
+        .toast.success {
+            border-left: 4px solid #28a745;
+        }
+
+        /* Empty State */
+        .empty-state {
             text-align: center;
-            min-height: 280px;
+            padding: 80px 20px;
+            color: var(--text-secondary);
+            animation: fadeInUp 0.6s var(--transition-spring) both;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        /* Video Preview in Editor */
+        .video-preview-box {
+            margin: 16px 0;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.03);
+            border-radius: 12px;
+            text-align: center;
+            min-height: 200px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-        }
-        .video-preview-placeholder {
-            color: #999;
-            font-size: 0.9rem;
-        }
-        .preview-buttons {
-            display: flex;
-            gap: 10px;
-            margin: 15px 0;
-        }
-        
-        .giscus-wrapper {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid rgba(0,0,0,0.08);
+            color: var(--text-secondary);
         }
 
-        @media (max-width: 720px) {
-            .container { padding: 0 16px; }
-            .nav-content { flex-wrap: wrap; justify-content: center; gap: 12px; }
-            .profile-header { flex-direction: column; text-align: center; }
-            .profile-stats { justify-content: center; }
-            .edit-profile-btn { position: static; margin-top: 15px; display: inline-flex; }
-            .profile-card:hover .edit-profile-btn { display: inline-flex; }
+        .video-preview-box.has-video {
+            padding: 0;
+            background: #000;
+            overflow: hidden;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar {
+                width: calc(100% - 32px);
+                top: 12px;
+                padding: 10px 16px;
+            }
+
+            .nav-links {
+                gap: 4px;
+            }
+
+            .nav-btn span {
+                display: none;
+            }
+
+            main {
+                padding-top: 90px;
+            }
+
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .profile-stats {
+                justify-content: center;
+            }
+
+            .blog-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modal {
+                width: 95%;
+                padding: 24px;
+                border-radius: 20px;
+            }
+
+            .edit-profile-btn {
+                position: static;
+                margin-top: 16px;
+                opacity: 1;
+                transform: none;
+                justify-content: center;
+            }
+        }
+
+        /* Loading Animation */
+        .skeleton {
+            background: linear-gradient(90deg, rgba(0,0,0,0.05) 25%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.05) 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 8px;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Admin Badge */
+        .admin-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
         }
     </style>
 </head>
 <body>
 
-<div class="navbar">
-    <div class="container nav-content glass-panel">
-        <div class="logo">
-            ✦ 极简日志
-        </div>
-        <div class="nav-links">
-            <a href="#" id="homeLink" class="nav-link">首页</a>
-            <div id="authSection">
-                <button class="btn" id="adminLoginBtn">管理登录</button>
+    <nav class="navbar acrylic">
+        <div class="nav-content">
+            <div class="logo" onclick="app.goHome()">
+                <i class="fas fa-feather-alt"></i> 极简博客
             </div>
-            <div id="adminTools" style="display: none;">
-                <button class="btn" id="newPostBtn"><i class="fas fa-plus"></i> 写文章</button>
-                <button class="btn" id="logoutBtn">退出</button>
-                <span class="status-badge"><i class="fas fa-user-check"></i> 已登录</span>
-            </div>
-        </div>
-    </div>
-</div>
-
-<main class="container">
-    <!-- 自我介绍区域 -->
-    <div id="profileSection" class="profile-section"></div>
-    
-    <!-- 文章列表 -->
-    <div id="blogListContainer" class="blog-grid"></div>
-</main>
-
-<!-- 登录模态框 -->
-<div id="loginModal" class="modal">
-    <div class="modal-card">
-        <div class="modal-header">
-            <span>🔐 管理员验证</span>
-            <button class="close-btn" onclick="closeModal('loginModal')">&times;</button>
-        </div>
-        <input type="text" id="loginUsername" placeholder="用户名">
-        <input type="password" id="loginPassword" placeholder="密码">
-        <div id="loginError" style="color:#c00; font-size:0.8rem;"></div>
-        <div style="display:flex; gap:12px; margin-top:12px;">
-            <button class="btn btn-primary" id="confirmLoginBtn" style="flex:1;">登录</button>
-            <button class="btn" id="rememberLoginBtn" style="flex:1;">记住我</button>
-        </div>
-        <div style="margin-top: 16px; font-size:0.75rem; text-align:center;">演示: admin / admin123</div>
-    </div>
-</div>
-
-<!-- 编辑自我介绍模态框 -->
-<div id="profileModal" class="modal">
-    <div class="modal-card">
-        <div class="modal-header">
-            <span>✏️ 编辑个人介绍</span>
-            <button class="close-btn" onclick="closeModal('profileModal')">&times;</button>
-        </div>
-        <div class="profile-editor">
-            <label>👤 昵称/姓名</label>
-            <input type="text" id="profileName" placeholder="你的名字">
-            
-            <label>🖼️ 头像图标 (Emoji 或 文字)</label>
-            <input type="text" id="profileAvatarIcon" placeholder="例如: ✨、👨‍💻、📝" maxlength="4">
-            <div class="avatar-preview">
-                <div class="current-avatar" id="avatarPreview">✨</div>
-                <span style="font-size: 0.8rem; color: #666;">预览效果</span>
-            </div>
-            
-            <label>📝 个人简介 (支持 Markdown)</label>
-            <textarea id="profileBio" rows="6" placeholder="写点关于自己的介绍...&#10;&#10;例如：&#10;热爱写作和分享的开发者&#10;喜欢探索新技术&#10;博客记录生活与思考"></textarea>
-            
-            <div style="display: flex; gap: 12px; margin-top: 20px;">
-                <button class="btn btn-primary" id="saveProfileBtn" style="flex:1;">💾 保存</button>
-                <button class="btn" onclick="closeModal('profileModal')">取消</button>
-            </div>
-            <div style="margin-top: 12px; font-size: 0.7rem; color: #666; background: rgba(0,0,0,0.03); padding: 10px; border-radius: 12px;">
-                💡 提示：支持 Markdown 语法，可以添加链接、粗体等格式
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- B站视频插入对话框 -->
-<div id="bilibiliDialog" class="modal">
-    <div class="modal-card">
-        <div class="modal-header">
-            <span>📺 插入B站视频</span>
-            <button class="close-btn" onclick="closeModal('bilibiliDialog')">&times;</button>
-        </div>
-        <div class="video-dialog-section">
-            <label>输入B站视频BV号或完整链接</label>
-            <input type="text" id="bilibiliInput" placeholder="例如: BV1GJ411x7h7 或 https://www.bilibili.com/video/BV1GJ411x7h7">
-            
-            <div class="preview-buttons">
-                <button class="btn" id="previewVideoBtn" style="flex:1;">🔍 预览视频</button>
-                <button class="btn" id="clearPreviewBtn" style="flex:1;">🗑️ 清除预览</button>
-            </div>
-            
-            <div class="video-preview" id="videoPreview">
-                <div class="video-preview-placeholder">
-                    <i class="fas fa-video" style="font-size: 48px; opacity: 0.3; margin-bottom: 10px; display: block;"></i>
-                    点击「预览视频」查看效果
+            <div class="nav-links">
+                <button class="nav-btn" onclick="app.goHome()">
+                    <i class="fas fa-home"></i> <span>首页</span>
+                </button>
+                <div id="guestActions">
+                    <button class="nav-btn primary" onclick="app.showLogin()">
+                        <i class="fas fa-lock"></i> <span>管理登录</span>
+                    </button>
+                </div>
+                <div id="adminActions" style="display: none;">
+                    <button class="nav-btn primary" onclick="app.openEditor()">
+                        <i class="fas fa-plus"></i> <span>写文章</span>
+                    </button>
+                    <button class="nav-btn" onclick="app.logout()">
+                        <i class="fas fa-sign-out-alt"></i> <span>退出</span>
+                    </button>
+                    <span class="admin-badge">
+                        <i class="fas fa-shield-alt"></i> 管理员
+                    </span>
                 </div>
             </div>
-            
-            <div style="display: flex; gap: 12px; margin-top: 15px;">
-                <button class="btn btn-primary" id="insertVideoBtn" style="flex:1;">✅ 插入到文章</button>
-                <button class="btn" onclick="closeModal('bilibiliDialog')">取消</button>
-            </div>
         </div>
-    </div>
-</div>
+    </nav>
 
-<!-- 文章编辑窗 -->
-<div id="editorModal" class="modal">
-    <div class="modal-card" style="max-width: 850px;">
-        <div class="modal-header">
-            <span id="editorTitle">撰写文章</span>
-            <button class="close-btn" onclick="closeModal('editorModal')">&times;</button>
-        </div>
-        <div class="toolbar-mini">
-            <button class="tool-btn" onclick="openBilibiliDialog()"><i class="fab fa-bilibili"></i> 插入B站视频</button>
-            <button class="tool-btn" onclick="insertImageHelper()"><i class="fas fa-image"></i> 插入图片</button>
-            <button class="tool-btn" onclick="insertLinkHelper()"><i class="fas fa-link"></i> 插入链接</button>
-        </div>
-        <input type="text" id="postTitle" placeholder="文章标题">
-        <input type="text" id="postExcerpt" placeholder="摘要（可选）">
-        <textarea id="postContent" rows="12" placeholder="支持Markdown语法。插入B站视频使用: @bilibili:BV号"></textarea>
-        <div id="editorError" style="color:#c00;"></div>
-        <div style="display:flex; gap:12px; margin-top:16px;">
-            <button class="btn btn-primary" id="savePostBtn">发布</button>
-            <button class="btn" onclick="closeModal('editorModal')">取消</button>
-        </div>
-    </div>
-</div>
-
-<!-- 文章详情模态框 -->
-<div id="detailModal" class="modal">
-    <div class="modal-card" style="max-width: 980px;">
-        <div class="modal-header">
-            <span id="detailTitle"></span>
-            <button class="close-btn" onclick="closeModal('detailModal')">&times;</button>
-        </div>
-        <div id="detailContent" class="article-content"></div>
-        <div id="detailAdminActions" style="margin-top: 20px; display: flex; gap: 12px; justify-content: flex-end;"></div>
-        <div id="giscusContainer" class="giscus-wrapper"></div>
-    </div>
-</div>
-
-<script>
-    // ---------- 全局数据 ----------
-    let posts = [];
-    let isAdmin = false;
-    let editId = null;
-    let currentPostId = null;
-    
-    // 个人资料配置
-    let profileData = {
-        name: '极简博主',
-        avatarIcon: '✍️',
-        bio: '欢迎来到我的博客！这里记录技术思考、生活感悟和创作分享。\n\n喜欢写作、摄影和开源。'
-    };
-
-    // 加载个人资料
-    function loadProfile() {
-        const saved = localStorage.getItem('blog_profile');
-        if (saved) {
-            try {
-                profileData = JSON.parse(saved);
-            } catch(e) {}
-        }
-        renderProfile();
-    }
-    
-    // 保存个人资料
-    function saveProfile() {
-        localStorage.setItem('blog_profile', JSON.stringify(profileData));
-        renderProfile();
-        showToast('个人介绍已更新');
-    }
-    
-    // 渲染自我介绍区域
-    function renderProfile() {
-        const container = document.getElementById('profileSection');
-        if (!container) return;
-        
-        // 简单的 Markdown 解析（支持粗体、斜体、链接）
-        let bioHtml = profileData.bio || '';
-        bioHtml = bioHtml.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-        bioHtml = bioHtml.replace(/\*(.*?)\*/g, '<em>$1</em>');
-        bioHtml = bioHtml.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
-        bioHtml = bioHtml.replace(/\n/g, '<br>');
-        
-        // 计算文章数量
-        const postCount = posts.length;
-        
-        container.innerHTML = `
-            <div class="profile-card">
-                <button class="edit-profile-btn" id="editProfileBtn" ${!isAdmin ? 'style="display:none;"' : ''}>
+    <main class="container">
+        <!-- Profile Section -->
+        <section class="profile-section" id="profileSection">
+            <div class="profile-card acrylic">
+                <button class="edit-profile-btn" id="editProfileBtn" onclick="app.editProfile()" style="display: none;">
                     <i class="fas fa-edit"></i> 编辑介绍
                 </button>
                 <div class="profile-header">
-                    <div class="profile-avatar">
-                        ${profileData.avatarIcon || '✍️'}
-                    </div>
+                    <div class="avatar" id="profileAvatar">✨</div>
                     <div class="profile-info">
-                        <div class="profile-name">${escapeHtml(profileData.name || '极简博主')}</div>
-                        <div class="profile-bio">${bioHtml}</div>
+                        <h1 id="profileName">博主</h1>
+                        <div class="profile-bio" id="profileBio">
+                            欢迎来到我的博客！这里记录着我的思考与创作。<br>
+                            使用 <strong>Markdown</strong> 语法书写，支持插入 <a href="#">B站视频</a> 和图片。
+                        </div>
                     </div>
                 </div>
                 <div class="profile-stats">
-                    <div class="stat-item">
-                        <div class="stat-number">${postCount}</div>
+                    <div class="stat">
+                        <div class="stat-value" id="postCount">0</div>
                         <div class="stat-label">文章</div>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-number">❤️</div>
-                        <div class="stat-label">用心创作</div>
+                    <div class="stat">
+                        <div class="stat-value">∞</div>
+                        <div class="stat-label">创意</div>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-number">✨</div>
-                        <div class="stat-label">持续更新</div>
+                    <div class="stat">
+                        <div class="stat-value">❤️</div>
+                        <div class="stat-label">热爱</div>
                     </div>
                 </div>
             </div>
-        `;
-        
-        // 绑定编辑按钮事件
-        const editBtn = document.getElementById('editProfileBtn');
-        if (editBtn && isAdmin) {
-            editBtn.addEventListener('click', openProfileEditor);
-        }
-    }
-    
-    // 打开个人资料编辑窗口
-    function openProfileEditor() {
-        if (!isAdmin) {
-            showToast('请先登录', true);
-            return;
-        }
-        document.getElementById('profileName').value = profileData.name || '';
-        document.getElementById('profileAvatarIcon').value = profileData.avatarIcon || '✍️';
-        document.getElementById('profileBio').value = profileData.bio || '';
-        document.getElementById('avatarPreview').textContent = profileData.avatarIcon || '✍️';
-        document.getElementById('profileModal').style.display = 'flex';
-        
-        // 实时预览头像图标
-        const avatarInput = document.getElementById('profileAvatarIcon');
-        const avatarPreview = document.getElementById('avatarPreview');
-        avatarInput.oninput = function() {
-            avatarPreview.textContent = this.value || '✍️';
-        };
-    }
-    
-    // 保存个人资料
-    function saveProfileFromEditor() {
-        const newName = document.getElementById('profileName').value.trim();
-        const newAvatar = document.getElementById('profileAvatarIcon').value.trim() || '✍️';
-        const newBio = document.getElementById('profileBio').value.trim();
-        
-        if (!newName) {
-            showToast('昵称不能为空', true);
-            return;
-        }
-        
-        profileData = {
-            name: newName,
-            avatarIcon: newAvatar,
-            bio: newBio || '暂无介绍'
-        };
-        
-        saveProfile();
-        closeModal('profileModal');
-    }
+        </section>
 
-    // 辅助函数
-    function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
-    
-    function showToast(msg, isErr=false) {
-        let t = document.createElement('div'); t.className='toast'; t.innerText=msg; 
-        t.style.background=isErr?'#c62828':'rgba(0,0,0,0.8)'; 
-        document.body.appendChild(t);
-        setTimeout(()=>t.remove(),2500);
-    }
-    
-    function closeModal(id) { 
-        document.getElementById(id).style.display='none'; 
-    }
-
-    // 从输入中提取BV号
-    function extractBvid(input) {
-        if (!input) return null;
-        const bvMatch = input.match(/BV[a-zA-Z0-9]{10}/);
-        if (bvMatch) return bvMatch[0];
-        const urlMatch = input.match(/\/video\/(BV[a-zA-Z0-9]{10})/);
-        if (urlMatch) return urlMatch[1];
-        return null;
-    }
-
-    // 生成B站播放器HTML
-    function generateBilibiliPlayer(bvid, options = {}) {
-        const { autoplay = 0, highQuality = 1, danmaku = 1 } = options;
-        return `<div class="bilibili-player-wrapper">
-            <div class="bilibili-player">
-                <iframe src="https://player.bilibili.com/player.html?bvid=${bvid}&page=1&high_quality=${highQuality}&danmaku=${danmaku}&autoplay=${autoplay}" 
-                        frameborder="0" 
-                        allowfullscreen>
-                </iframe>
+        <!-- Blog Grid -->
+        <section id="blogSection">
+            <h2 class="section-title">
+                <i class="fas fa-stream"></i> 最新文章
+            </h2>
+            <div class="blog-grid" id="blogGrid">
+                <!-- Posts will be rendered here -->
             </div>
-        </div>`;
-    }
+        </section>
+    </main>
 
-    function previewBilibiliVideo() {
-        const input = document.getElementById('bilibiliInput').value;
-        const bvid = extractBvid(input);
-        const previewDiv = document.getElementById('videoPreview');
-        
-        if (bvid) {
-            const playerHtml = generateBilibiliPlayer(bvid, { autoplay: 0 });
-            previewDiv.innerHTML = playerHtml;
-            showToast(`✓ 预览视频: ${bvid}`);
-        } else {
-            previewDiv.innerHTML = `
-                <div class="video-preview-placeholder">
-                    <i class="fas fa-exclamation-triangle" style="font-size: 48px; opacity: 0.5; margin-bottom: 10px; display: block;"></i>
-                    ❌ 无法识别BV号
-                </div>
-            `;
-            showToast('无法识别BV号', true);
-        }
-    }
-
-    function clearPreview() {
-        const previewDiv = document.getElementById('videoPreview');
-        previewDiv.innerHTML = `
-            <div class="video-preview-placeholder">
-                <i class="fas fa-video" style="font-size: 48px; opacity: 0.3; margin-bottom: 10px; display: block;"></i>
-                点击「预览视频」查看效果
+    <!-- Login Modal -->
+    <div class="modal-overlay" id="loginModal" onclick="app.closeModalOnOverlay(event, 'loginModal')">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title"><i class="fas fa-lock"></i> 管理员验证</span>
+                <button class="close-btn" onclick="app.closeModal('loginModal')">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-        `;
-    }
+            <div class="form-group">
+                <label class="form-label">密码</label>
+                <input type="password" class="form-input" id="loginPassword" placeholder="请输入管理员密码" onkeypress="if(event.key==='Enter')app.login()">
+            </div>
+            <div id="loginError" style="color: #dc3545; font-size: 0.9rem; margin-bottom: 16px; display: none;">
+                <i class="fas fa-exclamation-circle"></i> 密码错误
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="app.login()">登录</button>
+                <button class="btn btn-secondary" onclick="app.closeModal('loginModal')">取消</button>
+            </div>
+        </div>
+    </div>
 
-    function insertVideoToEditor() {
-        const input = document.getElementById('bilibiliInput').value;
-        const bvid = extractBvid(input);
-        
-        if (!bvid) {
-            showToast('请输入有效的BV号', true);
-            return;
-        }
-        
-        const textarea = document.getElementById('postContent');
-        const insertText = `@bilibili:${bvid}`;
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        textarea.value = textarea.value.substring(0, start) + insertText + textarea.value.substring(end);
-        textarea.focus();
-        
-        closeModal('bilibiliDialog');
-        showToast(`✓ 视频已插入！BV号: ${bvid}`);
-    }
+    <!-- Profile Edit Modal -->
+    <div class="modal-overlay" id="profileModal" onclick="app.closeModalOnOverlay(event, 'profileModal')">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title"><i class="fas fa-user-edit"></i> 编辑个人介绍</span>
+                <button class="close-btn" onclick="app.closeModal('profileModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">昵称 / 姓名</label>
+                <input type="text" class="form-input" id="editName" placeholder="你的名字">
+            </div>
+            <div class="form-group">
+                <label class="form-label">头像 Emoji</label>
+                <input type="text" class="form-input" id="editAvatar" placeholder="例如: 🚀" maxlength="2">
+            </div>
+            <div class="form-group">
+                <label class="form-label">个人简介 (支持 Markdown)</label>
+                <textarea class="form-textarea" id="editBio" placeholder="写点关于自己的介绍..."></textarea>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="app.saveProfile()">保存</button>
+                <button class="btn btn-secondary" onclick="app.closeModal('profileModal')">取消</button>
+            </div>
+        </div>
+    </div>
 
-    function openBilibiliDialog() {
-        document.getElementById('bilibiliInput').value = '';
-        clearPreview();
-        document.getElementById('bilibiliDialog').style.display = 'flex';
-    }
+    <!-- Editor Modal -->
+    <div class="modal-overlay" id="editorModal" onclick="app.closeModalOnOverlay(event, 'editorModal')">
+        <div class="modal" style="max-width: 900px;">
+            <div class="modal-header">
+                <span class="modal-title" id="editorTitle"><i class="fas fa-pen"></i> 撰写文章</span>
+                <button class="close-btn" onclick="app.closeModal('editorModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="toolbar">
+                <button class="tool-btn" onclick="app.openBilibiliDialog()">
+                    <i class="fab fa-bilibili" style="color: #00a1d6;"></i> 插入B站视频
+                </button>
+                <button class="tool-btn" onclick="app.insertImage()">
+                    <i class="fas fa-image"></i> 插入图片
+                </button>
+                <button class="tool-btn" onclick="app.insertLink()">
+                    <i class="fas fa-link"></i> 插入链接
+                </button>
+                <button class="tool-btn" onclick="app.insertCode()">
+                    <i class="fas fa-code"></i> 代码块
+                </button>
+            </div>
 
-    // 增强Markdown: 支持多种B站视频格式
-    function renderMarkdownWithVideo(text) {
-        if(!text) return '<p>暂无内容</p>';
-        
-        let html = text;
-        
-        html = html.replace(/@bilibili:([A-Za-z0-9]+)/gi, (match, bvid) => {
-            return generateBilibiliPlayer(bvid);
-        });
-        
-        html = html.replace(/\[bilibili:([A-Za-z0-9]+)\]/gi, (match, bvid) => {
-            return generateBilibiliPlayer(bvid);
-        });
-        
-        html = html.replace(/^(BV[0-9A-Za-z]{10})$/gm, (match, bv) => {
-            return generateBilibiliPlayer(bv);
-        });
-        
-        html = html.replace(/https?:\/\/(www\.)?bilibili\.com\/video\/(BV[a-zA-Z0-9]{10})/gi, (match, prefix, bvid) => {
-            return generateBilibiliPlayer(bvid);
-        });
-        
-        html = html.replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" style="max-width:100%; border-radius:18px; margin:20px 0;">');
-        html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
-        html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-        html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-        html = html.replace(/^### (.*)$/gm, '<h3>$1</h3>');
-        html = html.replace(/^## (.*)$/gm, '<h2>$1</h2>');
-        html = html.replace(/^# (.*)$/gm, '<h1>$1</h1>');
-        html = html.replace(/```(.*?)```/gs, '<pre><code>$1</code></pre>');
-        html = html.replace(/`(.*?)`/g, '<code>$1</code>');
-        html = html.replace(/^\s*-\s(.*)$/gm, '<li>$1</li>');
-        html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
-        
-        let paras = html.split(/\n\n/);
-        html = paras.map(p => p.trim()).filter(p=>p && !p.startsWith('<h')&&!p.startsWith('<ul')&&!p.startsWith('<pre')&&!p.startsWith('<div')).map(p=>`<p>${p}</p>`).join('');
-        
-        return html;
-    }
+            <div class="form-group">
+                <input type="text" class="form-input" id="postTitle" placeholder="文章标题">
+            </div>
+            <div class="form-group">
+                <textarea class="form-textarea" id="postContent" placeholder="开始写作... 使用 Markdown 语法
 
-    // 文章存储
-    async function savePostsToLocal() { localStorage.setItem('winblog_posts', JSON.stringify(posts)); }
-    
-    async function loadPostsFromLocal() {
-        let raw = localStorage.getItem('winblog_posts');
-        if(raw) { 
-            try{ posts = JSON.parse(raw); } catch(e){} 
-        }
-        if(!posts || !posts.length) posts = getDefaultArticles();
-        renderBlogList();
-        renderProfile(); // 更新文章数量统计
-    }
-    
-    function getDefaultArticles() {
-        return [
-            { 
-                id: "1", 
-                title: "B站视频播放示例", 
-                excerpt: "点击查看如何在文章中嵌入B站视频", 
-                content: "## 🎬 视频演示\n\n下面是一个B站视频示例：\n\n@bilibili:BV1GJ411x7h7\n\n试试看吧！", 
-                date: new Date().toLocaleDateString('zh-CN') 
+支持：
+- **粗体** 和 *斜体*
+- [链接](url)
+- ![图片](url)
+- @bilibili:BV号 插入视频" style="min-height: 300px;"></textarea>
+            </div>
+            <div id="editorError" style="color: #dc3545; margin-bottom: 16px; display: none;"></div>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="app.savePost()">发布文章</button>
+                <button class="btn btn-secondary" onclick="app.closeModal('editorModal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bilibili Video Modal -->
+    <div class="modal-overlay" id="bilibiliModal" onclick="app.closeModalOnOverlay(event, 'bilibiliModal')">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal-header">
+                <span class="modal-title"><i class="fab fa-bilibili"></i> 插入B站视频</span>
+                <button class="close-btn" onclick="app.closeModal('bilibiliModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">B站视频链接或BV号</label>
+                <input type="text" class="form-input" id="bilibiliInput" placeholder="例如: BV1GJ411x7h7 或 https://www.bilibili.com/video/BV1GJ411x7h7">
+            </div>
+            <div class="video-preview-box" id="videoPreview">
+                <i class="fas fa-video" style="font-size: 3rem; margin-bottom: 12px; opacity: 0.3;"></i>
+                <div>输入BV号后点击预览查看效果</div>
+            </div>
+            <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                <button class="btn btn-secondary" style="flex: 1;" onclick="app.previewBilibili()">
+                    <i class="fas fa-eye"></i> 预览
+                </button>
+                <button class="btn btn-secondary" style="flex: 1;" onclick="app.clearBilibiliPreview()">
+                    <i class="fas fa-trash"></i> 清除
+                </button>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="app.insertBilibili()">插入到文章</button>
+                <button class="btn btn-secondary" onclick="app.closeModal('bilibiliModal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Article Detail Modal -->
+    <div class="modal-overlay" id="detailModal" onclick="app.closeModalOnOverlay(event, 'detailModal')">
+        <div class="modal" style="max-width: 900px;">
+            <div class="modal-header">
+                <span class="modal-title" id="detailTitle">文章标题</span>
+                <button class="close-btn" onclick="app.closeModal('detailModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="article-content" id="detailContent"></div>
+            <div id="detailActions" style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;"></div>
+            
+            <!-- Giscus Comments -->
+            <div class="giscus-container" id="giscusContainer"></div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // Application Logic
+        const app = {
+            posts: [],
+            isAdmin: false,
+            currentPostId: null,
+            editingPostId: null,
+            bilibiliCache: null,
+
+            // Default profile
+            profile: {
+                name: '极简博主',
+                avatar: '✨',
+                bio: '欢迎来到我的博客！这里记录着我的思考与创作。\n\n使用 **Markdown** 语法书写，支持插入 B站视频 和图片。'
             },
-            { 
-                id: "2", 
-                title: "极简博客使用指南", 
-                excerpt: "毛玻璃风格，支持B站视频和评论功能", 
-                content: "## ✨ 功能特点\n\n### 1. B站视频嵌入\n使用 @bilibili:BV号 即可插入视频\n\n### 2. 毛玻璃设计\nWindows 11 风格的现代化界面\n\n开始创作吧！", 
-                date: new Date().toLocaleDateString('zh-CN') 
+
+            init() {
+                this.loadProfile();
+                this.loadPosts();
+                this.checkAuth();
+                this.render();
+            },
+
+            // Storage helpers for GitHub Pages (localStorage)
+            saveToStorage(key, data) {
+                try {
+                    localStorage.setItem(key, JSON.stringify(data));
+                    return true;
+                } catch (e) {
+                    this.showToast('存储空间不足', 'error');
+                    return false;
+                }
+            },
+
+            getFromStorage(key, defaultValue = null) {
+                try {
+                    const data = localStorage.getItem(key);
+                    return data ? JSON.parse(data) : defaultValue;
+                } catch (e) {
+                    return defaultValue;
+                }
+            },
+
+            // Profile Management
+            loadProfile() {
+                const saved = this.getFromStorage('blog_profile');
+                if (saved) this.profile = saved;
+            },
+
+            saveProfile() {
+                this.saveToStorage('blog_profile', this.profile);
+                this.renderProfile();
+                this.showToast('个人介绍已更新');
+            },
+
+            renderProfile() {
+                document.getElementById('profileName').textContent = this.profile.name;
+                document.getElementById('profileAvatar').textContent = this.profile.avatar;
+                
+                // Parse markdown in bio
+                let bioHtml = this.parseMarkdown(this.profile.bio);
+                document.getElementById('profileBio').innerHTML = bioHtml;
+                
+                // Update edit button visibility
+                const editBtn = document.getElementById('editProfileBtn');
+                if (editBtn) editBtn.style.display = this.isAdmin ? 'flex' : 'none';
+            },
+
+            editProfile() {
+                if (!this.isAdmin) return;
+                document.getElementById('editName').value = this.profile.name;
+                document.getElementById('editAvatar').value = this.profile.avatar;
+                document.getElementById('editBio').value = this.profile.bio;
+                this.showModal('profileModal');
+            },
+
+            saveProfileFromEditor() {
+                const name = document.getElementById('editName').value.trim();
+                const avatar = document.getElementById('editAvatar').value.trim() || '✨';
+                const bio = document.getElementById('editBio').value.trim();
+
+                if (!name) {
+                    this.showToast('昵称不能为空', 'error');
+                    return;
+                }
+
+                this.profile = { name, avatar, bio: bio || '暂无介绍' };
+                this.saveProfile();
+                this.closeModal('profileModal');
+            },
+
+            // Post Management
+            loadPosts() {
+                const saved = this.getFromStorage('blog_posts');
+                if (saved && saved.length > 0) {
+                    this.posts = saved;
+                } else {
+                    // Default sample posts
+                    this.posts = [
+                        {
+                            id: '1',
+                            title: '欢迎使用极简博客',
+                            content: '这是一个基于 Windows 11 Fluent Design 设计的极简博客系统。\n\n## 特性\n\n- ✨ **毛玻璃效果** - 使用 Acrylic 材质设计\n- 🎬 **B站视频** - 使用 `@bilibili:BV号` 插入视频\n- 🖼️ **图片支持** - 通过 URL 插入图片\n- 💬 **评论系统** - 基于 Giscus 的 GitHub Discussions\n\n@bilibili:BV1GJ411x7h7\n\n开始创作吧！',
+                            date: new Date().toLocaleDateString('zh-CN'),
+                            excerpt: '基于 Windows 11 Fluent Design 的极简博客系统，支持 Markdown、B站视频和评论功能。'
+                        }
+                    ];
+                    this.savePosts();
+                }
+            },
+
+            savePosts() {
+                this.saveToStorage('blog_posts', this.posts);
+                this.updatePostCount();
+            },
+
+            updatePostCount() {
+                const count = this.posts.length;
+                document.getElementById('postCount').textContent = count;
+            },
+
+            // Rendering
+            render() {
+                this.renderProfile();
+                this.renderPosts();
+                this.updatePostCount();
+                this.updateUI();
+            },
+
+            renderPosts() {
+                const grid = document.getElementById('blogGrid');
+                if (this.posts.length === 0) {
+                    grid.innerHTML = `
+                        <div class="empty-state" style="grid-column: 1/-1;">
+                            <i class="fas fa-inbox"></i>
+                            <h3>暂无文章</h3>
+                            <p>管理员登录后可以发布第一篇文章</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                grid.innerHTML = this.posts.map(post => `
+                    <article class="blog-card acrylic" onclick="app.showDetail('${post.id}')">
+                        <h3>${this.escapeHtml(post.title)}</h3>
+                        <div class="blog-meta">
+                            <i class="far fa-calendar"></i> ${post.date}
+                        </div>
+                        <div class="blog-excerpt">${this.escapeHtml(post.excerpt || post.content.substring(0, 100))}...</div>
+                        <div class="read-more">
+                            阅读全文 <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </article>
+                `).join('');
+            },
+
+            // Markdown Parser
+            parseMarkdown(text) {
+                if (!text) return '';
+                
+                // Bilibili video
+                text = text.replace(/@bilibili:(BV[a-zA-Z0-9]+)/gi, (match, bvid) => {
+                    return this.generateBilibiliPlayer(bvid);
+                });
+
+                // Images
+                text = text.replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" loading="lazy">');
+                
+                // Links
+                text = text.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+                
+                // Bold & Italic
+                text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+                
+                // Headers
+                text = text.replace(/^### (.*$)/gm, '<h3>$1</h3>');
+                text = text.replace(/^## (.*$)/gm, '<h2>$1</h2>');
+                text = text.replace(/^# (.*$)/gm, '<h1>$1</h1>');
+                
+                // Code blocks
+                text = text.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+                text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+                
+                // Lists
+                text = text.replace(/^- (.*$)/gm, '<li>$1</li>');
+                text = text.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+                
+                // Paragraphs
+                const paragraphs = text.split(/\n\n/).filter(p => p.trim());
+                text = paragraphs.map(p => {
+                    if (p.startsWith('<') && !p.startsWith('<li')) return p;
+                    return `<p>${p}</p>`;
+                }).join('');
+                
+                return text;
+            },
+
+            generateBilibiliPlayer(bvid) {
+                return `
+                    <div class="bilibili-wrapper">
+                        <div class="bilibili-player">
+                            <iframe src="https://player.bilibili.com/player.html?bvid=${bvid}&page=1&high_quality=1&danmaku=1&autoplay=0" 
+                                    allowfullscreen 
+                                    loading="lazy">
+                            </iframe>
+                        </div>
+                    </div>
+                `;
+            },
+
+            // Article Detail
+            showDetail(id) {
+                const post = this.posts.find(p => p.id === id);
+                if (!post) return;
+
+                this.currentPostId = id;
+                document.getElementById('detailTitle').textContent = post.title;
+                document.getElementById('detailContent').innerHTML = this.parseMarkdown(post.content);
+
+                // Admin actions
+                const actions = document.getElementById('detailActions');
+                if (this.isAdmin) {
+                    actions.innerHTML = `
+                        <button class="btn btn-secondary" onclick="app.editPost('${id}')">
+                            <i class="fas fa-edit"></i> 编辑
+                        </button>
+                        <button class="btn btn-secondary" style="background: #dc3545; color: white;" onclick="app.deletePost('${id}')">
+                            <i class="fas fa-trash"></i> 删除
+                        </button>
+                    `;
+                } else {
+                    actions.innerHTML = '';
+                }
+
+                // Load Giscus comments
+                this.loadGiscus(post);
+
+                this.showModal('detailModal');
+            },
+
+            loadGiscus(post) {
+                const container = document.getElementById('giscusContainer');
+                container.innerHTML = '';
+                
+                const script = document.createElement('script');
+                script.src = 'https://giscus.app/client.js';
+                script.setAttribute('data-repo', 'yourusername/yourusername.github.io');
+                script.setAttribute('data-repo-id', 'R_kgDOxxxxxx');
+                script.setAttribute('data-category', 'Announcements');
+                script.setAttribute('data-category-id', 'DIC_kwDOxxxxxx');
+                script.setAttribute('data-mapping', 'specific');
+                script.setAttribute('data-term', `post-${post.id}`);
+                script.setAttribute('data-strict', '0');
+                script.setAttribute('data-reactions-enabled', '1');
+                script.setAttribute('data-emit-metadata', '0');
+                script.setAttribute('data-input-position', 'bottom');
+                script.setAttribute('data-theme', 'preferred_color_scheme');
+                script.setAttribute('data-lang', 'zh-CN');
+                script.setAttribute('crossorigin', 'anonymous');
+                script.async = true;
+                
+                container.appendChild(script);
+            },
+
+            // Editor Functions
+            openEditor(id = null) {
+                if (!this.isAdmin) {
+                    this.showToast('请先登录', 'error');
+                    return;
+                }
+
+                this.editingPostId = id;
+                const titleInput = document.getElementById('postTitle');
+                const contentInput = document.getElementById('postContent');
+                const modalTitle = document.getElementById('editorTitle');
+
+                if (id) {
+                    const post = this.posts.find(p => p.id === id);
+                    titleInput.value = post.title;
+                    contentInput.value = post.content;
+                    modalTitle.innerHTML = '<i class="fas fa-edit"></i> 编辑文章';
+                } else {
+                    titleInput.value = '';
+                    contentInput.value = '';
+                    modalTitle.innerHTML = '<i class="fas fa-pen"></i> 撰写文章';
+                }
+
+                document.getElementById('editorError').style.display = 'none';
+                this.showModal('editorModal');
+            },
+
+            editPost(id) {
+                this.closeModal('detailModal');
+                setTimeout(() => this.openEditor(id), 300);
+            },
+
+            savePost() {
+                const title = document.getElementById('postTitle').value.trim();
+                const content = document.getElementById('postContent').value.trim();
+                const errorDiv = document.getElementById('editorError');
+
+                if (!title || !content) {
+                    errorDiv.textContent = '标题和内容不能为空';
+                    errorDiv.style.display = 'block';
+                    return;
+                }
+
+                errorDiv.style.display = 'none';
+
+                const now = new Date().toLocaleDateString('zh-CN');
+                
+                if (this.editingPostId) {
+                    const index = this.posts.findIndex(p => p.id === this.editingPostId);
+                    if (index !== -1) {
+                        this.posts[index] = {
+                            ...this.posts[index],
+                            title,
+                            content,
+                            excerpt: content.substring(0, 100).replace(/[#*`]/g, ''),
+                            date: now
+                        };
+                    }
+                } else {
+                    const newPost = {
+                        id: Date.now().toString(),
+                        title,
+                        content,
+                        excerpt: content.substring(0, 100).replace(/[#*`]/g, ''),
+                        date: now
+                    };
+                    this.posts.unshift(newPost);
+                }
+
+                this.savePosts();
+                this.renderPosts();
+                this.closeModal('editorModal');
+                this.showToast(this.editingPostId ? '文章已更新' : '文章已发布');
+                this.editingPostId = null;
+            },
+
+            deletePost(id) {
+                if (!confirm('确定要删除这篇文章吗？此操作不可恢复。')) return;
+                
+                this.posts = this.posts.filter(p => p.id !== id);
+                this.savePosts();
+                this.renderPosts();
+                this.closeModal('detailModal');
+                this.showToast('文章已删除');
+            },
+
+            // Bilibili Integration
+            openBilibiliDialog() {
+                document.getElementById('bilibiliInput').value = '';
+                this.clearBilibiliPreview();
+                this.showModal('bilibiliModal');
+            },
+
+            extractBvid(input) {
+                if (!input) return null;
+                const bvMatch = input.match(/BV[a-zA-Z0-9]{10}/);
+                if (bvMatch) return bvMatch[0];
+                return null;
+            },
+
+            previewBilibili() {
+                const input = document.getElementById('bilibiliInput').value;
+                const bvid = this.extractBvid(input);
+                const preview = document.getElementById('videoPreview');
+
+                if (bvid) {
+                    this.bilibiliCache = bvid;
+                    preview.className = 'video-preview-box has-video';
+                    preview.innerHTML = this.generateBilibiliPlayer(bvid);
+                    this.showToast(`预览: ${bvid}`);
+                } else {
+                    preview.className = 'video-preview-box';
+                    preview.innerHTML = `
+                        <i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 12px; opacity: 0.5;"></i>
+                        <div>无法识别BV号，请输入正确的B站视频链接</div>
+                    `;
+                    this.showToast('BV号格式错误', 'error');
+                }
+            },
+
+            clearBilibiliPreview() {
+                this.bilibiliCache = null;
+                const preview = document.getElementById('videoPreview');
+                preview.className = 'video-preview-box';
+                preview.innerHTML = `
+                    <i class="fas fa-video" style="font-size: 3rem; margin-bottom: 12px; opacity: 0.3;"></i>
+                    <div>输入BV号后点击预览查看效果</div>
+                `;
+            },
+
+            insertBilibili() {
+                const input = document.getElementById('bilibiliInput').value;
+                const bvid = this.extractBvid(input);
+
+                if (!bvid) {
+                    this.showToast('请输入有效的BV号', 'error');
+                    return;
+                }
+
+                const textarea = document.getElementById('postContent');
+                const insertText = `\n@bilibili:${bvid}\n`;
+                
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+                textarea.value = textarea.value.substring(0, start) + insertText + textarea.value.substring(end);
+                
+                this.closeModal('bilibiliModal');
+                this.showToast('视频已插入');
+            },
+
+            // Editor Helpers
+            insertImage() {
+                const url = prompt('请输入图片URL:');
+                if (url) {
+                    this.insertToEditor(`![图片](${url})`);
+                }
+            },
+
+            insertLink() {
+                const text = prompt('链接文字:');
+                if (text) {
+                    const url = prompt('链接URL:');
+                    if (url) {
+                        this.insertToEditor(`[${text}](${url})`);
+                    }
+                }
+            },
+
+            insertCode() {
+                this.insertToEditor('\n```\n代码内容\n```\n');
+            },
+
+            insertToEditor(text) {
+                const textarea = document.getElementById('postContent');
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+                textarea.value = textarea.value.substring(0, start) + text + textarea.value.substring(end);
+                textarea.focus();
+            },
+
+            // Auth
+            checkAuth() {
+                const auth = this.getFromStorage('blog_auth');
+                if (auth && auth.expires > Date.now()) {
+                    this.isAdmin = true;
+                }
+            },
+
+            showLogin() {
+                document.getElementById('loginPassword').value = '';
+                document.getElementById('loginError').style.display = 'none';
+                this.showModal('loginModal');
+                setTimeout(() => document.getElementById('loginPassword').focus(), 100);
+            },
+
+            login() {
+                const password = document.getElementById('loginPassword').value;
+                if (password === 'bixie4.5') {
+                    this.isAdmin = true;
+                    this.saveToStorage('blog_auth', { expires: Date.now() + 24 * 60 * 60 * 1000 });
+                    this.updateUI();
+                    this.closeModal('loginModal');
+                    this.renderProfile();
+                    this.showToast('登录成功');
+                } else {
+                    document.getElementById('loginError').style.display = 'block';
+                }
+            },
+
+            logout() {
+                this.isAdmin = false;
+                localStorage.removeItem('blog_auth');
+                this.updateUI();
+                this.renderProfile();
+                this.showToast('已退出登录');
+            },
+
+            updateUI() {
+                document.getElementById('guestActions').style.display = this.isAdmin ? 'none' : 'block';
+                document.getElementById('adminActions').style.display = this.isAdmin ? 'flex' : 'none';
+            },
+
+            // Utilities
+            showModal(id) {
+                const modal = document.getElementById(id);
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            },
+
+            closeModal(id) {
+                const modal = document.getElementById(id);
+                modal.classList.remove('active');
+                document.body.style.overflow = '';
+            },
+
+            closeModalOnOverlay(event, id) {
+                if (event.target === event.currentTarget) {
+                    this.closeModal(id);
+                }
+            },
+
+            showToast(message, type = 'success') {
+                const toast = document.getElementById('toast');
+                toast.textContent = message;
+                toast.className = `toast ${type} show`;
+                
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            },
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            },
+
+            goHome() {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
-        ];
-    }
+        };
 
-    function renderBlogList() {
-        const container = document.getElementById('blogListContainer');
-        if(!container) return;
-        if(posts.length===0) { container.innerHTML='<div style="text-align:center; padding:60px;">✨ 暂无文章，管理员登录后发布</div>'; return; }
-        container.innerHTML = posts.map(p => `
-            <div class="blog-card" data-id="${p.id}">
-                <div class="blog-title">${escapeHtml(p.title)}</div>
-                <div class="blog-meta"><i class="far fa-calendar-alt"></i> ${p.date || '未知'}</div>
-                <div class="blog-excerpt">${escapeHtml(p.excerpt || (p.content || '').substring(0,80))}...</div>
-                <button class="btn read-more" data-id="${p.id}" style="margin-top:8px;">阅读全文 →</button>
-            </div>
-        `).join('');
-        document.querySelectorAll('.read-more').forEach(btn => {
-            btn.addEventListener('click', (e) => { e.stopPropagation(); showArticleDetail(btn.dataset.id); });
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            app.init();
         });
-        document.querySelectorAll('.blog-card').forEach(card => {
-            card.addEventListener('click', (e) => { if(!e.target.classList.contains('read-more')) showArticleDetail(card.dataset.id); });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.active').forEach(modal => {
+                    modal.classList.remove('active');
+                });
+                document.body.style.overflow = '';
+            }
         });
-    }
-
-    // Giscus 评论配置
-    function getArticleIdentifier(postId, postTitle) {
-        const slug = postTitle ? postTitle.toLowerCase().replace(/[^\w\u4e00-\u9fa5]+/g, '-').substring(0, 50) : 'post';
-        return `/article/${postId}/${slug}`;
-    }
-
-    function loadGiscusComments(postId, postTitle) {
-        const container = document.getElementById('giscusContainer');
-        if(!container) return;
-        
-        const uniquePath = getArticleIdentifier(postId, postTitle);
-        container.innerHTML = '';
-        
-        const script = document.createElement('script');
-        script.src = 'https://giscus.app/client.js';
-        script.setAttribute('data-repo', 'wyf2012/Blog');
-        script.setAttribute('data-repo-id', 'R_kgDORzrk5w');
-        script.setAttribute('data-category', 'Announcements');
-        script.setAttribute('data-category-id', 'DIC_kwDORzrk584C5jXz');
-        script.setAttribute('data-mapping', 'specific');
-        script.setAttribute('data-term', uniquePath);
-        script.setAttribute('data-strict', '0');
-        script.setAttribute('data-reactions-enabled', '1');
-        script.setAttribute('data-emit-metadata', '0');
-        script.setAttribute('data-input-position', 'bottom');
-        script.setAttribute('data-theme', 'preferred_color_scheme');
-        script.setAttribute('data-lang', 'zh-CN');
-        script.setAttribute('crossorigin', 'anonymous');
-        script.async = true;
-        
-        container.appendChild(script);
-    }
-
-    async function showArticleDetail(id) {
-        let article = posts.find(a=>a.id==id);
-        if(!article) return;
-        
-        currentPostId = id;
-        document.getElementById('detailTitle').innerText = article.title;
-        document.getElementById('detailContent').innerHTML = renderMarkdownWithVideo(article.content);
-        
-        const adminDiv = document.getElementById('detailAdminActions');
-        if(isAdmin) {
-            adminDiv.innerHTML = `<button class="btn" id="editDetailBtn">编辑文章</button><button class="btn" id="deleteDetailBtn" style="background:#f0f0f0;">删除</button>`;
-            document.getElementById('editDetailBtn')?.addEventListener('click',()=>{ closeModal('detailModal'); openEditor(article.id); });
-            document.getElementById('deleteDetailBtn')?.addEventListener('click',async ()=>{ 
-                if(confirm('永久删除？')){ 
-                    posts=posts.filter(p=>p.id!=id); 
-                    await savePostsToLocal(); 
-                    renderBlogList(); 
-                    renderProfile();
-                    closeModal('detailModal'); 
-                    showToast('已删除'); 
-                } 
-            });
-        } else adminDiv.innerHTML='';
-        
-        document.getElementById('detailModal').style.display='flex';
-        loadGiscusComments(article.id, article.title);
-    }
-
-    function openEditor(id=null) {
-        if(!isAdmin){ showToast('请先登录',true); return; }
-        editId = id;
-        if(id) {
-            let p = posts.find(p=>p.id==id);
-            if(p){ document.getElementById('postTitle').value=p.title; document.getElementById('postExcerpt').value=p.excerpt||''; document.getElementById('postContent').value=p.content; document.getElementById('editorTitle').innerText='编辑文章'; }
-        } else {
-            document.getElementById('postTitle').value=''; document.getElementById('postExcerpt').value=''; document.getElementById('postContent').value=''; document.getElementById('editorTitle').innerText='写新文章';
-        }
-        document.getElementById('editorModal').style.display='flex';
-    }
-    
-    async function saveCurrentPost() {
-        let title = document.getElementById('postTitle').value.trim();
-        let excerpt = document.getElementById('postExcerpt').value.trim();
-        let content = document.getElementById('postContent').value.trim();
-        if(!title || !content){ document.getElementById('editorError').innerText='标题和内容不能为空'; return; }
-        document.getElementById('editorError').innerText='';
-        let now = new Date().toLocaleDateString('zh-CN');
-        if(editId) {
-            let idx = posts.findIndex(p=>p.id==editId);
-            if(idx!==-1) posts[idx] = {...posts[idx], title, excerpt, content, date: now};
-            editId=null;
-        } else {
-            const newId = Date.now().toString();
-            posts.unshift({ id: newId, title, excerpt, content, date: now });
-        }
-        await savePostsToLocal();
-        renderBlogList();
-        renderProfile();
-        closeModal('editorModal');
-        showToast('文章已保存');
-    }
-
-    function insertImageHelper() { 
-        let url=prompt('图片URL'); 
-        if(url){ 
-            let ta=document.getElementById('postContent'); 
-            let ins=`![图片](${url})`; 
-            let s=ta.selectionStart,e=ta.selectionEnd; 
-            ta.value=ta.value.substring(0,s)+ins+ta.value.substring(e); 
-            ta.focus(); 
-        } 
-    }
-    
-    function insertLinkHelper() { 
-        let txt=prompt('链接文字'); 
-        if(txt){ 
-            let url=prompt('URL'); 
-            if(url){ 
-                let ta=document.getElementById('postContent'); 
-                let ins=`[${txt}](${url})`; 
-                let s=ta.selectionStart,e=ta.selectionEnd; 
-                ta.value=ta.value.substring(0,s)+ins+ta.value.substring(e); 
-                ta.focus(); 
-            } 
-        } 
-    }
-
-    // 登录持久化
-    function persistLogin(remember=false) { 
-        localStorage.setItem('admin_logged', 'true'); 
-        localStorage.setItem('admin_expiry', remember ? Date.now()+30*24*3600000 : Date.now()+24*3600000); 
-        isAdmin=true; 
-        updateUI(true); 
-        renderProfile();
-    }
-    
-    function checkLoginState() { 
-        let exp = localStorage.getItem('admin_expiry'); 
-        if(localStorage.getItem('admin_logged')==='true' && exp && Date.now()<parseInt(exp)){ 
-            isAdmin=true; 
-            updateUI(true); 
-        } else { 
-            isAdmin=false; 
-            updateUI(false); 
-        }
-        renderProfile();
-    }
-    
-    function updateUI(logged) { 
-        const authSection = document.getElementById('authSection');
-        const adminTools = document.getElementById('adminTools');
-        if(authSection) authSection.style.display = logged ? 'none' : 'block';
-        if(adminTools) adminTools.style.display = logged ? 'flex' : 'none';
-    }
-    
-    function logout() { 
-        localStorage.removeItem('admin_logged'); 
-        localStorage.removeItem('admin_expiry'); 
-        isAdmin=false; 
-        updateUI(false); 
-        renderBlogList(); 
-        renderProfile();
-        showToast('已退出'); 
-    }
-    
-    function handleLogin(remember=false) { 
-        let u=document.getElementById('loginUsername').value, p=document.getElementById('loginPassword').value; 
-        if(u==='admin' && p==='admin123'){ 
-            persistLogin(remember); 
-            closeModal('loginModal'); 
-            showToast(remember?'登录状态30天有效':'登录成功'); 
-            document.getElementById('loginError').innerText=''; 
-        } else { 
-            document.getElementById('loginError').innerText='用户名或密码错误 (admin / admin123)'; 
-        } 
-    }
-
-    // 事件绑定
-    window.onload=()=>{
-        loadProfile();
-        loadPostsFromLocal();
-        checkLoginState();
-
-        document.getElementById('adminLoginBtn')?.addEventListener('click',()=>document.getElementById('loginModal').style.display='flex');
-        document.getElementById('confirmLoginBtn')?.addEventListener('click',()=>handleLogin(false));
-        document.getElementById('rememberLoginBtn')?.addEventListener('click',()=>handleLogin(true));
-        document.getElementById('logoutBtn')?.addEventListener('click',logout);
-        document.getElementById('newPostBtn')?.addEventListener('click',()=>openEditor(null));
-        document.getElementById('savePostBtn')?.addEventListener('click',saveCurrentPost);
-        document.getElementById('homeLink')?.addEventListener('click',(e)=>{e.preventDefault(); renderBlogList();});
-        document.getElementById('saveProfileBtn')?.addEventListener('click', saveProfileFromEditor);
-        
-        const logoDiv = document.querySelector('.logo');
-        if(logoDiv) logoDiv.addEventListener('click',()=>renderBlogList());
-        
-        document.getElementById('previewVideoBtn')?.addEventListener('click', previewBilibiliVideo);
-        document.getElementById('clearPreviewBtn')?.addEventListener('click', clearPreview);
-        document.getElementById('insertVideoBtn')?.addEventListener('click', insertVideoToEditor);
-        
-        window.closeModal=closeModal;
-        window.openBilibiliDialog=openBilibiliDialog;
-        window.insertImageHelper=insertImageHelper;
-        window.insertLinkHelper=insertLinkHelper;
-    };
-    
-    window.showArticleDetail = showArticleDetail;
-    window.openEditor = openEditor;
-    window.openProfileEditor = openProfileEditor;
-</script>
+    </script>
 </body>
 </html>
