@@ -424,7 +424,7 @@
             border: 1px solid var(--acrylic-border);
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
             width: 90%;
-            max-width: 800px;
+            max-width: 900px;
             max-height: 85vh;
             overflow-y: auto;
             transform: scale(0.9) translateY(20px);
@@ -914,7 +914,7 @@
 
     <!-- Login Modal -->
     <div class="modal-overlay" id="loginModal" onclick="app.closeModalOnOverlay(event, 'loginModal')">
-        <div class="modal">
+        <div class="modal" style="max-width: 500px;">
             <div class="modal-header">
                 <span class="modal-title"><i class="fas fa-lock"></i> 管理员验证</span>
                 <button class="close-btn" onclick="app.closeModal('loginModal')"><i class="fas fa-times"></i></button>
@@ -1035,7 +1035,7 @@
 
     <!-- Profile Edit Modal -->
     <div class="modal-overlay" id="profileModal" onclick="app.closeModalOnOverlay(event, 'profileModal')">
-        <div class="modal">
+        <div class="modal" style="max-width: 500px;">
             <div class="modal-header">
                 <span class="modal-title">编辑个人介绍</span>
                 <button class="close-btn" onclick="app.closeModal('profileModal')"><i class="fas fa-times"></i></button>
@@ -1105,14 +1105,16 @@
 
     <!-- Detail Modal -->
     <div class="modal-overlay" id="detailModal" onclick="app.closeModalOnOverlay(event, 'detailModal')">
-        <div class="modal" style="max-width: 900px;">
+        <div class="modal">
             <div class="modal-header">
                 <span class="modal-title" id="detailTitle"></span>
                 <button class="close-btn" onclick="app.closeModal('detailModal')"><i class="fas fa-times"></i></button>
             </div>
             <div class="article-content" id="detailContent"></div>
             <div id="detailActions" style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;"></div>
-            <div class="giscus-container"><div class="giscus" id="giscus-comments"></div></div>
+            <div class="giscus-container">
+                <div class="giscus" id="giscus-comments"></div>
+            </div>
         </div>
     </div>
 
@@ -1124,13 +1126,14 @@
     <input type="file" id="fileInput" accept=".json" style="display: none;" onchange="app.handleFileImport(event)">
 
     <script>
-        const GISCUS_CONFIG = {
+        // Giscus 基础配置
+        const GISCUS_BASE_CONFIG = {
             src: 'https://giscus.app/client.js',
             'data-repo': 'wyf2012/Blog',
             'data-repo-id': 'R_kgDORzrk5w',
             'data-category': 'Announcements',
             'data-category-id': 'DIC_kwDORzrk584C5jXz',
-            'data-mapping': 'pathname',
+            'data-mapping': 'specific',  // 改为 specific，使用特定标识符
             'data-strict': '0',
             'data-reactions-enabled': '1',
             'data-emit-metadata': '0',
@@ -1149,6 +1152,7 @@
             postsSha: null,
             storageMode: 'github',
             profile: { name: '极简博主', avatar: '✨', bio: '欢迎来到我的博客！' },
+            currentPostId: null,
 
             init() {
                 this.loadProfile();
@@ -1341,7 +1345,7 @@
                     this.posts = [{
                         id: '1',
                         title: '欢迎使用极简博客',
-                        content: '## 特性\n- 毛玻璃效果\n- B站视频支持\n- GitHub 同步\n\n密码: bixie4.5',
+                        content: '## 特性\n- 毛玻璃效果\n- B站视频支持\n- GitHub 同步\n\n**管理员密码: bixie4.5**\n\n@bilibili:BV1GJ411x7h7',
                         date: new Date().toLocaleDateString('zh-CN'),
                         excerpt: '欢迎使用极简博客'
                     }];
@@ -1431,23 +1435,52 @@
                 return text.split(/\n\n/).map(p => p.trim() ? (p.startsWith('<') ? p : `<p>${p}</p>`) : '').join('');
             },
 
+            // 加载 Giscus 评论 - 修复串评论问题
+            loadGiscusForPost(postId) {
+                const container = document.getElementById('giscus-comments');
+                if (!container) return;
+                
+                // 清空容器
+                container.innerHTML = '';
+                
+                // 创建新的 script 元素，使用文章 ID 作为特定标识符
+                const script = document.createElement('script');
+                script.src = GISCUS_BASE_CONFIG.src;
+                
+                // 设置所有属性
+                Object.keys(GISCUS_BASE_CONFIG).forEach(key => {
+                    if (key !== 'src' && key !== 'async') {
+                        script.setAttribute(key, GISCUS_BASE_CONFIG[key]);
+                    }
+                });
+                
+                // 关键：使用文章 ID 作为 specific term，确保每篇文章的评论独立
+                script.setAttribute('data-term', `post-${postId}`);
+                script.async = true;
+                
+                container.appendChild(script);
+            },
+
             showDetail(id) {
                 const post = this.posts.find(p => p.id === id);
                 if (!post) return;
+                
+                this.currentPostId = id;
                 document.getElementById('detailTitle').textContent = post.title;
                 document.getElementById('detailContent').innerHTML = this.parseMarkdown(post.content);
+                
                 const actions = document.getElementById('detailActions');
                 if (this.isAdmin) {
                     actions.innerHTML = `
                         <button class="btn btn-secondary" onclick="app.editPost('${id}')">编辑</button>
                         <button class="btn btn-secondary" style="background:#dc3545;color:#fff;" onclick="app.deletePost('${id}')">删除</button>
                     `;
-                } else actions.innerHTML = '';
-                const script = document.createElement('script');
-                script.src = GISCUS_CONFIG.src;
-                Object.keys(GISCUS_CONFIG).forEach(k => { if (k !== 'src') script.setAttribute(k, GISCUS_CONFIG[k]); });
-                const container = document.getElementById('giscus-comments');
-                if (container) { container.innerHTML = ''; container.appendChild(script); }
+                } else {
+                    actions.innerHTML = '';
+                }
+                
+                // 加载该文章的独立评论系统
+                this.loadGiscusForPost(id);
                 this.showModal('detailModal');
             },
 
