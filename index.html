@@ -329,7 +329,7 @@
         return { sha: data.sha, content: data.content };
     }
     
-    // 从 GitHub 加载文章（直接读取 articles 数组）
+    // 从 GitHub 加载文章 - 修复缺失字段问题
     async function loadFromGitHub() {
         if (!githubConfig.owner || !githubConfig.repo) return false;
         
@@ -341,20 +341,32 @@
                 const json = JSON.parse(decoded);
                 console.log('解析后的对象:', json);
                 
-                // 直接从 json.articles 获取文章数组
+                let articles = null;
                 if (json.articles && Array.isArray(json.articles)) {
-                    posts = json.articles;
-                    console.log('✅ 成功加载文章，共', posts.length, '篇');
-                    localStorage.setItem('blog_posts_cache', JSON.stringify(posts));
-                    return true;
+                    articles = json.articles;
                 } else if (Array.isArray(json)) {
-                    // 兼容旧格式：直接是数组
-                    posts = json;
-                    console.log('✅ 成功加载文章（数组格式），共', posts.length, '篇');
+                    articles = json;
+                }
+                
+                if (articles && articles.length > 0) {
+                    // 修复缺失的字段，确保每个文章都有必要的属性
+                    posts = articles.map(article => ({
+                        id: article.id || Date.now().toString(),
+                        title: article.title || '无标题',
+                        summary: article.summary || '',  // 确保 summary 字段存在
+                        content: article.content || article.content || '',
+                        date: article.date || new Date().toLocaleDateString('zh-CN'),
+                        pinned: article.pinned || false,
+                        imageUrl: article.imageUrl || ''
+                    }));
+                    
+                    console.log('✅ 成功加载文章，共', posts.length, '篇');
+                    console.log('文章列表:', posts.map(p => ({ title: p.title, summary: p.summary })));
+                    
                     localStorage.setItem('blog_posts_cache', JSON.stringify(posts));
                     return true;
                 } else {
-                    console.log('❌ 无法识别的数据格式');
+                    console.log('文章数组为空');
                     return false;
                 }
             } else {
@@ -379,7 +391,6 @@
         
         try {
             showLoading(true);
-            // 保存为标准格式 { articles: [...] }
             const dataToSave = { articles: posts };
             const jsonStr = JSON.stringify(dataToSave, null, 2);
             console.log('保存的数据:', jsonStr);
