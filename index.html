@@ -159,9 +159,9 @@
         <label>GitHub Token</label>
         <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxx">
         <label>GitHub 用户名</label>
-        <input type="text" id="githubOwner" placeholder="username">
+        <input type="text" id="githubOwner" placeholder="username" value="tianlu464">
         <label>仓库名称</label>
-        <input type="text" id="githubRepo" placeholder="blog">
+        <input type="text" id="githubRepo" placeholder="blog" value="blog">
         <div id="configResult" style="margin: 10px 0; font-size: 13px;"></div>
         <div style="display: flex; gap: 10px;">
             <button class="btn" id="testConnectionBtn" style="flex:1;">🔍 测试连接</button>
@@ -208,8 +208,8 @@
 <script>
     // ==================== GitHub 配置 ====================
     let githubConfig = {
-        owner: '',
-        repo: '',
+        owner: 'tianlu464',
+        repo: 'blog',
         token: ''
     };
     const STORAGE_FILE = 'data.json';
@@ -294,8 +294,8 @@
             if (saved) {
                 const config = JSON.parse(saved);
                 githubConfig = {
-                    owner: config.owner || '',
-                    repo: config.repo || '',
+                    owner: config.owner || 'tianlu464',
+                    repo: config.repo || 'blog',
                     token: config.token || ''
                 };
             }
@@ -309,7 +309,7 @@
     }
     
     function clearGithubConfig() {
-        githubConfig = { owner: '', repo: '', token: '' };
+        githubConfig = { owner: 'tianlu464', repo: 'blog', token: '' };
         localStorage.removeItem(TOKEN_STORAGE_KEY);
         showToast('已清除配置');
     }
@@ -329,7 +329,7 @@
         return { sha: data.sha, content: data.content };
     }
     
-    // 从 GitHub 加载文章（自动识别两种格式）
+    // 从 GitHub 加载文章（直接读取 articles 数组）
     async function loadFromGitHub() {
         if (!githubConfig.owner || !githubConfig.repo) return false;
         
@@ -337,33 +337,34 @@
             const file = await getFileSha();
             if (file && file.content) {
                 const decoded = base64Decode(file.content);
+                console.log('解码后的JSON:', decoded);
                 const json = JSON.parse(decoded);
+                console.log('解析后的对象:', json);
                 
-                // 关键修复：兼容两种数据格式
-                let articles = null;
-                if (Array.isArray(json)) {
-                    // 格式1：直接是数组
-                    articles = json;
-                    console.log('检测到数组格式，文章数:', articles.length);
-                } else if (json.articles && Array.isArray(json.articles)) {
-                    // 格式2：包含 articles 字段
-                    articles = json.articles;
-                    console.log('检测到 articles 对象格式，文章数:', articles.length);
-                } else {
-                    console.log('无法识别的数据格式');
-                    return false;
-                }
-                
-                if (articles && articles.length > 0) {
-                    posts = articles;
+                // 直接从 json.articles 获取文章数组
+                if (json.articles && Array.isArray(json.articles)) {
+                    posts = json.articles;
+                    console.log('✅ 成功加载文章，共', posts.length, '篇');
                     localStorage.setItem('blog_posts_cache', JSON.stringify(posts));
                     return true;
+                } else if (Array.isArray(json)) {
+                    // 兼容旧格式：直接是数组
+                    posts = json;
+                    console.log('✅ 成功加载文章（数组格式），共', posts.length, '篇');
+                    localStorage.setItem('blog_posts_cache', JSON.stringify(posts));
+                    return true;
+                } else {
+                    console.log('❌ 无法识别的数据格式');
+                    return false;
                 }
+            } else {
+                console.log('文件不存在');
+                return false;
             }
         } catch (err) {
             console.error('GitHub加载失败:', err);
+            return false;
         }
-        return false;
     }
     
     async function saveToGitHub() {
@@ -378,9 +379,10 @@
         
         try {
             showLoading(true);
-            // 保存为 articles 对象格式（更清晰）
+            // 保存为标准格式 { articles: [...] }
             const dataToSave = { articles: posts };
             const jsonStr = JSON.stringify(dataToSave, null, 2);
+            console.log('保存的数据:', jsonStr);
             const content = btoa(unescape(encodeURIComponent(jsonStr)));
             let sha = null;
             try {
@@ -431,7 +433,7 @@
         
         try {
             const success = await loadFromGitHub();
-            if (success && posts.length) {
+            if (success && posts.length > 0) {
                 renderBlogList();
                 updateSyncStatus('success', `已同步 ${posts.length} 篇文章`);
                 if (showLoadingIndicator) showToast(`✅ 同步成功！共 ${posts.length} 篇文章`, false);
@@ -439,10 +441,23 @@
                 // 从本地缓存加载
                 let cached = localStorage.getItem('blog_posts_cache');
                 if (cached) {
-                    posts = JSON.parse(cached);
-                    renderBlogList();
-                    updateSyncStatus('error', '使用本地缓存');
-                    if (showLoadingIndicator) showToast('⚠️ 云端无数据，已加载本地缓存', true);
+                    try {
+                        posts = JSON.parse(cached);
+                        if (posts && posts.length > 0) {
+                            renderBlogList();
+                            updateSyncStatus('error', '使用本地缓存');
+                            if (showLoadingIndicator) showToast(`⚠️ 云端无数据，已加载本地缓存 (${posts.length}篇)`, true);
+                        } else {
+                            posts = [];
+                            renderBlogList();
+                            updateSyncStatus('error', '暂无数据');
+                            if (showLoadingIndicator) showToast('⚠️ 暂无文章', true);
+                        }
+                    } catch(e) {
+                        posts = [];
+                        renderBlogList();
+                        updateSyncStatus('error', '缓存读取失败');
+                    }
                 } else {
                     posts = [];
                     renderBlogList();
@@ -454,8 +469,10 @@
             console.error('同步失败:', e);
             let cached = localStorage.getItem('blog_posts_cache');
             if (cached) {
-                posts = JSON.parse(cached);
-                renderBlogList();
+                try {
+                    posts = JSON.parse(cached);
+                    renderBlogList();
+                } catch(e) {}
             }
             updateSyncStatus('error', '同步失败');
             if (showLoadingIndicator) showToast(`❌ 同步失败: ${e.message}`, true);
@@ -729,8 +746,8 @@
     function openConfigModal() {
         if (!editMode) { showToast('请先进入管理员模式', true); return; }
         document.getElementById('githubToken').value = githubConfig.token || '';
-        document.getElementById('githubOwner').value = githubConfig.owner || '';
-        document.getElementById('githubRepo').value = githubConfig.repo || '';
+        document.getElementById('githubOwner').value = githubConfig.owner || 'tianlu464';
+        document.getElementById('githubRepo').value = githubConfig.repo || 'blog';
         document.getElementById('configResult').innerHTML = '';
         document.getElementById('githubConfigModal').style.display = 'flex';
     }
