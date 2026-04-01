@@ -554,7 +554,7 @@
         }
 
         .btn:disabled {
-            opacity: 0.5;
+            opacity: 0.6;
             cursor: not-allowed;
             transform: none !important;
         }
@@ -597,7 +597,10 @@
             padding: 2px 6px;
             border-radius: 4px;
             font-family: 'Consolas', monospace;
-            font-size: 0.9em;
+            font-size: 0.9emem;
+        }
+
+        .article;
         }
 
         .article-content pre {
@@ -633,7 +636,7 @@
             border: none;
         }
 
-        /* Giscus Comments - Enhanced Styling */
+        /* Giscus Comments */
         .giscus-container {
             margin-top: 48px;
             padding-top: 32px;
@@ -760,6 +763,8 @@
             border-radius: 50%;
             animation: spin 1s linear infinite;
             display: inline-block;
+            margin-right: 8px;
+            vertical-align: middle;
         }
 
         @keyframes spin {
@@ -1191,6 +1196,7 @@
             bilibiliCache: null,
             githubConfig: null,
             giscusLoaded: false,
+            isSaving: false,
 
             // Default profile
             profile: {
@@ -1209,24 +1215,20 @@
 
             // Giscus Integration
             loadGiscus() {
-                // Remove existing giscus script if any
                 const existingScript = document.getElementById('giscus-script');
                 if (existingScript) {
                     existingScript.remove();
                 }
 
-                // Clear existing giscus container
                 const container = document.getElementById('giscus-comments');
                 if (container) {
                     container.innerHTML = '';
                 }
 
-                // Create new script element with user configuration
                 const script = document.createElement('script');
                 script.id = 'giscus-script';
                 script.src = GISCUS_CONFIG.src;
                 
-                // Set all data attributes
                 Object.keys(GISCUS_CONFIG).forEach(key => {
                     if (key !== 'src' && key !== 'async') {
                         script.setAttribute(key, GISCUS_CONFIG[key]);
@@ -1235,7 +1237,6 @@
                 
                 script.async = GISCUS_CONFIG.async;
 
-                // Insert script after the container
                 if (container) {
                     container.appendChild(script);
                 }
@@ -1451,7 +1452,6 @@
                     this.showSyncStatus('已同步到 GitHub', 'success');
                     return true;
                 } catch (error) {
-                    console.error('Failed to save to GitHub:', error);
                     this.showSyncStatus('同步失败', 'error');
                     this.showToast('同步到 GitHub 失败: ' + error.message, 'error');
                     return false;
@@ -1647,13 +1647,11 @@
                     actions.innerHTML = '';
                 }
 
-                // Load Giscus comments
                 this.loadGiscus();
-
                 this.showModal('detailModal');
             },
 
-            // Editor Functions
+            // Editor Functions - FIXED
             openEditor(id = null) {
                 if (!this.isAdmin) {
                     this.showToast('请先登录', 'error');
@@ -1664,6 +1662,11 @@
                 const titleInput = document.getElementById('postTitle');
                 const contentInput = document.getElementById('postContent');
                 const modalTitle = document.getElementById('editorTitle');
+                const saveBtn = document.getElementById('savePostBtn');
+
+                // Reset button state
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '发布文章';
 
                 if (id) {
                     const post = this.posts.find(p => p.id === id);
@@ -1685,7 +1688,14 @@
                 setTimeout(() => this.openEditor(id), 300);
             },
 
+            // FIXED: savePost with proper error handling and button reset
             async savePost() {
+                // Prevent double submission
+                if (this.isSaving) {
+                    console.log('Save already in progress, ignoring');
+                    return;
+                }
+
                 const title = document.getElementById('postTitle').value.trim();
                 const content = document.getElementById('postContent').value.trim();
                 const errorDiv = document.getElementById('editorError');
@@ -1698,42 +1708,60 @@
                 }
 
                 errorDiv.style.display = 'none';
+                
+                // Set saving flag and update UI
+                this.isSaving = true;
                 saveBtn.disabled = true;
                 saveBtn.innerHTML = '<span class="spinner"></span> 保存中...';
 
-                const now = new Date().toLocaleDateString('zh-CN');
-                
-                if (this.editingPostId) {
-                    const index = this.posts.findIndex(p => p.id === this.editingPostId);
-                    if (index !== -1) {
-                        this.posts[index] = {
-                            ...this.posts[index],
+                try {
+                    const now = new Date().toLocaleDateString('zh-CN');
+                    
+                    if (this.editingPostId) {
+                        const index = this.posts.findIndex(p => p.id === this.editingPostId);
+                        if (index !== -1) {
+                            this.posts[index] = {
+                                ...this.posts[index],
+                                title,
+                                content,
+                                excerpt: content.substring(0, 100).replace(/[#*`]/g, ''),
+                                date: now
+                            };
+                        }
+                    } else {
+                        const newPost = {
+                            id: Date.now().toString(),
                             title,
                             content,
                             excerpt: content.substring(0, 100).replace(/[#*`]/g, ''),
                             date: now
                         };
+                        this.posts.unshift(newPost);
                     }
-                } else {
-                    const newPost = {
-                        id: Date.now().toString(),
-                        title,
-                        content,
-                        excerpt: content.substring(0, 100).replace(/[#*`]/g, ''),
-                        date: now
-                    };
-                    this.posts.unshift(newPost);
-                }
 
-                await this.savePosts();
-                
-                saveBtn.disabled = false;
-                saveBtn.innerHTML = '发布文章';
-                
-                this.renderPosts();
-                this.closeModal('editorModal');
-                this.showToast(this.editingPostId ? '文章已更新' : '文章已发布');
-                this.editingPostId = null;
+                    // Save to storage (with timeout protection)
+                    await Promise.race([
+                        this.savePosts(),
+                        new Promise((_, reject) => 
+                            setTimeout(() => reject(new Error('保存超时')), 30000)
+                        )
+                    ]);
+
+                    this.renderPosts();
+                    this.closeModal('editorModal');
+                    this.showToast(this.editingPostId ? '文章已更新' : '文章已发布');
+                    this.editingPostId = null;
+                    
+                } catch (error) {
+                    errorDiv.textContent = '保存失败: ' + error.message;
+                    errorDiv.style.display = 'block';
+                    this.showToast('保存失败: ' + error.message, 'error');
+                } finally {
+                    // ALWAYS reset button state
+                    this.isSaving = false;
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = '发布文章';
+                }
             },
 
             async deletePost(id) {
@@ -1939,6 +1967,16 @@
                     modal.classList.remove('active');
                 });
                 document.body.style.overflow = '';
+                
+                // Reset saving state if modal closed with Escape
+                if (app.isSaving) {
+                    app.isSaving = false;
+                    const saveBtn = document.getElementById('savePostBtn');
+                    if (saveBtn) {
+                        saveBtn.disabled = false;
+                        saveBtn.innerHTML = '发布文章';
+                    }
+                }
             }
         });
     </script>
