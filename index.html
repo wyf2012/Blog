@@ -147,16 +147,15 @@
     <div class="loading-spinner"><i class="fas fa-spinner"></i><span>正在同步...</span></div>
 </div>
 
-<!-- GitHub 配置模态框 -->
+<!-- GitHub 配置模态框（仅管理员可见） -->
 <div id="githubConfigModal" class="modal">
     <div class="modal-card">
         <div class="modal-header"><span>☁️ GitHub 云端配置</span><button class="close-btn" onclick="closeModal('githubConfigModal')">&times;</button></div>
         <div class="config-info">
             <i class="fas fa-info-circle"></i> <strong>配置说明：</strong><br>
-            需要 GitHub Personal Access Token（勾选 repo 权限）<br>
-            <a href="https://github.com/settings/tokens" target="_blank">点击获取 Token</a>
+            Token 仅用于保存文章，访客无需配置即可同步阅读
         </div>
-        <label>GitHub Token</label>
+        <label>GitHub Token（仅管理员保存时需要）</label>
         <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxx">
         <label>GitHub 用户名</label>
         <input type="text" id="githubOwner" placeholder="username" value="tianlu464">
@@ -168,6 +167,9 @@
             <button class="btn btn-primary" id="saveConfigBtn" style="flex:1;">💾 保存配置</button>
         </div>
         <button class="btn" id="clearConfigBtn" style="width:100%; margin-top:10px;">🗑️ 清除配置</button>
+        <div class="config-info" style="margin-top: 15px; background: #e8f5e9;">
+            💡 <strong>访客须知：</strong> 无需任何配置，点击「同步云端」即可获取最新文章！
+        </div>
     </div>
 </div>
 
@@ -319,58 +321,87 @@
         try { return decodeURIComponent(escape(atob(str))); } catch (e) { return atob(str); }
     }
     
-    async function getFileSha() {
-        if (!githubConfig.owner || !githubConfig.repo) return null;
-        const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${STORAGE_FILE}`;
-        const res = await fetch(url);
-        if (res.status === 404) return null;
-        if (!res.ok) throw new Error(`获取文件失败: ${res.status}`);
-        const data = await res.json();
-        return { sha: data.sha, content: data.content };
+    // 公开读取（不需要 Token！）- 访客专用
+    async function fetchFromGithubPublic() {
+        const owner = githubConfig.owner || 'tianlu464';
+        const repo = githubConfig.repo || 'blog';
+        const url = `https://api.github.com/repos/${owner}/${repo}/contents/${STORAGE_FILE}`;
+        
+        console.log('访客模式：公开读取', url);
+        
+        try {
+            // 公开仓库不需要 Authorization 头！
+            const res = await fetch(url);
+            
+            if (res.status === 404) {
+                console.log('文件不存在');
+                return null;
+            }
+            if (!res.ok) {
+                console.error('HTTP错误:', res.status);
+                throw new Error(`HTTP ${res.status}`);
+            }
+            
+            const data = await res.json();
+            const decoded = base64Decode(data.content);
+            console.log('解码成功，长度:', decoded.length);
+            return JSON.parse(decoded);
+        } catch(e) {
+            console.error('公开读取失败:', e);
+            return null;
+        }
     }
     
-    // 从 GitHub 加载文章 - 修复缺失字段问题
+    // 需要 Token 的读取（管理员用，获取 sha）
+    async function fetchFromGithubWithToken() {
+        if (!githubConfig.token) return null;
+        const owner = githubConfig.owner;
+        const repo = githubConfig.repo;
+        const url = `https://api.github.com/repos/${owner}/${repo}/contents/${STORAGE_FILE}`;
+        
+        try {
+            const res = await fetch(url, {
+                headers: { 'Authorization': `token ${githubConfig.token}` }
+            });
+            if (res.status === 404) return null;
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            return { sha: data.sha, content: data.content };
+        } catch(e) {
+            console.error('Token读取失败:', e);
+            return null;
+        }
+    }
+    
+    // 从 GitHub 加载文章（访客和主管理员都可用）
     async function loadFromGitHub() {
         if (!githubConfig.owner || !githubConfig.repo) return false;
         
         try {
-            const file = await getFileSha();
-            if (file && file.content) {
-                const decoded = base64Decode(file.content);
-                console.log('解码后的JSON:', decoded);
-                const json = JSON.parse(decoded);
-                console.log('解析后的对象:', json);
+            // 公开读取，不需要 Token
+            const json = await fetchFromGithubPublic();
+            
+            if (json) {
+                console.log('解析到的JSON:', json);
                 
-                let articles = null;
+                // 直接从 json.articles 获取文章数组
                 if (json.articles && Array.isArray(json.articles)) {
-                    articles = json.articles;
-                } else if (Array.isArray(json)) {
-                    articles = json;
-                }
-                
-                if (articles && articles.length > 0) {
-                    // 修复缺失的字段，确保每个文章都有必要的属性
-                    posts = articles.map(article => ({
-                        id: article.id || Date.now().toString(),
-                        title: article.title || '无标题',
-                        summary: article.summary || '',  // 确保 summary 字段存在
-                        content: article.content || article.content || '',
-                        date: article.date || new Date().toLocaleDateString('zh-CN'),
-                        pinned: article.pinned || false,
-                        imageUrl: article.imageUrl || ''
-                    }));
-                    
+                    posts = json.articles;
                     console.log('✅ 成功加载文章，共', posts.length, '篇');
-                    console.log('文章列表:', posts.map(p => ({ title: p.title, summary: p.summary })));
-                    
+                    localStorage.setItem('blog_posts_cache', JSON.stringify(posts));
+                    return true;
+                } else if (Array.isArray(json)) {
+                    // 兼容旧格式
+                    posts = json;
+                    console.log('✅ 成功加载文章（数组格式），共', posts.length, '篇');
                     localStorage.setItem('blog_posts_cache', JSON.stringify(posts));
                     return true;
                 } else {
-                    console.log('文章数组为空');
+                    console.log('❌ 无法识别的数据格式');
                     return false;
                 }
             } else {
-                console.log('文件不存在');
+                console.log('文件不存在或读取失败');
                 return false;
             }
         } catch (err) {
@@ -379,6 +410,7 @@
         }
     }
     
+    // 保存到 GitHub（需要 Token，仅管理员）
     async function saveToGitHub() {
         if (!editMode) {
             showToast('只有管理员可以保存到云端', true);
@@ -393,13 +425,11 @@
             showLoading(true);
             const dataToSave = { articles: posts };
             const jsonStr = JSON.stringify(dataToSave, null, 2);
-            console.log('保存的数据:', jsonStr);
             const content = btoa(unescape(encodeURIComponent(jsonStr)));
+            
             let sha = null;
-            try {
-                const file = await getFileSha();
-                if (file) sha = file.sha;
-            } catch (e) { }
+            const fileData = await fetchFromGithubWithToken();
+            if (fileData) sha = fileData.sha;
             
             const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${STORAGE_FILE}`;
             const body = { 
@@ -701,37 +731,46 @@
         const repo = document.getElementById('githubRepo').value.trim();
         const resultDiv = document.getElementById('configResult');
         
-        if (!token || !owner || !repo) {
-            resultDiv.innerHTML = '❌ 请填写完整信息';
+        if (!owner || !repo) {
+            resultDiv.innerHTML = '❌ 请填写用户名和仓库名';
             resultDiv.style.color = '#dc2626';
             return;
         }
         
-        resultDiv.innerHTML = '🔄 测试中...';
+        resultDiv.innerHTML = '🔄 测试公开访问...';
         resultDiv.style.color = '#3730a3';
         
         try {
-            const repoRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
-                headers: { 'Authorization': `token ${token}` }
-            });
-            if (repoRes.status === 401) {
-                resultDiv.innerHTML = '❌ Token 无效，请检查权限（需要 repo 权限）';
-                resultDiv.style.color = '#dc2626';
-                return;
-            }
-            if (repoRes.status === 404) {
-                resultDiv.innerHTML = `❌ 仓库 ${owner}/${repo} 不存在`;
-                resultDiv.style.color = '#dc2626';
-                return;
-            }
-            if (!repoRes.ok) {
-                resultDiv.innerHTML = `❌ 仓库访问失败: HTTP ${repoRes.status}`;
-                resultDiv.style.color = '#dc2626';
-                return;
+            // 测试公开访问（不需要 Token）
+            const publicUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${STORAGE_FILE}`;
+            const publicRes = await fetch(publicUrl);
+            
+            if (publicRes.status === 404) {
+                resultDiv.innerHTML = '⚠️ 文件不存在，但仓库可访问';
+                resultDiv.style.color = '#f59e0b';
+            } else if (publicRes.ok) {
+                resultDiv.innerHTML = '✅ 公开读取成功！访客可以同步';
+                resultDiv.style.color = '#10b981';
+            } else {
+                resultDiv.innerHTML = `⚠️ 公开访问异常: HTTP ${publicRes.status}`;
+                resultDiv.style.color = '#f59e0b';
             }
             
-            resultDiv.innerHTML = '✅ 连接成功！可以保存配置';
-            resultDiv.style.color = '#10b981';
+            // 如果提供了 Token，测试写入权限
+            if (token) {
+                const authRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
+                    headers: { 'Authorization': `token ${token}` }
+                });
+                if (authRes.status === 401) {
+                    resultDiv.innerHTML += '\n❌ Token 无效，无法写入';
+                    resultDiv.style.color = '#dc2626';
+                } else if (authRes.ok) {
+                    resultDiv.innerHTML += '\n✅ Token 有效，可以保存文章';
+                    resultDiv.style.color = '#10b981';
+                }
+            } else {
+                resultDiv.innerHTML += '\n💡 未配置 Token，只能阅读，不能保存';
+            }
         } catch(e) {
             resultDiv.innerHTML = `❌ 网络错误: ${e.message}`;
             resultDiv.style.color = '#dc2626';
@@ -743,8 +782,8 @@
         const owner = document.getElementById('githubOwner').value.trim();
         const repo = document.getElementById('githubRepo').value.trim();
         
-        if (!token || !owner || !repo) {
-            showToast('请填写完整信息', true);
+        if (!owner || !repo) {
+            showToast('请填写用户名和仓库名', true);
             return;
         }
         
