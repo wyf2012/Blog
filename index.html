@@ -1850,6 +1850,28 @@
                 }
             },
 
+            // Unicode-safe base64 encoding
+            utf8ToBase64(str) {
+                // First encode the string to UTF-8
+                const utf8Bytes = new TextEncoder().encode(str);
+                // Convert bytes to binary string
+                const binaryString = Array.from(utf8Bytes, byte => String.fromCharCode(byte)).join('');
+                // Use btoa on the binary string
+                return btoa(binaryString);
+            },
+
+            base64ToUtf8(base64) {
+                // Decode base64 to binary string
+                const binaryString = atob(base64);
+                // Convert binary string to bytes
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                // Decode bytes to UTF-8 string
+                return new TextDecoder().decode(bytes);
+            },
+
             // Load posts from GitHub
             async loadFromGitHub() {
                 if (!this.githubConfig) {
@@ -1884,7 +1906,8 @@
                     }
 
                     const data = await response.json();
-                    const content = atob(data.content);
+                    // Use Unicode-safe decoding
+                    const content = this.base64ToUtf8(data.content);
                     this.posts = JSON.parse(content);
                     this.postsSha = data.sha;
                     
@@ -1910,7 +1933,10 @@
 
                 const { owner, repo, branch, token } = this.githubConfig;
                 const path = 'data/posts.json';
-                const content = btoa(unescape(encodeURIComponent(JSON.stringify(this.posts, null, 2))));
+                
+                // Use Unicode-safe encoding
+                const jsonContent = JSON.stringify(this.posts, null, 2);
+                const content = this.utf8ToBase64(jsonContent);
                 
                 this.showSyncStatus('正在推送到 GitHub...', 'syncing');
 
@@ -1963,6 +1989,8 @@
                     }
 
                     const result = await response.json();
+                    this.postsSha = result
+                    const result = await response.json();
                     this.postsSha = result.content.sha;
                     this.showSyncStatus('已同步到 GitHub', 'success');
                     this.showToast('数据已同步到 GitHub');
@@ -1993,7 +2021,6 @@
                 this.showToast('备份文件已下载');
             },
 
-            importFromFile() 
             importFromFile() {
                 document.getElementById('fileInput').click();
             },
@@ -2113,4 +2140,557 @@
                         this.posts = JSON.parse(saved);
                     } catch (e) {
                         this.posts = [];
-      
+                    }
+                } else {
+                    // Default welcome post
+                    this.posts = [
+                        {
+                            id: '1',
+                            title: '欢迎使用极简博客',
+                            content: '这是一个基于 Windows 11 Fluent Design 设计的极简博客系统。\n\n## 特性\n\n- ✨ **毛玻璃效果** - 使用 Acrylic 材质设计\n- 🎬 **B站视频** - 使用 `@bilibili:BV号` 插入视频\n- 🖼️ **图片支持** - 通过 URL 插入图片\n- 💬 **评论系统** - 基于 Giscus 的 GitHub Discussions\n- 🔄 **GitHub 同步** - 文章自动保存到仓库 JSON 文件\n\n@bilibili:BV1GJ411x7h7\n\n## 开始使用\n\n1. 点击右上角"管理登录"（密码: bixie4.5）\n2. 配置 GitHub 同步（首次使用必需）\n3. 开始创作你的第一篇文章！\n\n文章会自动同步到 GitHub 仓库的 `data/posts.json` 文件中。',
+                            date: new Date().toLocaleDateString('zh-CN'),
+                            excerpt: '基于 Windows 11 Fluent Design 的极简博客系统，支持 Markdown、B站视频、GitHub 自动同步和评论功能。'
+                        }
+                    ];
+                    this.savePostsToLocal();
+                }
+            },
+
+            savePostsToLocal() {
+                localStorage.setItem('blog_posts', JSON.stringify(this.posts));
+            },
+
+            async savePosts() {
+                // Always save to localStorage as backup
+                this.savePostsToLocal();
+                
+                // If GitHub mode, push to GitHub
+                if (this.storageMode === 'github') {
+                    if (this.githubConfig) {
+                        try {
+                            await this.pushToGitHub();
+                        } catch (error) {
+                            console.error('Auto-push to GitHub failed:', error);
+                            this.showToast('GitHub 同步失败，已保存到本地', 'warning');
+                        }
+                    } else {
+                        this.showToast('未配置 GitHub，文章仅保存在本地', 'warning');
+                        this.showSetupBannerIfNeeded();
+                    }
+                }
+            },
+
+            showSyncStatus(text, status) {
+                const indicator = document.getElementById('syncIndicator');
+                const statusDot = document.getElementById('syncStatusDot');
+                const textSpan = document.getElementById('syncText');
+                
+                textSpan.textContent = text;
+                statusDot.className = 'sync-status';
+                
+                if (status === 'syncing') {
+                    statusDot.classList.add('syncing');
+                } else if (status === 'error') {
+                    statusDot.classList.add('error');
+                } else if (status === 'local') {
+                    statusDot.classList.add('local');
+                }
+                
+                indicator.classList.remove('hidden');
+                
+                if (status !== 'syncing') {
+                    setTimeout(() => {
+                        indicator.classList.add('hidden');
+                    }, 3000);
+                }
+            },
+
+            // Profile Management
+            loadProfile() {
+                const saved = localStorage.getItem('blog_profile');
+                if (saved) {
+                    try {
+                        this.profile = JSON.parse(saved);
+                    } catch (e) {}
+                }
+            },
+
+            saveProfile() {
+                localStorage.setItem('blog_profile', JSON.stringify(this.profile));
+                this.renderProfile();
+            },
+
+            renderProfile() {
+                document.getElementById('profileName').textContent = this.profile.name;
+                document.getElementById('profileAvatar').textContent = this.profile.avatar;
+                
+                let bioHtml = this.parseMarkdown(this.profile.bio);
+                document.getElementById('profileBio').innerHTML = bioHtml;
+                
+                const editBtn = document.getElementById('editProfileBtn');
+                if (editBtn) editBtn.style.display = this.isAdmin ? 'flex' : 'none';
+            },
+
+            editProfile() {
+                if (!this.isAdmin) return;
+                document.getElementById('editName').value = this.profile.name;
+                document.getElementById('editAvatar').value = this.profile.avatar;
+                document.getElementById('editBio').value = this.profile.bio;
+                this.showModal('profileModal');
+            },
+
+            saveProfileFromEditor() {
+                const name = document.getElementById('editName').value.trim();
+                const avatar = document.getElementById('editAvatar').value.trim() || '✨';
+                const bio = document.getElementById('editBio').value.trim();
+
+                if (!name) {
+                    this.showToast('昵称不能为空', 'error');
+                    return;
+                }
+
+                this.profile = { name, avatar, bio: bio || '暂无介绍' };
+                this.saveProfile();
+                this.closeModal('profileModal');
+                this.showToast('个人介绍已更新');
+                
+                // Sync profile to GitHub if in GitHub mode
+                if (this.storageMode === 'github' && this.githubConfig) {
+                    this.pushToGitHub();
+                }
+            },
+
+            // Rendering
+            render() {
+                this.renderProfile();
+                this.renderPosts();
+                this.updatePostCount();
+                this.updateUI();
+            },
+
+            renderPosts() {
+                const grid = document.getElementById('blogGrid');
+                if (this.posts.length === 0) {
+                    grid.innerHTML = `
+                        <div class="empty-state" style="grid-column: 1/-1;">
+                            <i class="fas fa-inbox"></i>
+                            <h3>暂无文章</h3>
+                            <p>${this.isAdmin ? '点击"写文章"发布第一篇文章' : '管理员登录后可以发布文章'}</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                grid.innerHTML = this.posts.map(post => `
+                    <article class="blog-card acrylic" onclick="app.showDetail('${post.id}')">
+                        <h3>${this.escapeHtml(post.title)}</h3>
+                        <div class="blog-meta">
+                            <i class="far fa-calendar"></i> ${post.date}
+                        </div>
+                        <div class="blog-excerpt">${this.escapeHtml(post.excerpt || post.content.substring(0, 100))}...</div>
+                        <div class="read-more">
+                            阅读全文 <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </article>
+                `).join('');
+            },
+
+            updatePostCount() {
+                document.getElementById('postCount').textContent = this.posts.length;
+            },
+
+            // Markdown Parser
+            parseMarkdown(text) {
+                if (!text) return '';
+                
+                text = text.replace(/@bilibili:(BV[a-zA-Z0-9]+)/gi, (match, bvid) => {
+                    return this.generateBilibiliPlayer(bvid);
+                });
+
+                text = text.replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" loading="lazy">');
+                text = text.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+                text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+                text = text.replace(/^### (.*$)/gm, '<h3>$1</h3>');
+                text = text.replace(/^## (.*$)/gm, '<h2>$1</h2>');
+                text = text.replace(/^# (.*$)/gm, '<h1>$1</h1>');
+                text = text.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+                text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+                text = text.replace(/^- (.*$)/gm, '<li>$1</li>');
+                text = text.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+                
+                const paragraphs = text.split(/\n\n/).filter(p => p.trim());
+                text = paragraphs.map(p => {
+                    if (p.startsWith('<') && !p.startsWith('<li')) return p;
+                    return `<p>${p}</p>`;
+                }).join('');
+                
+                return text;
+            },
+
+            generateBilibiliPlayer(bvid) {
+                return `
+                    <div class="bilibili-wrapper">
+                        <div class="bilibili-player">
+                            <iframe src="https://player.bilibili.com/player.html?bvid=${bvid}&page=1&high_quality=1&danmaku=1&autoplay=0" 
+                                    allowfullscreen 
+                                    loading="lazy">
+                            </iframe>
+                        </div>
+                    </div>
+                `;
+            },
+
+            // Article Detail with Giscus
+            showDetail(id) {
+                const post = this.posts.find(p => p.id === id);
+                if (!post) return;
+
+                this.currentPostId = id;
+                document.getElementById('detailTitle').textContent = post.title;
+                document.getElementById('detailContent').innerHTML = this.parseMarkdown(post.content);
+
+                const actions = document.getElementById('detailActions');
+                if (this.isAdmin) {
+                    actions.innerHTML = `
+                        <button class="btn btn-secondary" onclick="app.editPost('${id}')">
+                            <i class="fas fa-edit"></i> 编辑
+                        </button>
+                        <button class="btn btn-secondary" style="background: #dc3545; color: white;" onclick="app.deletePost('${id}')">
+                            <i class="fas fa-trash"></i> 删除
+                        </button>
+                    `;
+                } else {
+                    actions.innerHTML = '';
+                }
+
+                this.loadGiscus();
+                this.showModal('detailModal');
+            },
+
+            // Editor Functions
+            openEditor(id = null) {
+                if (!this.isAdmin) {
+                    this.showToast('请先登录', 'error');
+                    return;
+                }
+
+                // Check if GitHub mode but not configured
+                if (this.storageMode === 'github' && !this.githubConfig) {
+                    this.showToast('请先配置 GitHub 同步', 'warning');
+                    this.showSetupWizard();
+                    return;
+                }
+
+                this.editingPostId = id;
+                const titleInput = document.getElementById('postTitle');
+                const contentInput = document.getElementById('postContent');
+                const modalTitle = document.getElementById('editorTitle');
+                const saveBtn = document.getElementById('savePostBtn');
+
+                // Reset button state
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '发布文章';
+
+                if (id) {
+                    const post = this.posts.find(p => p.id === id);
+                    titleInput.value = post.title;
+                    contentInput.value = post.content;
+                    modalTitle.innerHTML = '<i class="fas fa-edit"></i> 编辑文章';
+                } else {
+                    titleInput.value = '';
+                    contentInput.value = '';
+                    modalTitle.innerHTML = '<i class="fas fa-pen"></i> 撰写文章';
+                }
+
+                document.getElementById('editorError').style.display = 'none';
+                this.showModal('editorModal');
+            },
+
+            editPost(id) {
+                this.closeModal('detailModal');
+                setTimeout(() => this.openEditor(id), 300);
+            },
+
+            async savePost() {
+                if (this.isSaving) return;
+
+                const title = document.getElementById('postTitle').value.trim();
+                const content = document.getElementById('postContent').value.trim();
+                const errorDiv = document.getElementById('editorError');
+                const saveBtn = document.getElementById('savePostBtn');
+
+                if (!title || !content) {
+                    errorDiv.textContent = '标题和内容不能为空';
+                    errorDiv.style.display = 'block';
+                    return;
+                }
+
+                errorDiv.style.display = 'none';
+                
+                this.isSaving = true;
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<span class="spinner"></span> 保存中...';
+
+                try {
+                    const now = new Date().toLocaleDateString('zh-CN');
+                    
+                    if (this.editingPostId) {
+                        const index = this.posts.findIndex(p => p.id === this.editingPostId);
+                        if (index !== -1) {
+                            this.posts[index] = {
+                                ...this.posts[index],
+                                title,
+                                content,
+                                excerpt: content.substring(0, 100).replace(/[#*`]/g, ''),
+                                date: now
+                            };
+                        }
+                    } else {
+                        const newPost = {
+                            id: Date.now().toString(),
+                            title,
+                            content,
+                            excerpt: content.substring(0, 100).replace(/[#*`]/g, ''),
+                            date: now
+                        };
+                        this.posts.unshift(newPost);
+                    }
+
+                    await this.savePosts();
+                    this.renderPosts();
+                    this.closeModal('editorModal');
+                    this.showToast(this.editingPostId ? '文章已更新' : '文章已发布');
+                    this.editingPostId = null;
+                    
+                } catch (error) {
+                    errorDiv.textContent = '保存失败: ' + error.message;
+                    errorDiv.style.display = 'block';
+                    this.showToast('保存失败: ' + error.message, 'error');
+                } finally {
+                    this.isSaving = false;
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = '发布文章';
+                }
+            },
+
+            async deletePost(id) {
+                if (!confirm('确定要删除这篇文章吗？此操作不可恢复。')) return;
+                
+                this.posts = this.posts.filter(p => p.id !== id);
+                await this.savePosts();
+                this.renderPosts();
+                this.closeModal('detailModal');
+                this.showToast('文章已删除');
+            },
+
+            // Bilibili Integration
+            openBilibiliDialog() {
+                document.getElementById('bilibiliInput').value = '';
+                this.clearBilibiliPreview();
+                this.showModal('bilibiliModal');
+            },
+
+            extractBvid(input) {
+                if (!input) return null;
+                const bvMatch = input.match(/BV[a-zA-Z0-9]{10}/);
+                if (bvMatch) return bvMatch[0];
+                return null;
+            },
+
+            previewBilibili() {
+                const input = document.getElementById('bilibiliInput').value;
+                const bvid = this.extractBvid(input);
+                const preview = document.getElementById('videoPreview');
+
+                if (bvid) {
+                    this.bilibiliCache = bvid;
+                    preview.className = 'video-preview-box has-video';
+                    preview.innerHTML = this.generateBilibiliPlayer(bvid);
+                    this.showToast(`预览: ${bvid}`);
+                } else {
+                    preview.className = 'video-preview-box';
+                    preview.innerHTML = `
+                        <i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 12px; opacity: 0.5;"></i>
+                        <div>无法识别BV号，请输入正确的B站视频链接</div>
+                    `;
+                    this.showToast('BV号格式错误', 'error');
+                }
+            },
+
+            clearBilibiliPreview() {
+                this.bilibiliCache = null;
+                const preview = document.getElementById('videoPreview');
+                preview.className = 'video-preview-box';
+                preview.innerHTML = `
+                    <i class="fas fa-video" style="font-size: 3rem; margin-bottom: 12px; opacity: 0.3;"></i>
+                    <div>输入BV号后点击预览查看效果</div>
+                `;
+            },
+
+            insertBilibili() {
+                const input = document.getElementById('bilibiliInput').value;
+                const bvid = this.extractBvid(input);
+
+                if (!bvid) {
+                    this.showToast('请输入有效的BV号', 'error');
+                    return;
+                }
+
+                const textarea = document.getElementById('postContent');
+                const insertText = `\n@bilibili:${bvid}\n`;
+                
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+                textarea.value = textarea.value.substring(0, start) + insertText + textarea.value.substring(end);
+                
+                this.closeModal('bilibiliModal');
+                this.showToast('视频已插入');
+            },
+
+            // Editor Helpers
+            insertImage() {
+                const url = prompt('请输入图片URL:');
+                if (url) {
+                    this.insertToEditor(`![图片](${url})`);
+                }
+            },
+
+            insertLink() {
+                const text = prompt('链接文字:');
+                if (text) {
+                    const url = prompt('链接URL:');
+                    if (url) {
+                        this.insertToEditor(`[${text}](${url})`);
+                    }
+                }
+            },
+
+            insertCode() {
+                this.insertToEditor('\n```\n代码内容\n```\n');
+            },
+
+            insertToEditor(text) {
+                const textarea = document.getElementById('postContent');
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+                textarea.value = textarea.value.substring(0, start) + text + textarea.value.substring(end);
+                textarea.focus();
+            },
+
+            // Auth
+            checkAuth() {
+                const auth = localStorage.getItem('blog_auth');
+                if (auth) {
+                    try {
+                        const data = JSON.parse(auth);
+                        if (data.expires > Date.now()) {
+                            this.isAdmin = true;
+                        }
+                    } catch (e) {}
+                }
+            },
+
+            showLogin() {
+                document.getElementById('loginPassword').value = '';
+                document.getElementById('loginError').style.display = 'none';
+                this.showModal('loginModal');
+                setTimeout(() => document.getElementById('loginPassword').focus(), 100);
+            },
+
+            login() {
+                const password = document.getElementById('loginPassword').value;
+                if (password === 'bixie4.5') {
+                    this.isAdmin = true;
+                    localStorage.setItem('blog_auth', JSON.stringify({ expires: Date.now() + 24 * 60 * 60 * 1000 }));
+                    this.updateUI();
+                    this.renderProfile();
+                    this.closeModal('loginModal');
+                    this.showToast('登录成功');
+                    
+                    // Show setup banner if needed
+                    this.showSetupBannerIfNeeded();
+                } else {
+                    document.getElementById('loginError').style.display = 'block';
+                }
+            },
+
+            logout() {
+                this.isAdmin = false;
+                localStorage.removeItem('blog_auth');
+                this.updateUI();
+                this.renderProfile();
+                this.showToast('已退出登录');
+            },
+
+            updateUI() {
+                document.getElementById('guestActions').style.display = this.isAdmin ? 'none' : 'block';
+                document.getElementById('adminActions').style.display = this.isAdmin ? 'flex' : 'none';
+            },
+
+            // Utilities
+            showModal(id) {
+                const modal = document.getElementById(id);
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            },
+
+            closeModal(id) {
+                const modal = document.getElementById(id);
+                modal.classList.remove('active');
+                document.body.style.overflow = '';
+            },
+
+            closeModalOnOverlay(event, id) {
+                if (event.target === event.currentTarget) {
+                    this.closeModal(id);
+                }
+            },
+
+            showToast(message, type = 'success') {
+                const toast = document.getElementById('toast');
+                toast.innerHTML = message;
+                toast.className = `toast ${type} show`;
+                
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            },
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            },
+
+            goHome() {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            app.init();
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.active').forEach(modal => {
+                    modal.classList.remove('active');
+                });
+                document.body.style.overflow = '';
+                
+                if (app.isSaving) {
+                    app.isSaving = false;
+                    const saveBtn = document.getElementById('savePostBtn');
+                    if (saveBtn) {
+                        saveBtn.disabled = false;
+                        saveBtn.innerHTML = '发布文章';
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
