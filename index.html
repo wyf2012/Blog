@@ -1990,10 +1990,7 @@
 
                     const result = await response.json();
                     this.postsSha = result.content.sha;
-                    this.showSyncStatus('已同步
-                    const result = await response.json();
-                    this.postsSha = result.content.sha;
-                    this.showSyncStatus('已同步到 GitHub', 'success');
+                    this.showSyncStatus('已同步', 'success');
                     this.showToast('数据已同步到 GitHub');
                     return true;
                 } catch (error) {
@@ -2520,47 +2517,100 @@
             },
 
             clearBilibiliPreview() {
-                this.bilibiliCache = null;
-                const preview = document.getElementById('videoPreview');
+                this.bilibBV号格式错误', 'error');
+                }
+            },
+
+            clearBilibiliPreview() {
+                thisiliCache.bilibiliCache = null;
+                const preview = document.getElementById('videoPreview = null;
+                const preview = document.getElementById('');
                 preview.className = 'video-preview-box';
                 preview.innerHTML = `
-                    <i class="fas fa-video" style="font-size: 3rem; margin-bottom: 12px; opacity: 0.3;"></i>
+                    <i class="fas favideoPreview');
+                preview.className = 'video-preview-box';
+                preview.innerHTML = `
+                    <i class="fas fa-video-video" style="font-size: 3" style="font-size: 3rem; margin-bottom: 12px; opacity: rem; margin-bottom: 12px0.3;"></i>
+                    <div>输入BV号后点击预览查看效果</div>
+                `;
+            },
+
+; opacity: 0.3;"></i>
                     <div>输入BV号后点击预览查看效果</div>
                 `;
             },
 
             insertBilibili() {
+                const input = document.getElementById('            insertBilibili() {
                 const input = document.getElementById('bilibiliInput').value;
                 const bvid = this.extractBvid(input);
 
                 if (!bvid) {
-                    this.showToast('请输入有效的BV号', 'error');
+bilibiliInput').value;
+                const bvid = this.extractBvid(input);
+
+                if (!bvid                    this.showToast) {
+                    this.showToast('请输入有效的BV号',('请输入有效的BV号', 'error');
+                    return;
+                }
+
+                const textarea 'error');
                     return;
                 }
 
                 const textarea = document.getElementById('postContent');
+                = document.getElementById('postContent');
                 const insertText = `\n@bilibili:${bvid}\n`;
                 
                 const start = textarea.selectionStart;
+                const end = textarea.selectionEnd const insertText = `\n@bilibili:${bvid}\n`;
+                
+                const start = textarea.selectionStart;
                 const end = textarea.selectionEnd;
-                textarea.value = textarea.value.substring(0, start) + insertText + textarea.value.substring(end);
+               ;
+                textarea.value = textarea.value.substring textarea.value = textarea.value.substring(0, start) + insertText + textarea.value.substring(end);
                 
                 this.closeModal('bilibiliModal');
-                this.showToast('视频已插入');
+                this.showToast(0, start) + insertText + textarea.value.substring(end);
+                
+                this.closeModal('bilibiliModal');
+                this('视频已插入');
             },
 
+           .showToast('视频已插入');
             // Editor Helpers
-            insertImage() {
-                const url = prompt('请输入图片URL:');
+            insertImage },
+
+            // Editor Helpers
+           () {
+                const url = prompt('请输入图片 insertImage() {
+                const url = prompt('请输入图片URL:URL:');
                 if (url) {
                     this.insertToEditor(`![图片](${url})`);
                 }
             },
 
+           ');
+                if (url) insertLink() {
+                const text = prompt(' {
+                    this.insertToEditor(`![图片](${url})`);
+                }
+            },
+
             insertLink() {
-                const text = prompt('链接文字:');
+                const text = prompt('链接文字链接文字:');
+                if:');
                 if (text) {
+                    const (text) {
                     const url = prompt('链接URL:');
+ url = prompt('链接URL                    if (url) {
+                        this.insertToEditor(`[${text}](${url})`);
+                    }
+                }
+            },
+
+            insertCode() {
+:');
                     if (url) {
                         this.insertToEditor(`[${text}](${url})`);
                     }
@@ -2568,49 +2618,133 @@
             },
 
             insertCode() {
-                this.insertToEditor('\n```\n代码内容\n```\n');
+                this                this.insertToEditor('\n```\n代码内容.insertToEditor('\n```\n代码内容\n```\n');
             },
 
             insertToEditor(text) {
                 const textarea = document.getElementById('postContent');
-                const start = textarea.selectionStart;
+                const start\n```\n');
+            },
+
+            insertToEditor(text) {
+                const textarea = document.getElementById('postContent');
+                const start = textarea = textarea.selectionStart;
+                const end.selectionStart;
                 const end = textarea.selectionEnd;
+                = textarea.selectionEnd textarea.value = textarea.value.substring(0;
                 textarea.value = textarea.value.substring(0, start) + text + textarea.value.substring(end);
                 textarea.focus();
             },
 
-            // Auth
+            // Auth - 修复登录无, start) + text + textarea.value.substring(end);
+                textarea.focus();
+            },
+
+            // Auth - 修复登录无响应问题
             checkAuth() {
-                const auth = localStorage.getItem('blog_auth');
+响应问题
+            checkAuth() {
+                const auth = localStorage.getItem('blog                const auth = localStorage.getItem('blog_auth');
+                if (auth) {
+                    try {
+                        const data = JSON.parse(auth);
+                        if (data.expires > Date.now_auth');
                 if (auth) {
                     try {
                         const data = JSON.parse(auth);
                         if (data.expires > Date.now()) {
+                            this.isAdmin = true()) {
                             this.isAdmin = true;
+                        } else;
+                        } else {
+                            // 过期则 {
+                            // 过期则清理
+                            localStorage.removeItem('blog_auth');
+                            this.isAdmin = false;
                         }
-                    } catch (e) {}
+                    } catch (e) {
+                        this.isAdmin =清理
+                            localStorage.removeItem('blog_auth');
+                            this.isAdmin = false;
+                        }
+                    } catch (e) {
+                        this.isAdmin = false;
+                    }
+                } else {
+ false;
+                    }
+                } else {
+                    this.isAdmin = false;
+                }
+            },
+
+                               this.isAdmin = false;
                 }
             },
 
             showLogin() {
-                // Clear previous input
+                // 确保模态框元素存在
+                const loginModal = document.getElementById('loginModal');
+                if (! showLogin() {
+                // 确保模态框元素存在
+                const loginModal = document.getElementById('loginModal) {
+                    console.error('loginModal');
+                if (!loginModal) {
+                    console.error('Login modal not found');
+                   Login modal not found');
+                    return;
+                }
+                
+                // 清空输入框和错误提示
+                const passwordInput = document.getElementById('loginPassword');
+                const errorDiv = document return;
+                }
+                
+                // 清空输入框和错误提示
                 const passwordInput = document.getElementById('loginPassword');
                 const errorDiv = document.getElementById('loginError');
                 
-                if (passwordInput) passwordInput.value = '';
+                if.getElementById('loginError');
+                
+                if (passwordInput) {
+                    passwordInput (passwordInput) {
+                    passwordInput.value = '';
+                    // 安全地聚焦
+                    try {
+                        passwordInput.focus();
+                    } catch(e) {
+                        console.warn('Focus failed:', e);
+                    }
+.value = '';
+                    // 安全地聚焦
+                    try {
+                        passwordInput.focus();
+                    } catch(e) {
+                        console.warn('Focus failed:', e);
+                    }
+                }
                 if (errorDiv) errorDiv.style.display = 'none';
                 
+                // 显示模态框
                 this.showModal('loginModal');
+            },
+
+            login() {
+                const passwordInput = document                }
+                if (errorDiv) errorDiv.style.display = 'none';
                 
-                // Focus after modal is shown
-                setTimeout(() => {
-                    if (passwordInput) passwordInput.focus();
-                }, 100);
+                // 显示模态框
+                this.showModal('loginModal');
             },
 
             login() {
                 const passwordInput = document.getElementById('loginPassword');
+               .getElementById('loginPassword');
                 const password = passwordInput ? passwordInput.value : '';
+                
+                if (password === 'bixie4.5') {
+                    this.isAdmin = true;
+                    localStorage.set const password = passwordInput ? passwordInput.value : '';
                 
                 if (password === 'bixie4.5') {
                     this.isAdmin = true;
@@ -2622,9 +2756,38 @@
                     
                     // Show setup banner if needed
                     this.showSetupBannerIfNeeded();
+               Item('blog_auth', JSON.stringify({ expires: Date.now() + 24 * 60 * 60 * 1000 }));
+                    this.updateUI();
+                    this.renderProfile();
+                    this.closeModal('loginModal');
+                    this.showToast('登录成功');
+                    
+                    // Show setup banner if needed
+                    this.showSetupBannerIfNeeded();
                 } else {
                     const errorDiv = document.getElementById('loginError');
                     if (errorDiv) errorDiv.style.display = 'block';
+                    // 清空密码输入框，方便 } else {
+                    const errorDiv = document.getElementById('loginError');
+                    if (errorDiv) errorDiv.style.display = 'block';
+                    // 清空密码输入框，方便重试
+                    if (password重试
+                    if (passwordInput) passwordInput.value = '';
+                    passwordInput?.focus();
+                }
+            },
+
+            logout() {
+                this.isAdmin = false;
+                localStorage.removeItem('blog_auth');
+                this.updateUI();
+                this.renderProfile();
+                this.showToast('已退出登录');
+            },
+
+            updateUI() {
+                const guestActions = document.getElementById('guestActionsInput) passwordInput.value = '';
+                    passwordInput?.focus();
                 }
             },
 
@@ -2638,83 +2801,168 @@
 
             updateUI() {
                 const guestActions = document.getElementById('guestActions');
+                const admin');
                 const adminActions = document.getElementById('adminActions');
                 
-                if (guestActions) guestActions.style.display = this.isAdmin ? 'none' : 'block';
-                if (adminActions) adminActions.style.display = this.isAdmin ? 'flex' : 'none';
+               Actions = document.getElementById('adminActions');
+                
+                if (guestActions if (guestActions) guest) guestActions.style.display =Actions.style this.is.display = this.isAdmin ?Admin ? 'none' : 'block 'none' :';
+                if (adminActions 'block';
+                if () adminadminActions) adminActions.styleActions.style.display = this.is.display = this.isAdmin ? 'flex'Admin ? 'flex' : : 'none';
+            'none';
+            },
+
             },
 
             // Utilities
             showModal(id) {
-                const modal = document.getElementById(id);
-                if (!modal) {
-                    console.error('Modal not found:', id);
-                    return;
+                const modal // Utilities
+            showModal(id) {
+                const modal = document = document.getElementById(id);
+                if (!.getElementById(id);
+                if (!modal)modal) {
+                    console.error {
+                    console.error('Modal('Modal not found:', id not found:', id);
+                    this.show);
+                    this.showToast('界面加载异常，请Toast('界面加载异常，请刷新页面', '刷新页面', 'error');
+                    return false;
+               error');
+                    return false;
                 }
+                modal.classList.add('active }
                 modal.classList.add('active');
+                document.body.style.overflow');
                 document.body.style.overflow = 'hidden';
+ = 'hidden';
+                return true;
+                return true;
             },
 
-            closeModal(id) {
-                const modal = document.getElementById(id);
+            },
+
+            closeModal(id            closeModal(id) {
+) {
+                const modal =                const modal = document.getElementById document.getElementById(id);
+(id);
                 if (!modal) {
-                    console.error('Modal not found:', id);
+                if (!modal) {
+                    console                    console.error('Modal not found:',.error('Modal not found:', id);
+                    return;
+                }
+                id);
                     return;
                 }
                 modal.classList.remove('active');
                 document.body.style.overflow = '';
             },
 
+            closeModalOnOverlay(event, id) modal.classList.remove('active');
+                document.body.style.overflow = '';
+            },
+
             closeModalOnOverlay(event, id) {
-                if (event.target === event.currentTarget) {
-                    this.closeModal(id);
+                if ( {
+                if (event.targetevent.target === event.currentTarget) {
+ === event.currentTarget) {
+                    this                    this.closeModal.closeModal(id);
+(id);
                 }
             },
 
             showToast(message, type = 'success') {
                 const toast = document.getElementById('toast');
+                if (!toast                }
+            },
+
+            showToast(message, type = 'success') {
+                const toast = document.getElementById('toast');
                 if (!toast) {
+) {
                     console.error('Toast element not found');
+                                       console.error('Toast element not found return;
+                }
+                toast.innerHTML =');
                     return;
                 }
-                toast.innerHTML = message;
+                toast message;
                 toast.className = `toast ${type} show`;
                 
                 setTimeout(() => {
                     toast.classList.remove('show');
-                }, 3000);
+                },.innerHTML = message;
+                toast.className = `toast ${type} show`;
+                
+                setTimeout(() => {
+                    toast.classList.remove('show');
+ 3000);
             },
 
-            escapeHtml(text) {
-                const div = document.createElement('div');
+            escape                }, 3000);
+            },
+
+Html(text) {
+                const div =            escapeHtml(text) {
+                const document.createElement div = document.createElement('div('div');
                 div.textContent = text;
                 return div.innerHTML;
             },
 
             goHome() {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                window.scrollTo({ top: 0');
+                div.textContent = text;
+                return div.innerHTML;
+            },
+
+            goHome() {
+                window.scrollTo({ top: 0, behavior, behavior: 'smooth' });
             }
         };
+
+: 'smooth' });
+            }
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            app.init();
+        });
+
+        // Keyboard        };
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             app.init();
         });
 
-        // Keyboard shortcuts
-        document.addEventListener('keydown', (e) => {
+        // shortcuts
+        document.addEventListener('keydown Keyboard shortcuts
+        document.addEventListener('keydown', (', (e) => {
+            if (ee) => {
             if (e.key === 'Escape') {
-                document.querySelectorAll('.modal-overlay.active').forEach(modal => {
+               .key === 'Escape') {
+                document document.querySelectorAll('.modal-overlay.active').forEach(modal => {
+                    modal.classList.remove('active.querySelectorAll('.modal-overlay.active').forEach(modal => {
                     modal.classList.remove('active');
+                });
+                document.body');
                 });
                 document.body.style.overflow = '';
                 
-                if (app.isSaving) {
+                if (app.style.overflow = '';
+                
+                if.isSaving) {
                     app.isSaving = false;
                     const saveBtn = document.getElementById('savePostBtn');
                     if (saveBtn) {
-                        saveBtn.disabled = false;
+ (app.isSaving) {
+                    app.isSaving = false;
+                    const saveBtn = document.getElementById('savePostBtn');
+                    if (saveBtn) {
+                        saveBtn.dis                        saveBtn.disabled = false;
+                        saveBtn.innerHTML = '发布文章abled = false;
                         saveBtn.innerHTML = '发布文章';
+                    }
+                }
+            }
+       ';
                     }
                 }
             }
@@ -2722,5 +2970,7 @@
     </script>
 </body>
 </html>
-
-
+``` });
+    </script>
+</body>
+</html>
