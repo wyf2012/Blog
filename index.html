@@ -1989,7 +1989,8 @@
                     }
 
                     const result = await response.json();
-                    this.postsSha = result
+                    this.postsSha = result.content.sha;
+                    this.showSyncStatus('已同步
                     const result = await response.json();
                     this.postsSha = result.content.sha;
                     this.showSyncStatus('已同步到 GitHub', 'success');
@@ -2592,14 +2593,25 @@
             },
 
             showLogin() {
-                document.getElementById('loginPassword').value = '';
-                document.getElementById('loginError').style.display = 'none';
+                // Clear previous input
+                const passwordInput = document.getElementById('loginPassword');
+                const errorDiv = document.getElementById('loginError');
+                
+                if (passwordInput) passwordInput.value = '';
+                if (errorDiv) errorDiv.style.display = 'none';
+                
                 this.showModal('loginModal');
-                setTimeout(() => document.getElementById('loginPassword').focus(), 100);
+                
+                // Focus after modal is shown
+                setTimeout(() => {
+                    if (passwordInput) passwordInput.focus();
+                }, 100);
             },
 
             login() {
-                const password = document.getElementById('loginPassword').value;
+                const passwordInput = document.getElementById('loginPassword');
+                const password = passwordInput ? passwordInput.value : '';
+                
                 if (password === 'bixie4.5') {
                     this.isAdmin = true;
                     localStorage.setItem('blog_auth', JSON.stringify({ expires: Date.now() + 24 * 60 * 60 * 1000 }));
@@ -2611,7 +2623,8 @@
                     // Show setup banner if needed
                     this.showSetupBannerIfNeeded();
                 } else {
-                    document.getElementById('loginError').style.display = 'block';
+                    const errorDiv = document.getElementById('loginError');
+                    if (errorDiv) errorDiv.style.display = 'block';
                 }
             },
 
@@ -2624,19 +2637,30 @@
             },
 
             updateUI() {
-                document.getElementById('guestActions').style.display = this.isAdmin ? 'none' : 'block';
-                document.getElementById('adminActions').style.display = this.isAdmin ? 'flex' : 'none';
+                const guestActions = document.getElementById('guestActions');
+                const adminActions = document.getElementById('adminActions');
+                
+                if (guestActions) guestActions.style.display = this.isAdmin ? 'none' : 'block';
+                if (adminActions) adminActions.style.display = this.isAdmin ? 'flex' : 'none';
             },
 
             // Utilities
             showModal(id) {
                 const modal = document.getElementById(id);
+                if (!modal) {
+                    console.error('Modal not found:', id);
+                    return;
+                }
                 modal.classList.add('active');
                 document.body.style.overflow = 'hidden';
             },
 
             closeModal(id) {
                 const modal = document.getElementById(id);
+                if (!modal) {
+                    console.error('Modal not found:', id);
+                    return;
+                }
                 modal.classList.remove('active');
                 document.body.style.overflow = '';
             },
@@ -2649,6 +2673,10 @@
 
             showToast(message, type = 'success') {
                 const toast = document.getElementById('toast');
+                if (!toast) {
+                    console.error('Toast element not found');
+                    return;
+                }
                 toast.innerHTML = message;
                 toast.className = `toast ${type} show`;
                 
@@ -2694,3 +2722,5 @@
     </script>
 </body>
 </html>
+
+
