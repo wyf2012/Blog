@@ -336,6 +336,7 @@
             transition: var(--transition-smooth);
             flex-shrink: 0;
             position: relative;
+            overflow: hidden;
         }
 
         .avatar::after {
@@ -1245,8 +1246,8 @@
                 <input type="text" class="form-input" id="editName">
             </div>
             <div class="form-group">
-                <label class="form-label">头像 Emoji</label>
-                <input type="text" class="form-input" id="editAvatar" maxlength="2">
+                <label class="form-label">头像 (Emoji 或 图片URL)</label>
+                <input type="text" class="form-input" id="editAvatar" placeholder="✨ 或 https://example.com/avatar.jpg">
             </div>
             <div class="form-group">
                 <label class="form-label">简介</label>
@@ -1666,10 +1667,29 @@
                 }
             },
 
-            // 修改：渲染个人资料时，根据管理员状态显示/隐藏编辑按钮
+            // 修改：渲染个人资料时，根据管理员状态显示/隐藏编辑按钮，并支持图片URL
             renderProfile() {
                 document.getElementById('profileName').textContent = this.profile.name;
-                document.getElementById('profileAvatar').textContent = this.profile.avatar;
+                
+                // 关键修改：支持图片URL和Emoji两种头像格式
+                const avatarElement = document.getElementById('profileAvatar');
+                avatarElement.innerHTML = ''; // 清空原有内容
+                
+                if (this.profile.avatar && this.profile.avatar.startsWith('http')) {
+                    // 如果是URL，创建图片元素
+                    const img = document.createElement('img');
+                    img.src = this.profile.avatar;
+                    img.alt = '用户头像';
+                    img.style.width = '100%';
+                    img.style.height = '100%';
+                    img.style.borderRadius = 'var(--radius-full)';
+                    img.style.objectFit = 'cover';
+                    avatarElement.appendChild(img);
+                } else {
+                    // 否则，视为文本（Emoji）显示
+                    avatarElement.textContent = this.profile.avatar || '✨';
+                }
+                
                 document.getElementById('profileBio').innerHTML = this.parseMarkdown(this.profile.bio);
                 
                 // 关键修改：仅在管理员模式下显示编辑按钮
@@ -1866,75 +1886,68 @@
 
             insertImage() {
                 const url = prompt('图片URL');
-                if (url) this.insertToEditor(`![图片](${url})`);
+               
+                if (url) {
+                    const markdown = `![图片](${url})`;
+                    const textarea = document.getElementById('postContent');
+                    const start = textarea.selectionStart;
+                    textarea.value = textarea.value.substring(0, start) + markdown + textarea.value.substring(start);
+                }
             },
 
             insertLink() {
                 const text = prompt('链接文字');
-                if (text) {
-                    const url = prompt('链接URL');
-                    if (url) this.insertToEditor(`[${text}](${url})`);
-                }
-            },
-
-            insertToEditor(text) {
-                const ta = document.getElementById('postContent');
-                const start = ta.selectionStart;
-                ta.value = ta.value.substring(0, start) + text + ta.value.substring(start);
-                ta.focus();
+                if (!text) return;
+                const url = prompt('链接地址');
+                if (!url) return;
+                const markdown = `[${text}](${url})`;
+                const textarea = document.getElementById('postContent');
+                const start = textarea.selectionStart;
+                textarea.value = textarea.value.substring(0, start) + markdown + textarea.value.substring(start);
             },
 
             checkAuth() {
-                const auth = localStorage.getItem('blog_auth');
-                if (auth) {
-                    try {
-                        const data = JSON.parse(auth);
-                        if (data.expires > Date.now()) {
-                            this.isAdmin = true;
-                        }
-                    } catch(e) {}
+                const stored = localStorage.getItem('is_admin');
+                if (stored === 'true') {
+                    this.isAdmin = true;
+                    document.getElementById('guestActions').style.display = 'none';
+                    document.getElementById('adminActions').style.display = 'flex';
                 }
             },
 
             showLogin() {
-                const pwd = document.getElementById('loginPassword');
-                if (pwd) pwd.value = '';
-                const err = document.getElementById('loginError');
-                if (err) err.style.display = 'none';
+                document.getElementById('loginPassword').value = '';
+                document.getElementById('loginError').style.display = 'none';
                 this.showModal('loginModal');
-                setTimeout(() => pwd?.focus(), 100);
             },
 
             login() {
-                const pwd = document.getElementById('loginPassword');
-                if (pwd?.value === 'bixie4.5') {
+                const password = document.getElementById('loginPassword').value;
+                if (password === 'bixie4.5') {
                     this.isAdmin = true;
-                    localStorage.setItem('blog_auth', JSON.stringify({ expires: Date.now() + 86400000 }));
-                    this.updateUI();
+                    localStorage.setItem('is_admin', 'true');
+                    document.getElementById('guestActions').style.display = 'none';
+                    document.getElementById('adminActions').style.display = 'flex';
                     this.closeModal('loginModal');
-                    this.showToast('登录成功');
+                    this.showToast('管理员登录成功');
+                    this.renderProfile();
                 } else {
-                    const err = document.getElementById('loginError');
-                    if (err) err.style.display = 'block';
-                    if (pwd) pwd.value = '';
+                    document.getElementById('loginError').style.display = 'block';
                 }
             },
 
             logout() {
                 this.isAdmin = false;
-                localStorage.removeItem('blog_auth');
-                this.updateUI();
-                this.showToast('已退出');
+                localStorage.removeItem('is_admin');
+                document.getElementById('guestActions').style.display = 'block';
+                document.getElementById('adminActions').style.display = 'none';
+                this.showToast('已退出管理员账号');
+                this.renderProfile();
             },
 
-            updateUI() {
-                const guest = document.getElementById('guestActions');
-                const admin = document.getElementById('adminActions');
-                if (guest) guest.style.display = this.isAdmin ? 'none' : 'block';
-                if (admin) admin.style.display = this.isAdmin ? 'flex' : 'none';
-                
-                // 确保个人资料编辑按钮状态同步更新
-                this.renderProfile();
+            goHome() {
+                this.closeAllModals();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             },
 
             showDataManager() {
@@ -1943,75 +1956,71 @@
                 this.showModal('dataModal');
             },
 
-            showSyncStatus(text, status) {
-                const indicator = document.getElementById('syncIndicator');
-                const statusDot = document.getElementById('syncStatusDot');
-                const textSpan = document.getElementById('syncText');
-                textSpan.textContent = text;
-                statusDot.className = 'sync-status';
-                if (status === 'syncing') statusDot.classList.add('syncing');
-                else if (status === 'error') statusDot.classList.add('error');
-                indicator.classList.remove('hidden');
-                if (status !== 'syncing') {
-                    setTimeout(() => indicator.classList.add('hidden'), 3000);
-                }
-            },
-
             showModal(id) {
-                const modal = document.getElementById(id);
-                if (modal) {
-                    modal.classList.add('active');
-                    document.body.style.overflow = 'hidden';
-                }
+                document.getElementById(id).classList.add('active');
+                document.body.style.overflow = 'hidden';
             },
 
             closeModal(id) {
-                const modal = document.getElementById(id);
-                if (modal) {
-                    modal.classList.remove('active');
-                    document.body.style.overflow = '';
+                document.getElementById(id).classList.remove('active');
+                document.body.style.overflow = '';
+            },
+
+            closeModalOnOverlay(event, modalId) {
+                if (event.target.classList.contains('modal-overlay')) {
+                    this.closeModal(modalId);
                 }
             },
 
-            closeModalOnOverlay(event, id) {
-                if (event.target === event.currentTarget) this.closeModal(id);
+            closeAllModals() {
+                document.querySelectorAll('.modal-overlay').forEach(modal => {
+                    modal.classList.remove('active');
+                });
+                document.body.style.overflow = '';
             },
 
-            showToast(msg, type = 'success') {
+            showToast(message, type = 'success') {
                 const toast = document.getElementById('toast');
-                toast.textContent = msg;
-                toast.className = `toast ${type} show`;
+                toast.textContent = message;
+                toast.className = 'toast';
+                if (type) toast.classList.add(type);
+                setTimeout(() => toast.classList.add('show'), 10);
                 setTimeout(() => toast.classList.remove('show'), 3000);
             },
 
-            escapeHtml(str) {
-                const div = document.createElement('div');
-                div.textContent = str;
-                return div.innerHTML;
+            showSyncStatus(text, status) {
+                const indicator = document.getElementById('syncIndicator');
+                const dot = document.getElementById('syncStatusDot');
+                const textSpan = document.getElementById('syncText');
+                indicator.classList.remove('hidden');
+                dot.className = 'sync-status ' + status;
+                textSpan.textContent = text;
+                if (status === 'success') {
+                    setTimeout(() => indicator.classList.add('hidden'), 2000);
+                }
             },
 
-            goHome() {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
             }
         };
 
-        document.addEventListener('DOMContentLoaded', () => app.init());
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
-                document.body.style.overflow = '';
-            }
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            app.init();
         });
 
-        // Fluent Reveal 效果 - 追踪鼠标位置
+        // 为博客卡片添加鼠标跟随效果
         document.addEventListener('mousemove', (e) => {
-            document.querySelectorAll('.blog-card').forEach(card => {
+            for (const card of document.getElementsByClassName('blog-card')) {
                 const rect = card.getBoundingClientRect();
                 const x = e.clientX - rect.left;
                 const y = e.clientY - rect.top;
-                card.style.setProperty('--mouse-x', x + 'px');
-                card.style.setProperty('--mouse-y', y + 'px');
-            });
+                card.style.setProperty('--mouse-x', `${x}px`);
+                card.style.setProperty('--mouse-y', `${y}px`);
+            }
         });
     </script>
 </body>
