@@ -597,6 +597,7 @@
             justify-content: center;
             opacity: 0;
             transition: opacity 0.3s ease;
+            padding-top: 60px; /* 修复：防止模态框被顶栏遮挡 */
         }
 
         .modal-overlay.active {
@@ -612,7 +613,7 @@
             box-shadow: var(--elevation-4);
             width: 90%;
             max-width: 900px;
-            max-height: 85vh;
+            max-height: calc(85vh - 60px); /* 修复：考虑顶栏高度 */
             overflow-y: auto;
             transform: scale(0.95) translateY(16px);
             transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -1097,6 +1098,9 @@
             }
             .section-title { flex-direction: column; align-items: flex-start; gap: var(--space-sm); }
             .container { padding: 0 var(--space-lg); }
+            .modal-overlay {
+                padding-top: 0; /* 在移动端不需要内边距 */
+            }
         }
 
         /* ===== 选中状态 ===== */
@@ -1333,7 +1337,7 @@
             'data-repo-id': 'R_kgDORzrk5w',
             'data-category': 'Announcements',
             'data-category-id': 'DIC_kwDORzrk584C5jXz',
-            'data-mapping': 'specific',
+            'data-mapping': 'pathname',
             'data-strict': '0',
             'data-reactions-enabled': '1',
             'data-emit-metadata': '0',
@@ -1349,7 +1353,7 @@
         const GITHUB_REPO = 'Blog';
         const GITHUB_BRANCH = 'main';
         const POSTS_PATH = 'data/posts.json';
-        const PROFILE_PATH = 'data/profile.json'; // 新增：个人资料存储路径
+        const PROFILE_PATH = 'data/profile.json';
 
         const app = {
             posts: [],
@@ -1357,24 +1361,24 @@
             editingPostId: null,
             githubToken: null,
             postsSha: null,
-            profileSha: null, // 新增：个人资料文件的sha
+            profileSha: null,
             profile: { name: '极简博主', avatar: '✨', bio: '欢迎来到我的博客！这里记录着我的思考与创作。' },
             currentPostId: null,
             lastSyncTime: null,
+            giscusScript: null,
 
             init() {
                 this.loadToken();
                 this.checkAuth();
-                this.loadProfileFromGitHub(); // 修改：从GitHub加载个人资料
+                this.loadProfileFromGitHub();
                 this.loadPostsFromGitHub();
                 this.startAutoSync();
             },
 
             startAutoSync() {
-                // 每5分钟自动同步一次
                 setInterval(() => {
                     this.loadPostsFromGitHub(true);
-                    this.loadProfileFromGitHub(); // 新增：自动同步个人资料
+                    this.loadProfileFromGitHub();
                 }, 300000);
             },
 
@@ -1390,21 +1394,18 @@
 
             async refreshFromGitHub() {
                 await this.loadPostsFromGitHub(false);
-                await this.loadProfileFromGitHub(); // 新增：刷新个人资料
+                await this.loadProfileFromGitHub();
             },
 
-            // 新增：从GitHub加载个人资料
             async loadProfileFromGitHub() {
                 try {
                     const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${PROFILE_PATH}?ref=${GITHUB_BRANCH}`;
                     const res = await fetch(url);
                     
                     if (res.status === 404) {
-                        // 文件不存在，使用默认资料并尝试创建
                         this.profile = { name: '极简博主', avatar: '✨', bio: '欢迎来到我的博客！这里记录着我的思考与创作。' };
                         this.saveProfileToLocal();
                         this.renderProfile();
-                        // 如果是管理员且有Token，尝试推送默认资料
                         if (this.isAdmin && this.githubToken) {
                             this.pushProfileToGitHub('创建默认个人资料');
                         }
@@ -1422,12 +1423,10 @@
                     
                 } catch (error) {
                     console.error('Failed to load profile from GitHub:', error);
-                    // 如果从GitHub加载失败，尝试从本地加载
                     this.loadProfileFromLocal();
                 }
             },
 
-            // 修改：从本地加载个人资料
             loadProfileFromLocal() {
                 const saved = localStorage.getItem('blog_profile');
                 if (saved) {
@@ -1440,13 +1439,11 @@
                 this.renderProfile();
             },
 
-            // 修改：保存个人资料到本地
             saveProfileToLocal() {
                 localStorage.setItem('blog_profile', JSON.stringify(this.profile));
                 this.renderProfile();
             },
 
-            // 新增：推送个人资料到GitHub
             async pushProfileToGitHub(commitMessage = 'Update profile') {
                 if (!this.githubToken) {
                     this.showToast('请先在同步设置中配置 GitHub Token 以同步个人资料', 'error');
@@ -1531,12 +1528,10 @@
                 }
                 
                 try {
-                    // 公开仓库不需要 token，直接访问
                     const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${POSTS_PATH}?ref=${GITHUB_BRANCH}`;
                     const res = await fetch(url);
                     
                     if (res.status === 404) {
-                        // 文件不存在，创建默认文章
                         this.createDefaultPosts();
                         if (!silent) this.showToast('GitHub 上暂无数据，已创建默认文章', 'warning');
                         return;
@@ -1563,7 +1558,6 @@
                     
                 } catch (error) {
                     console.error('Failed to load from GitHub:', error);
-                    // 如果从 GitHub 加载失败，尝试从本地加载
                     this.loadPostsFromLocal();
                     if (!silent) this.showToast('从 GitHub 加载失败，使用本地缓存', 'error');
                     this.showSyncStatus('同步失败', 'error');
@@ -1599,7 +1593,6 @@
                 }];
                 this.savePostsToLocal();
                 this.render();
-                // 如果是管理员，尝试推送
                 if (this.isAdmin && this.githubToken) {
                     this.pushToGitHub();
                 }
@@ -1667,16 +1660,13 @@
                 }
             },
 
-            // 修改：渲染个人资料时，根据管理员状态显示/隐藏编辑按钮，并支持图片URL
             renderProfile() {
                 document.getElementById('profileName').textContent = this.profile.name;
                 
-                // 关键修改：支持图片URL和Emoji两种头像格式
                 const avatarElement = document.getElementById('profileAvatar');
-                avatarElement.innerHTML = ''; // 清空原有内容
+                avatarElement.innerHTML = '';
                 
                 if (this.profile.avatar && this.profile.avatar.startsWith('http')) {
-                    // 如果是URL，创建图片元素
                     const img = document.createElement('img');
                     img.src = this.profile.avatar;
                     img.alt = '用户头像';
@@ -1686,20 +1676,17 @@
                     img.style.objectFit = 'cover';
                     avatarElement.appendChild(img);
                 } else {
-                    // 否则，视为文本（Emoji）显示
                     avatarElement.textContent = this.profile.avatar || '✨';
                 }
                 
                 document.getElementById('profileBio').innerHTML = this.parseMarkdown(this.profile.bio);
                 
-                // 关键修改：仅在管理员模式下显示编辑按钮
                 const editBtn = document.getElementById('editProfileBtn');
                 if (editBtn) {
                     editBtn.style.display = this.isAdmin ? 'flex' : 'none';
                 }
             },
 
-            // 修改：编辑个人资料时检查管理员权限
             editProfile() {
                 if (!this.isAdmin) {
                     this.showToast('请先登录管理员账号', 'error');
@@ -1713,7 +1700,6 @@
                 this.showModal('profileModal');
             },
 
-            // 修改保存个人资料的方法，添加GitHub同步
             async saveProfileFromEditor() {
                 if (!this.isAdmin) {
                     this.showToast('仅管理员可编辑个人资料', 'error');
@@ -1734,7 +1720,6 @@
                 this.closeModal('profileModal');
                 this.showToast('个人介绍已更新');
                 
-                // 同步到GitHub
                 await this.pushProfileToGitHub(`更新个人资料: ${name}`);
             },
 
@@ -1775,17 +1760,25 @@
             loadGiscusForPost(postId) {
                 const container = document.getElementById('giscus-comments');
                 if (!container) return;
+                
                 container.innerHTML = '';
-                const script = document.createElement('script');
-                script.src = GISCUS_BASE_CONFIG.src;
+                
+                if (this.giscusScript) {
+                    this.giscusScript.remove();
+                }
+                
+                this.giscusScript = document.createElement('script');
+                this.giscusScript.src = GISCUS_BASE_CONFIG.src;
+                
                 Object.keys(GISCUS_BASE_CONFIG).forEach(key => {
                     if (key !== 'src' && key !== 'async') {
-                        script.setAttribute(key, GISCUS_BASE_CONFIG[key]);
+                        this.giscusScript.setAttribute(key, GISCUS_BASE_CONFIG[key]);
                     }
                 });
-                script.setAttribute('data-term', `post-${postId}`);
-                script.async = true;
-                container.appendChild(script);
+                
+                this.giscusScript.setAttribute('data-term', `post-${postId}`);
+                this.giscusScript.async = true;
+                container.appendChild(this.giscusScript);
             },
 
             showDetail(id) {
@@ -1847,7 +1840,6 @@
                 this.showToast(this.editingPostId ? '已更新' : '已发布');
                 this.editingPostId = null;
                 
-                // 如果有 Token，推送到 GitHub
                 if (this.githubToken) {
                     await this.pushToGitHub();
                 } else {
@@ -1886,7 +1878,6 @@
 
             insertImage() {
                 const url = prompt('图片URL');
-               
                 if (url) {
                     const markdown = `![图片](${url})`;
                     const textarea = document.getElementById('postContent');
